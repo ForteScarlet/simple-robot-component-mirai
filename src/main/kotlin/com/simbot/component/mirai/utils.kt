@@ -18,7 +18,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 
-/** 发送消息，此处解析部分CQ码并转化为Message */
+/**
+ * 发送消息之前，会将Message通过此处进行处理。
+ * 此处可解析部分CQ码并转化为Message
+ * 然后发送此消息
+ */
 suspend fun <C: Contact> C.sendMsg(msg: String): MessageReceipt<Contact> {
     return this.sendMessage(msg)
 }

@@ -1,5 +1,6 @@
 # simple-robot mirai组件
-基于**`simple-robot-core`**核心框架，对接**`Mirai`**的qqandroid库
+
+基于 **`simple-robot-core`** 核心框架，对接 **`Mirai`** 的qqandroid库
 
 
 ## 特性

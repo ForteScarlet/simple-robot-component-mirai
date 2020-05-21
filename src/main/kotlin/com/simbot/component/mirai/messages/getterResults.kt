@@ -1,6 +1,7 @@
-package com.simbot.component.mirai.results
+package com.simbot.component.mirai.messages
 
 import com.forte.qqrobot.beans.messages.result.*
+import com.forte.qqrobot.beans.messages.result.inner.BanInfo
 import com.forte.qqrobot.beans.messages.result.inner.GroupMember
 import com.forte.qqrobot.beans.messages.result.inner.GroupNote
 import com.forte.qqrobot.beans.messages.types.PowerType
@@ -46,7 +47,7 @@ class MiraiLoginInfo(
 /** 群信息 */
 class MiraiGroupInfo(
         val baseGroup: Group
-) : GroupInfo {
+) : GroupInfo, com.forte.qqrobot.beans.messages.result.inner.Group {
 
     private val groupName: String = baseGroup.name
     private val entranceAnnouncement: String = baseGroup.settings.entranceAnnouncement
@@ -81,6 +82,9 @@ class MiraiGroupInfo(
 
     /** 入群公告 */
     override fun getBoard(): String = entranceAnnouncement
+
+    override fun getGroupCode(): String = baseGroup.id.toString()
+
 
     /** 群成员上限  */
     @Deprecated("just -1", ReplaceWith("-1"))
@@ -139,6 +143,9 @@ class MiraiGroupInfo(
     /** 获取群标签  */
     @Deprecated("empty", ReplaceWith("emptyArray()"))
     override fun getTags(): Array<String> = emptyArray()
+
+
+    override fun getHeadUrl(): String = baseGroup.avatarUrl
 
 }
 
@@ -224,7 +231,7 @@ class MiraiGroupMemberList(
 
     /** 群成员列表 */
     private val groupMemberArray: Array<GroupMember> by lazy {
-        group.members.asSequence().map { MiraiGroupMember(it) }.toList().toTypedArray()
+        group.members.asSequence().map { MiraiGroupMember(it) as GroupMember }.toList().toTypedArray()
     }
 
     /** 获取原本的数据 originalData  */
@@ -384,6 +391,103 @@ class MiraiGroupNoteList(val group: Group): GroupNoteList {
      */
     override fun getList(): Array<GroupNote> = groupNoteArray
 }
+
+/**
+ * 群列表
+ */
+class MiraiGroupList(val groups: ContactList<Group>): GroupList {
+    override fun getOriginalData(): String = toString()
+    override fun toString(): String = groups.toString()
+
+    private val groupList: Array<com.forte.qqrobot.beans.messages.result.inner.Group> by lazy {
+        groups.asSequence().map { MiraiGroupInfo(it) as com.forte.qqrobot.beans.messages.result.inner.Group }.toList().toTypedArray()
+    }
+
+    /**
+     * 获取群列表
+     */
+    override fun getList(): Array<com.forte.qqrobot.beans.messages.result.inner.Group> = groupList
+
+}
+
+
+/** 获取好友列表 */
+class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
+    override fun getOriginalData(): String = toString()
+    override fun toString(): String = friends.toString()
+
+    /** 好友数组 */
+    val friendList: Array<com.forte.qqrobot.beans.messages.result.inner.Friend> by lazy {
+        friends.asSequence().map { MiraiFriend(it) as com.forte.qqrobot.beans.messages.result.inner.Friend }.toList().toTypedArray()
+    }
+    /** 好友分组, 无分组信息 */
+    private val friendListMap: MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> by lazy { mutableMapOf("" to friendList) }
+
+    /** 无分组信息 */
+    @Deprecated("just getFriendList()", ReplaceWith("friendList"))
+    override fun getFirendList(group: String?): Array<com.forte.qqrobot.beans.messages.result.inner.Friend> = friendList
+
+    /** 无分组信息 */
+    @Deprecated("just getFriendList()")
+    override fun getFriendList(): MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> = friendListMap
+
+    /** 好友信息 */
+    inner class MiraiFriend(val friend: Friend): com.forte.qqrobot.beans.messages.result.inner.Friend {
+        override fun getQQ(): String = friend.id.toString()
+        override fun getOriginalData(): String = toString()
+        override fun toString(): String = friend.toString()
+        override fun getName(): String = friend.nick
+    }
+
+}
+
+
+/** 禁言列表 */
+class MiraiGroupBanList(group: Group): BanList {
+
+    /** 禁言列表 */
+    private val banList: Array<BanInfo> by lazy {
+        group.members.asSequence().filter { it.isMuted }.map { MiraiGroupBanInfo(it) as BanInfo }.toList().toTypedArray()
+    }
+
+    /** 获取原本的数据 originalData  */
+    override fun getOriginalData(): String? = null
+
+    /**
+     * 获取列表, 极度不建议返回为null
+     * non-null
+     */
+    override fun getList(): Array<BanInfo> = banList
+
+}
+
+/** 禁言信息 */
+class MiraiGroupBanInfo(val member: Member): BanInfo {
+    /**
+     * 被禁言者的QQ
+     */
+    override fun getQQ(): String = member.id.toString()
+    /** 获取原本的数据 originalData  */
+    override fun getOriginalData(): String = member.toString()
+
+    override fun toString(): String = member.toString()
+
+    /**
+     * 是否为管理员
+     */
+    override fun isManager(): Boolean = member.permission.isOperator()
+
+    /**
+     * 被禁言成员昵称
+     */
+    override fun getNickName(): String = member.nameCardOrNick
+    /**
+     * 禁言剩余时间
+     */
+    override fun lastTime(): Long = member.muteTimeRemaining.toLong()
+}
+
+
 
 
 

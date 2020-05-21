@@ -51,6 +51,8 @@ suspend fun main() {
  * @see MessageSubscribersBuilder
  */
 fun Bot.messageDSL() {
+
+
     // 监听这个 bot 的来自所有群和好友的消息
     this.subscribeMessages {
         // 当接收到消息 == "你好" 时就回复 "你好!"

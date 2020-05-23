@@ -6,29 +6,33 @@
 
 
 ## 特性
+
 - 内置`v1.4-1.13`版本的`CQCodeUtils`模组来代替核心内部自带的CQCodeUtil工具.
 
 - 接收到的绝大部分`CQ码`都是从`mirai码`转化而来。
 而从`mirai码`转化而来的`CQ码`与原版CQ码有一定的区别，例如`at`类型的CQ码, 正常情况下为`[CQ:at,qq=12345678]`，而转化而来的则是`[CQ:at,at=12345678]`
 此问题可能会逐步改善，但是还请注意情况，增加一层判断。
 
-- 图片暂时没法复读？
+- 为了兼容Mirai的特性与simbot的特性，此组件内置了部分缓存类以缓存一些信息，例如请求的request和image等
 
-- 为了兼容Mirai的特性与simbot，此组件内置了部分缓存类以缓存一些信息，例如请求的request和image等
+## Mirai版本
+目前使用的mirai版本为：**`1.0-RC`**
+
+
 
 ## 支持内容
 目前测试了：
 - 私信的复读（文本、表情、图片）
 - 群聊被at情况下的复读（文本、表情、图片）
 - 启动的时候主动发送消息（`after()`）
-- 主动发送图片（以本地路径的cq码类型发送，例如`KQCodeUtils.INSTANCE.toCq("image", "file=C:\\Users\\Administrator\\Desktop\\123.jpg")`）
+- 主动发送图片（以本地路径的cq码类型发送，例如`KQCodeUtils.INSTANCE.toCq("image", "file=C:\\Users\\Administrator\\Desktop\\123.jpg")` 即 `[CQ:image,file=C:\\Users\\Administrator\\Desktop\\123.jpg]`）
 - 根据返回值的快捷回复：
-    - Message消息相关中，返回值为`Map`类型的时候，会获取key = "reply"的作为快捷回复值。
+    - Message消息相关(私信、群聊事件)中，返回值为`Map`类型的时候，会获取key = "reply"的作为快捷回复值。
+    
+    
 - 多账号登录
 - 群消息撤回监听（mirai没有提供用户撤回的消息的具体msg内容的获取方法，因此撤回消息的`getMsg()`方法所得到的值会通过simbot组件进行缓存，如果监听到的撤回消息的缓存已过期或者其发送是在程序未启动的时候发送的，则只能获取到null。）
-- 私聊撤回暂不支持
-
-- 撤回监听需要等下一次核心更新
+- 私聊撤回监听暂不支持
 
 ## 注意事项
 - 尽可能使用`KQCodeUtils`来代替`CQCodeUtil`。使Mirai兼容simbot已经损失了很多性能了，CQ码方面就换相对高效一点的工具吧。

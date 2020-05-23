@@ -4,7 +4,6 @@ import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
 import net.mamoe.mirai.utils.BotConfiguration
-import java.util.*
 
 /**
  * Mirai配置类

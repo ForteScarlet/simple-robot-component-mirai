@@ -4,9 +4,7 @@ import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
 import net.mamoe.mirai.event.events.*
-import net.mamoe.mirai.event.subscribe
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.event.subscribeFriendMessages
 import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent

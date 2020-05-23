@@ -11,7 +11,6 @@ import com.forte.qqrobot.listener.invoker.ListenerFilter
 import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
-import com.simbot.component.mirai.messages.MiraiBaseMsgGet
 import com.simbot.component.mirai.messages.MiraiMessageGet
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking

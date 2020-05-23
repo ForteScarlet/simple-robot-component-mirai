@@ -9,7 +9,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.alsoLogin
-import net.mamoe.mirai.closeAndJoin
 import net.mamoe.mirai.join
 import net.mamoe.mirai.utils.BotConfiguration
 import java.util.concurrent.ConcurrentHashMap

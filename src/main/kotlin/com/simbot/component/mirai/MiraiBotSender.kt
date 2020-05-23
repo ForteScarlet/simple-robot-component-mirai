@@ -9,10 +9,10 @@ import com.forte.qqrobot.sender.senderlist.BaseRootSenderList
 import com.simbot.component.mirai.messages.*
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.mute
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
-import java.lang.IllegalArgumentException
 
 
 /**

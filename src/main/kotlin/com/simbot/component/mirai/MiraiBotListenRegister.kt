@@ -163,7 +163,6 @@ suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent) {
 fun MiraiBotInfo.register(msgProcessor: MsgProcessor) {
     val bot = this.bot
 
-
     //region 消息监听相关事件
 
     bot.subscribeMessages {

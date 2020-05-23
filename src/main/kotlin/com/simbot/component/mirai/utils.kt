@@ -78,7 +78,7 @@ fun KQCode.toMessage(contact: Contact): Message {
         //endregion
 
         //region face
-        "face" ->  Face(this["id"]!!.toInt())
+        "face" ->  Face((this["id"] ?: this["face"])!!.toInt())
         //endregion
 
 
@@ -89,10 +89,15 @@ fun KQCode.toMessage(contact: Contact): Message {
             // file文件，可能是本地的或者网络的
             val image: Image = if(file.startsWith("http")){
                 // 网络图片 阻塞上传
-                runBlocking { contact.uploadImage(URL(file)) }
+                runBlocking {
+                    contact.uploadImage(URL(file)).also {  ImageCache[file] = it }
+                }
             }else{
+                // 先查询缓存中有没有这个东西
                 // 本地文件
-                runBlocking { contact.uploadImage(File(file)) }
+               ImageCache[file] ?: runBlocking {
+                   contact.uploadImage(File(file)).also { ImageCache[file] = it }
+               }
             }
             // 如果是闪照则转化
             return if(this["destruct"] == "true"){
@@ -251,6 +256,11 @@ object MiraiCodeFormatUtils {
                 // Voice，toString为url
                 is Voice -> "[mirai:voice:${it.url}]"
 
+                // image, 缓存Image并替换image参数为file
+                is Image -> {
+                    ImageCache[it.imageId] = it
+                    it.toString()
+                }
                 // 其他情况，直接toString()
                 else -> it.toString()
             }
@@ -393,18 +403,6 @@ object RequestCache {
         val id = request.botId()
         val key = request.toKey()
         joinRequestCacheMap.cache(id, key, request)
-//        // 获取缓存map
-//        val cacheMap = joinRequestCacheMap.computeIfAbsent(id) { CacheMap() }
-//        // 缓存30分钟
-//        cacheMap.putPlusMinutes(key, request, CACHE_TIME)
-//
-//        // 计数+1, 如果大于100，清除缓存
-//        if(counter.addAndGet(1) >= 100){
-//            counter.set(0)
-//            synchronized(cacheMap){
-//                cacheMap.detect()
-//            }
-//        }
         return key
     }
 
@@ -416,18 +414,6 @@ object RequestCache {
         val key = request.toKey()
         // 缓存30分钟
         joinRequestCacheMap.cache(id, key, request)
-//        // 获取缓存map
-//        val cacheMap = joinRequestCacheMap.computeIfAbsent(id) { CacheMap() }
-//        // 缓存30分钟
-//        cacheMap.putPlusMinutes(key, request, CACHE_TIME)
-//
-//        // 计数+1, 如果大于100，清除缓存
-//        if(counter.addAndGet(1) >= 100){
-//            counter.set(0)
-//            synchronized(cacheMap){
-//                cacheMap.detect()
-//            }
-//        }
         return key
     }
 
@@ -482,6 +468,40 @@ object RequestCache {
  * 图片缓存器
  */
 object ImageCache {
+    // image缓存map
+    @JvmStatic
+    private val imageCacheMap = CacheMap<String, Image>()
+
+    private const val CACHE_TIME: Long = 30
+
+    /** 计数器，当计数器达到100的时候，触发缓存清除 */
+    @JvmStatic
+    private val counter: AtomicInteger = AtomicInteger(0)
+    /** 获取 */
+    @JvmStatic
+    operator fun get(key: String): Image? {
+        // 获取缓存, 并刷新时间
+        val image = imageCacheMap[key] ?: return null
+        imageCacheMap.putPlusMinutes(key, image, CACHE_TIME)
+        return image
+    }
+
+    /** 记录一个map */
+    @JvmStatic
+    operator fun set(key: String, image: Image): Image? {
+        val putImage = imageCacheMap.putPlusMinutes(key, image, CACHE_TIME)
+        if(counter.addAndGet(1) > 100){
+            counter.set(0)
+            imageCacheMap.detect()
+        }
+        return putImage
+
+    }
+
+    /** 进行缓存 */
+    @JvmStatic
+    fun cache(key: String, image: Image): Image? = this.set(key, image)
+
 
 }
 

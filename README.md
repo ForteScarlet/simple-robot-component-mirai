@@ -1,5 +1,7 @@
 # simple-robot mirai组件
 
+[![](https://img.shields.io/badge/simple--robot-core-green)](https://github.com/ForteScarlet/simple-robot-core) [![](https://img.shields.io/maven-central/v/love.forte.simple-robot-component/component-mirai)](https://search.maven.org/artifact/love.forte.simple-robot-component/component-mirai)
+
 基于 **`simple-robot-core`** 核心框架，对接 **`Mirai`** 的qqandroid库
 
 
@@ -33,6 +35,20 @@
 - Image对象可以使用`ImageCache`得到，默认情况下，内部会默认对你发送的和接收到的Image类进行缓存，时效30分钟，每次获取会刷新其时间。
 - 与请求相关(request)的event实例（例如好友申请实例`NewFriendRequestEvent`）同样会被缓存，时效30分钟，获取不会刷新时间。
 - 配置文件中的`core.bots`格式不变，但是code不再可以省略了。格式为：`${账号1}:${密码1},${账号2}:${密码2},.....`，如果密码中存在：`\`或者`,`，则使用`\\`和`\,`进行转义。
+
+- 下载Mirai相关库的时候可以添加额外的仓库地址：
+```xml
+<repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
+        <repository>
+            <id>bintray</id>
+            <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
+        </repository>
+</repositories>
+```
 
 <br>
 

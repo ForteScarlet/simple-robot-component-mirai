@@ -7,6 +7,7 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
     <version>0.1-1.13</version>
+
     <properties>
         <kotlin.version>1.3.70</kotlin.version>
         <cqcodeUtils.version>1.4.1-1.13</cqcodeUtils.version>
@@ -15,6 +16,12 @@
         <kotlinx.version>1.3.5</kotlinx.version>
     </properties>
 
+    <name>simple-robot-component-mirai</name>
+    <description>a simple-robot component for mirai</description>
+    <scm>
+        <url>https://www.kancloud.cn/forte-scarlet/simple-coolq-doc/content</url>
+    </scm>
+    <url>https://github.com/ForteScarlet/simple-robot-component-mirai</url>
 
     <dependencies>
         <!-- 默认集成cqCodeUtils模组 -->
@@ -70,14 +77,14 @@
 
     <!-- 额外的仓库 -->
     <repositories>
-        <repository>
-            <id>jcenter</id>
-            <url>https://jcenter.bintray.com/</url>
-        </repository>
-        <repository>
-            <id>bintray</id>
-            <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
-        </repository>
+       <repository>
+           <id>jcenter</id>
+           <url>https://jcenter.bintray.com/</url>
+       </repository>
+       <repository>
+           <id>bintray</id>
+           <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
+       </repository>
     </repositories>
 
     <build>

@@ -9,7 +9,7 @@
     <version>0.1-1.13</version>
     <properties>
         <kotlin.version>1.3.70</kotlin.version>
-        <cqcodeUtils.version>1.4-1.13</cqcodeUtils.version>
+        <cqcodeUtils.version>1.4.1-1.13</cqcodeUtils.version>
         <mirai.version>1.0-RC</mirai.version>
         <simple-robot-core.version>1.13.1</simple-robot-core.version>
         <kotlinx.version>1.3.5</kotlinx.version>

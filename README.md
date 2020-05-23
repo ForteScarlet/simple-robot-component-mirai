@@ -20,6 +20,8 @@
 - 群聊被at情况下的复读（文本、表情、图片）
 - 启动的时候主动发送消息（`after()`）
 - 主动发送图片（以本地路径的cq码类型发送，例如`KQCodeUtils.INSTANCE.toCq("image", "file=C:\\Users\\Administrator\\Desktop\\123.jpg")`）
+- 根据返回值的快捷回复：
+    - Message消息相关中，返回值为`Map`类型的时候，会获取key = "reply"的作为快捷回复值。
 
 - 撤回监听需要等下一次核心更新
 

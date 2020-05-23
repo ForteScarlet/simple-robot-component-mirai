@@ -167,6 +167,8 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor) {
 
     bot.subscribeMessages {
         this.always {
+            // 首先缓存此消息
+            RecallCache.cache(this.source)
             val result = when (this) {
                 // 好友消息
                 is FriendMessageEvent -> {

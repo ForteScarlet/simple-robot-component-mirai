@@ -1,9 +1,6 @@
 package com.simbot.component.mirai
 
-import com.forte.qqrobot.BaseApplication
-import com.forte.qqrobot.MsgParser
-import com.forte.qqrobot.MsgProcessor
-import com.forte.qqrobot.SimpleRobotContext
+import com.forte.qqrobot.*
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
@@ -25,7 +22,9 @@ import java.io.Closeable
 import java.util.concurrent.Executors
 import java.util.function.Function
 
-/** mirai的context */
+/**
+ * mirai的context
+ */
 class MiraiContext(
         sender: MiraiBotSender,
         setter: MiraiBotSender,
@@ -51,6 +50,12 @@ class MiraiContext(
     }
 
 }
+
+/**
+ * mirai app
+ */
+interface MiraiApp: Application<MiraiConfiguration>
+
 
 /**
  *

@@ -285,28 +285,13 @@ object MiraiCodeFormatUtils {
 object RecallCache {
     /** botCacheMap */
     @JvmStatic
-    private val botCacheMap: MutableMap<Long, CacheMap<String, MessageSource>> = ConcurrentHashMap()
+    private val botCacheMap: MutableMap<Long, LRUCacheMap<String, MessageSource>> = ConcurrentHashMap()
 
     /** 计数器，当计数器达到100的时候，触发缓存清除 */
     @JvmStatic
     private val counter: AtomicInteger = AtomicInteger(0)
 
     private const val CACHE_TIME: Long = 30
-
-//    /** 缓存，消息记录10分钟 */
-//    @JvmStatic
-//    fun cache(receipt: MessageReceipt<*>): String {
-//        val source = receipt.source
-//        val id = source.bot.id
-//        val keyType: String = when(receipt.target){
-//            is Group -> "G"
-//            is Friend -> "F"
-//            is Member -> "M"
-//            else -> "N"
-//        }
-//        val key = keyType + source.id.toString()
-//        return cache(key, source)
-//    }
 
     /** 缓存消息记录 */
     @JvmStatic
@@ -325,9 +310,9 @@ object RecallCache {
      */
     private fun cache(botId: Long, id: String, source: MessageSource): String{
         // 获取缓存map
-        val cacheMap = botCacheMap.computeIfAbsent(botId) { CacheMap() }
+        val cacheMap = botCacheMap.computeIfAbsent(botId) { LRUCacheMap() }
 
-        // 缓存10分钟
+        // 缓存
         cacheMap.putPlusMinutes(id, source, CACHE_TIME)
 
         // 计数+1, 如果大于100，清除缓存
@@ -361,11 +346,11 @@ object RecallCache {
 object RequestCache {
     /** botCacheMap */
     @JvmStatic
-    private val friendRequestCacheMap: MutableMap<Long, CacheMap<String, NewFriendRequestEvent>> = ConcurrentHashMap()
+    private val friendRequestCacheMap: MutableMap<Long, LRUCacheMap<String, NewFriendRequestEvent>> = ConcurrentHashMap()
 
     /** 可能是[MemberJoinRequestEvent] 其他人入群 或者 [BotInvitedJoinGroupRequestEvent] 被邀请入群 */
     @JvmStatic
-    private val joinRequestCacheMap: MutableMap<Long, CacheMap<String, Any>> = ConcurrentHashMap()
+    private val joinRequestCacheMap: MutableMap<Long, LRUCacheMap<String, Any>> = ConcurrentHashMap()
 
     private const val CACHE_TIME: Long = 30
 
@@ -418,8 +403,8 @@ object RequestCache {
     }
 
     /** 进行缓存 */
-    private fun <V> MutableMap<Long, CacheMap<String, V>>.cache(botId: Long, key: String, value: V){
-        val cacheMap = this.computeIfAbsent(botId) { CacheMap() }
+    private fun <V> MutableMap<Long, LRUCacheMap<String, V>>.cache(botId: Long, key: String, value: V){
+        val cacheMap = this.computeIfAbsent(botId) { LRUCacheMap() }
         // 缓存30分钟
         cacheMap.putPlusMinutes(key, value, CACHE_TIME)
 

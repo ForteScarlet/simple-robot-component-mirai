@@ -507,6 +507,10 @@ abstract class MiraiMessageRecallEvent<out MRE: MessageRecallEvent>(event: MRE):
  */
 open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
 
+    private val recallMessage = RecallCache.get("${event.messageId}.${event.messageInternalId}.${event.messageTime}", event.bot.id)
+
+    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage)
+
     private val groupId by lazy { event.group.id.toString() }
     private val operatorId by lazy { event.getOperatorId().toString() }
 
@@ -537,7 +541,6 @@ open class MiraiPrivateRecall(event: MessageRecallEvent.FriendRecall): MiraiMess
      */
     override fun getQQCode(): String = authorId
     override fun getQQCodeNumber(): Long = event.authorId
-
 }
 //endregion
 //endregion

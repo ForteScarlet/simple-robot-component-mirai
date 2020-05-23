@@ -1,8 +1,10 @@
 package com.simbot.component.mirai
 
 import com.forte.qqrobot.BaseConfiguration
+import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
 import net.mamoe.mirai.utils.BotConfiguration
+import java.util.*
 
 /**
  * Mirai配置类
@@ -45,6 +47,32 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         }
     }
 
+    /**
+     * 获取预先注册的bot信息。
+     */
+    override fun getAdvanceBotInfo(): MutableMap<String, MutableList<BotInfo>> { // 如果没有任何信息，注册一个127:5700的默认地址
+        // 将数据转化为map，key为bot的账号（如果存在的话）
+        // 不存在账号信息的，key将会为null，只有key为null的时候，list才可以有多个参数，其余情况下，一个key只能对应一个地址。
+        val botInfoMap: MutableMap<String, MutableList<BotInfo>> = mutableMapOf()
+        // 不注册多次相同的code
+        val pathSet: MutableSet<String> = mutableSetOf()
+
+        for ((code, botInfo) in advanceBotInfo) {
+            val botInfos = botInfoMap.computeIfAbsent(code) { mutableListOf() }
+                if (botInfos.size > 0) { // 已经存在bot信息，抛出异常
+                    throw ConfigurationException("Cannot register the same code multiple times: $code")
+                } else {
+                    // 有code
+                    if (pathSet.add(code)) { // 保存成功，无重复code，则记录这个botInfo
+                        botInfos.add(botInfo)
+                    } else {
+                        throw ConfigurationException("Cannot register the same code multiple times: $code")
+                    }
+                }
+        }
+        // 返回最终结果
+        return botInfoMap
+    }
 
 }
 

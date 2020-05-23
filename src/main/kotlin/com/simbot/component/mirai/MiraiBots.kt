@@ -5,6 +5,7 @@ import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotSender
 import com.forte.qqrobot.bot.LoginInfo
 import com.simbot.component.mirai.messages.MiraiLoginInfo
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.alsoLogin
@@ -100,7 +101,10 @@ object MiraiBots {
     /** 等待所有bot下线 */
     suspend fun joinAll(){
         while(bots.isNotEmpty()){
-            bots.forEach{ it.value.join() }
+            delay(2000)
+            bots.forEach{
+                it.value.join()
+            }
         }
     }
 
@@ -185,7 +189,6 @@ class MiraiBotInfo(private val id: String,
         // 关闭bot，并移除其相关信息
         runBlocking {
             bot.close()
-            MiraiBots.remove(id)
         }
     }
 

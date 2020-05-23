@@ -9,7 +9,7 @@
     <version>0.1-1.13</version>
     <properties>
         <kotlin.version>1.3.70</kotlin.version>
-        <cqcodeUtils.version>1.3-1.12</cqcodeUtils.version>
+        <cqcodeUtils.version>1.4-1.13</cqcodeUtils.version>
         <mirai.version>1.0-RC</mirai.version>
         <simple-robot-core.version>1.13.1</simple-robot-core.version>
         <kotlinx.version>1.3.5</kotlinx.version>
@@ -17,7 +17,7 @@
 
 
     <dependencies>
-        <!-- 使用cqcode模组 -->
+        <!-- 默认集成cqCodeUtils模组 -->
         <dependency>
             <groupId>io.github.ForteScarlet.simple-robot-module</groupId>
             <artifactId>mod-cqcodeutils</artifactId>
@@ -305,73 +305,73 @@
         </plugins>
     </build>
 
-<!--    &lt;!&ndash; maven相关配置 &ndash;&gt;-->
-<!--    <licenses>-->
-<!--        <license>-->
-<!--            <name>The Apache License, Version 2.0</name>-->
-<!--            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>-->
-<!--        </license>-->
-<!--    </licenses>-->
+    <!-- maven相关配置 -->
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
 
-<!--    &lt;!&ndash; 开发者信息 &ndash;&gt;-->
-<!--    <developers>-->
-<!--        <developer>-->
-<!--            <roles>-->
-<!--                <role>a single programmer</role>-->
-<!--            </roles>-->
-<!--            <name>ForteScarlet</name>-->
-<!--            &lt;!&ndash; 项目开发者的email &ndash;&gt;-->
-<!--            <email>ForteScarlet@163.com</email>-->
-<!--        </developer>-->
-<!--    </developers>-->
+    <!-- 开发者信息 -->
+    <developers>
+        <developer>
+            <roles>
+                <role>a single programmer</role>
+            </roles>
+            <name>ForteScarlet</name>
+            <!-- 项目开发者的email -->
+            <email>ForteScarlet@163.com</email>
+        </developer>
+    </developers>
 
 
-<!--    <distributionManagement>-->
-<!--        <snapshotRepository>-->
-<!--            <id>oss</id>-->
-<!--            <url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
-<!--        </snapshotRepository>-->
-<!--        <repository>-->
-<!--            <id>oss</id>-->
-<!--            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
-<!--        </repository>-->
-<!--    </distributionManagement>-->
+    <distributionManagement>
+        <snapshotRepository>
+            <id>oss</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>oss</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
 
-<!--    <profiles>-->
-<!--        <profile>-->
-<!--            <id>release</id>-->
-<!--            <build>-->
-<!--                <plugins>-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.sonatype.plugins</groupId>-->
-<!--                        <artifactId>nexus-staging-maven-plugin</artifactId>-->
-<!--                        <version>1.6.7</version>-->
-<!--                        <extensions>true</extensions>-->
-<!--                        <configuration>-->
-<!--                            <serverId>oss</serverId>-->
-<!--                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
-<!--                            <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.apache.maven.plugins</groupId>-->
-<!--                        <artifactId>maven-gpg-plugin</artifactId>-->
-<!--                        <version>1.5</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>sign-artifacts</id>-->
-<!--                                <phase>verify</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>sign</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                    </plugin>-->
-<!--                </plugins>-->
-<!--            </build>-->
-<!--        </profile>-->
-<!--    </profiles>-->
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>oss</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.5</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

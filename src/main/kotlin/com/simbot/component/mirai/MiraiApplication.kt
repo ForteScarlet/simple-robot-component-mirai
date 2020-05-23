@@ -14,7 +14,8 @@ import com.forte.qqrobot.listener.invoker.ListenerFilter
 import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
-import com.simbot.component.mirai.messages.MiraiMsgGet
+import com.simbot.component.mirai.messages.MiraiBaseMsgGet
+import com.simbot.component.mirai.messages.MiraiMessageGet
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
@@ -97,12 +98,12 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     }
 
     /**
-     * 注册Mirai的at判断，追加当为[MiraiMsgGet]的时候的判断
+     * 注册Mirai的at判断，追加当为[MiraiMessageGet]的时候的判断
      */
     private fun registerMiraiAtFilter(){
         ListenerFilter.updateAtDetectionFunction { old ->
             Function { msg ->
-                if(msg is MiraiMsgGet){
+                if(msg is MiraiMessageGet<*>){
                     AtDetection { msg.message.firstIsInstanceOrNull<At>()?.target == msg.event.bot.id }
                 }else{
                     old.apply(msg)
@@ -124,26 +125,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         return Function {
             //            var bot: Bot
             var contact: Contact? = null
-            if (it is MiraiMsgGet) {
+            if (it is MiraiMessageGet<*>) {
                 contact = it.contact
-//                bot = contact.bot
             }
-//            else{
-//                // 不是MiraiMsgGet，获取bot
-//                val botId: String? = it.thisCode
-//                if(botId != null){
-//                    val botInfo = MiraiBots[botId]
-//                    if(botInfo != null){
-//                        bot = botInfo.bot
-//                    }else{
-//                        // error
-//                        throw NoSuchElementException("cannot found bot id $botId")
-//                    }
-//                }else{
-//                    // error
-//                    throw NoSuchElementException("cannot found bot id null")
-//                }
-//            }
             MultipleMiraiBotSender(contact, it, botManager, conf)
         }
     }
@@ -195,11 +179,12 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         MiraiBots.startListen(msgProcessor)
 
 //         在一条新线程中执行挂起，防止程序终止
-        Thread {
+        Thread({
             runBlocking(Executors.newFixedThreadPool(1).asCoroutineDispatcher()) {
                 MiraiBots.joinAll()
             }
-        }.start()
+            QQLog.debug("bots all shundown")
+        }, "Mirai-bot-join").start()
 
         return "mirai bot server"
     }

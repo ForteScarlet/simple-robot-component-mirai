@@ -121,15 +121,11 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
         // 没有这个人则可能抛出异常
         var to: Contact
         // 默认认为是给好友发消息
-        try {
-            to = bot.getFriend(code)
+        to = try {
+            bot.getFriend(code)
         }catch (fe: NoSuchElementException){
-             // 不是好友, 则可能是当前的contact
-            if(contact != null){
-                to = contact
-            }else{
-                throw fe
-            }
+            // 不是好友, 则可能是当前的contact
+            contact ?: throw fe
         }
         val result = runBlocking {
             to.sendMsg(msg)
@@ -203,14 +199,14 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     /** 处理好友申请 */
     override fun setFriendAddRequest(flag: String, friendName: String, agree: Boolean): Boolean {
         val botId = bot.id
-        val request = RequestCache.getFriendRequest(flag, botId)
+        val request = RequestCache.getFriendRequest(botId, flag)
         return if(request!=null){
             if(agree){
                 runBlocking { bot.acceptNewFriendRequest(request) }
             }else{
                 runBlocking { bot.rejectNewFriendRequest(request) }
             }
-            RequestCache.removeFriendRequest(flag, botId)
+            RequestCache.removeFriendRequest(botId, flag)
             true
             true
         }else{
@@ -221,7 +217,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     /** 处理加群申请 */
     override fun setGroupAddRequest(flag: String, requestType: GroupAddRequestType, agree: Boolean, why: String): Boolean {
         val botId = bot.id
-        val request = RequestCache.getJoinRequest(flag, botId)
+        val request = RequestCache.getJoinRequest(botId, flag)
         return if(request!=null){
             when(request) {
                 // 是加群申请
@@ -233,7 +229,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
                         // 不同意
                         runBlocking { bot.rejectMemberJoinRequest(request) }
                     }
-                    RequestCache.removeJoinRequest(flag, botId)
+                    RequestCache.removeJoinRequest(botId, flag)
                     true
                 }
                 // 是别人的邀请
@@ -245,7 +241,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
                         // 不同意, 即忽略
                         runBlocking { bot.ignoreInvitedJoinGroupRequest(request) }
                     }
-                    RequestCache.removeJoinRequest(flag, botId)
+                    RequestCache.removeJoinRequest(botId, flag)
                     true
                 }
                 else -> { throw IllegalArgumentException("unknown join request type: $request") }

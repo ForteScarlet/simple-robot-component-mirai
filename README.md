@@ -66,7 +66,7 @@
 <dependency>
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
-    <!-- 参考:0.1-1.13 -->
+    <!-- 参考:0.2-1.13 -->
     <version>${version}</version>
 </dependency>
 ```

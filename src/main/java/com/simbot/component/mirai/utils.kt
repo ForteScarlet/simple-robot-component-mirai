@@ -217,6 +217,39 @@ fun KQCode.toMessage(contact: Contact): Message {
         }
         //endregion
 
+        //region xml, for mirai
+        // TODO 增加对XML类型的CQ码做解析
+        "xml" -> {
+            // 解析的参数
+            val action = this["action"] ?: "plugin"
+            val actionData = this["actionData"] ?: ""
+            val brief = this["brief"] ?: ""
+            val flag: Int = this["flag"]?.toInt() ?: 3
+            val url = this["url"] ?: ""
+            val sourceName = this["sourceName"] ?: ""
+            val sourceIconURL = this["sourceIconURL"] ?: ""
+
+            // 构建xml
+            return buildXmlMessage(60) {
+                // 一般为点击这条消息后跳转的链接
+                this.actionData = actionData
+                // action
+                this.action = action
+                /**
+                 * 摘要, 在官方客户端内消息列表中显示
+                 */
+                this.brief = brief
+                this.flag = flag
+                this.url = url
+                // sourceName 好像是名称
+                this.sourceName = sourceName
+                // sourceIconURL 好像是图标
+                this.sourceIconURL = sourceIconURL
+            }
+        }
+        //endregion
+
+
 
 
 

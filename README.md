@@ -95,4 +95,194 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 ```
 
 
-# 施工中...
+## 可解析的CQ码
+此处简述已经支持解析为mirai`Message`的CQ码类型列表.
+参数展示格式为：`\[参数1(1)|参数1(2)](参数1含义)\[参数2](参数2含义)`
+每个中括号(`\[]`)中代表一种参数，中括号后面的括号中为对此参数的描述。
+参数名可能存在一些重名参数，例如at类型中，参数qq与参数at含义相同（例如`\[CQ:at,qq=123456789]`和`\[CQ:at,at=123456789]`）
+则其中，中括号中第一个出现的参数即为推荐参数，例如at中，推荐使用`qq`作为参数名，其次才是`at`
+
+
+- **at**
+
+    参数：\[`qq`|`at`](at的人的QQ号)
+    
+    
+- **face**
+    
+    参数：\[`face`|`id`](face表情的数字ID)
+    
+- **image**    
+
+    参数：\[`file`|`image`](图片的ID或本地文件或网络文件。)\[`destruct`](是否为闪照，参数为true即为闪照，可忽略)
+    
+    注①：file参数中的值，如果为`http`开头则会认定为网络图片。
+    注②：file参数中的值，图片ID一般为接收到的图片的ID，接收到的图片ID存在缓存期，默认缓存30分钟，每次获取此图片则会刷新此时间。也就是说当你30分钟内不再发送此图片，则之后也无法发送了。
+    注③：file参数中的值，在排除了网络图片后，会优先判断缓存，如果缓存中不存在才会去寻找本地文件，并根据本地文件路径将此图片计入缓存。
+    
+    
+    
+- **record**
+
+    参数：无
+    
+    注①：暂不支持发送语音，因此语音会变为`\[语音]`字样的文本消息    
+    
+
+- **rps**    
+
+    参数：无
+        
+    注①：暂不支持发送猜拳，因此语音会变为`\[猜拳]`字样的文本消息    
+        
+    
+- **dice**    
+
+     参数：无
+            
+     注①：暂不支持发送骰子，因此语音会变为`\[骰子]`字样的文本消息    
+
+
+- **shake**
+
+    参数：\[`type`](互动表情的数字类型，如果此参数忽略则会直接使用戳一戳)\[`id`](类型下的数字ID。默认-1)
+    
+    参考(摘自Mirai源码：`HummerMessage.kt`)：     
+    ```kotlin
+               /** 戳一戳 */
+               @JvmField
+               val Poke = PokeMessage("戳一戳", 1, -1)
+       
+               /** 比心 */
+               @JvmField
+               val ShowLove = PokeMessage("比心", 2, -1)
+       
+               /** 点赞  */
+               @JvmField
+               val Like = PokeMessage("点赞", 3, -1)
+       
+               /** 心碎 */
+               @JvmField
+               val Heartbroken = PokeMessage("心碎", 4, -1)
+       
+               /** 666 */
+               @JvmField
+               val SixSixSix = PokeMessage("666", 5, -1)
+       
+               /** 放大招 */
+               @JvmField
+               val FangDaZhao = PokeMessage("放大招", 6, -1)
+       
+               /** 宝贝球 (SVIP) */
+               @JvmField
+               val BaoBeiQiu = PokeMessage("宝贝球", 126, 2011)
+       
+               /** 玫瑰花 (SVIP) */
+               @JvmField
+               val Rose = PokeMessage("玫瑰花", 126, 2007)
+       
+               /** 召唤术 (SVIP) */
+               @JvmField
+               val ZhaoHuanShu = PokeMessage("召唤术", 126, 2006)
+       
+               /** 让你皮 (SVIP) */
+               @JvmField
+               val RangNiPi = PokeMessage("让你皮", 126, 2009)
+       
+               /** 结印 (SVIP) */
+               @JvmField
+               val JieYin = PokeMessage("结印", 126, 2005)
+       
+               /** 手雷 (SVIP) */
+               @JvmField
+               val ShouLei = PokeMessage("手雷", 126, 2004)
+       
+               /** 勾引 */
+               @JvmField
+               val GouYin = PokeMessage("勾引", 126, 2003)
+       
+               /** 抓一下 (SVIP) */
+               @JvmField
+               val ZhuaYiXia = PokeMessage("抓一下", 126, 2001)
+       
+               /** 碎屏 (SVIP) */
+               @JvmField
+               val SuiPing = PokeMessage("碎屏", 126, 2002)
+       
+               /** 敲门 (SVIP) */
+               @JvmField
+               val QiaoMen = PokeMessage("敲门", 126, 2002)
+     ```
+               
+
+- **anonymous**
+
+    参数：无
+    
+    注①：匿名消息暂时无效
+
+
+- **music**
+
+    参数：\[`type`](音乐类型)
+    
+    注①：mirai中没有直接进行的music分享解析，可参考下文的XML类型。
+    注②：后续可能会追加预设解析。
+    注③：目前阶段music类型CQ码会被解析为文本消息：`[$type音乐]`
+    
+    
+- **emoji**    
+
+    参数：\[`id`](emoji的id)
+    
+    注①：emoji直接发送就行，用不着cq码，所以这个类型的CQ码会被解析为文本消息：`emoji($id)`
+    
+
+- **location**
+
+    参数：\[`lat`](纬度)\[`lon`](经度)\[`title`](分享地点的名称)\[`content`](分享地点的具体地址)
+
+    注①：会被直接解析为文本消息：`位置($lat,$lon)[$title]:$content`
+    
+
+- **sign**
+
+    参数：无
+    
+    注①：不支持解析签到，会被直接解析为文本消息：`\[签到]`
+    
+
+- **show**
+
+    参数：无
+    
+    注①：会被直接解析为空消息，即忽略
+
+
+- **contact**
+
+    参数：\[`id`](联系人分享类型)
+    
+    注①：暂不支持此类型解析，可考虑参考XML消息。会被解析为文本消息：`$typeName: $id`
+
+    
+- **xml**    
+    
+    参数：\[`action`](一般为点击这条消息后跳转的链接)\[`actionData`]()\[`brief`](摘要, 在官方客户端内消息列表中显示)\[`flag`]()\[`url`](//TODO: 2019/12/3 unknown)\[`sourceName`](sourceName 好像是名称)\[`sourceIconURL`](sourceIconURL 好像是图标)
+    
+    
+    注①：以上参数都是mirai定义的，有注释的我都写上了
+    
+    
+- **app** 与 **json**
+
+    参数：\[`content`](json内容，默认为`{}`)    
+    
+    注①：因为说json大部分都是小程序类型，因此app与json合并解析，使用的都是`LightApp`类。
+    
+   
+   
+   
+- **其他**
+    
+    其他未提及的直接做toString处理。    

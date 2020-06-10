@@ -217,8 +217,8 @@ fun KQCode.toMessage(contact: Contact): Message {
         }
         //endregion
 
-        //region xml, for mirai
-        // TODO 增加对XML类型的CQ码做解析
+        //region xml message
+        //对XML类型的CQ码做解析
         "xml" -> {
             // 解析的参数
             val action = this["action"] ?: "plugin"
@@ -246,6 +246,15 @@ fun KQCode.toMessage(contact: Contact): Message {
                 // sourceIconURL 好像是图标
                 this.sourceIconURL = sourceIconURL
             }
+        }
+        //endregion
+
+
+        //region lightApp小程序 & json
+        // 一般都是json消息
+        "app","json" -> {
+            val content: String = this["content"] ?: "{}"
+            LightApp(content)
         }
         //endregion
 

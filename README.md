@@ -285,4 +285,6 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
    
 - **其他**
     
-    其他未提及的直接做toString处理。    
+    其他未提及的直接做toString处理。但是你可以追加一些额外的解析规则。
+    你可以通过`CQCodeParsingHandler.registerHandler(type, function)`来注册一个除上述解析以外的任意额外解析。
+    ※ 此类仅存在于Mirai组件中。    

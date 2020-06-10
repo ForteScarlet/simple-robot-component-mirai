@@ -19,6 +19,8 @@ import java.io.File
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.BiFunction
+import java.util.function.Function
 
 
 /**
@@ -264,7 +266,14 @@ fun KQCode.toMessage(contact: Contact): Message {
 
 
         //region else
-        else -> this.toString().toMessage()
+        else -> {
+            val handler = CQCodeParsingHandler[this.type]
+            return if(handler != null){
+                handler(this, contact)
+            }else{
+                this.toString().toMessage()
+            }
+        }
         //endregion
         //endregion
 
@@ -274,6 +283,53 @@ fun KQCode.toMessage(contact: Contact): Message {
 
 }
 
+/**
+ * 可注册的额外解析器
+ */
+object CQCodeParsingHandler {
+
+    /** 注册额外的解析器 */
+    private val otherHandler: MutableMap<String, (KQCode, Contact) -> Message> by lazy { mutableMapOf<String, (KQCode, Contact) -> Message>() }
+
+    /**
+     * get
+     */
+    operator fun get(cqType: String) = otherHandler[cqType]
+
+    /**
+     * set, same as [registerHandler]
+     */
+    operator fun set(cqType: String, handler: BiFunction<KQCode, Contact, Message>) {
+        registerHandler(cqType, handler)
+    }
+
+    /**
+     * Java - 注册一个处理器。
+     */
+    @JvmStatic
+    fun registerHandler(cqType: String, handler: BiFunction<KQCode, Contact, Message>) {
+        if (otherHandler.containsKey(cqType)) {
+            throw CQCodeParseHandlerRegisterException("failed.existed", cqType)
+        }else{
+            otherHandler[cqType] = handler::apply
+        }
+    }
+
+    /**
+     * 获取所有处理器
+     */
+    @JvmStatic
+    fun handlers(): Map<String, (KQCode, Contact) -> Message> = otherHandler.toMap()
+
+    /**
+     * 获取所有处理器
+     */
+    @JvmStatic
+    fun handlersFunc(): Map<String, BiFunction<KQCode, Contact, Message>>   = otherHandler.asSequence().map { em -> em.key to BiFunction<KQCode, Contact, Message> { code, cont -> em.value(code, cont) } }.toMap()
+
+
+
+}
 
 
 

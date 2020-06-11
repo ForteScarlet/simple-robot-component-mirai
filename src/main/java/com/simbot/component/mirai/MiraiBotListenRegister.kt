@@ -208,7 +208,8 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor) {
 
         // 新好友申请事件监听
         bot.subscribeAlways<NewFriendRequestEvent> {
-            val result = MiraiNewFriendRequestEvent(this).onMsg(msgProcessor)
+            val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this)
+            val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
             // try to quick reply
             result.quickReply(this)
         }

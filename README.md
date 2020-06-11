@@ -66,7 +66,7 @@
 <dependency>
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
-    <!-- 参考:0.2-1.13 -->
+    <!-- 参考:0.4-1.13 -->
     <version>${version}</version>
 </dependency>
 ```
@@ -281,6 +281,11 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
     注①：因为说json大部分都是小程序类型，因此app与json合并解析，使用的都是`LightApp`类。
     
    
+- **quote** 
+
+    参数：\[`id`|`quote`](引用回复的消息ID)
+    
+    注①：使用方法即创建"quote"类型的CQ码放在消息开头即可。参数id为需要回复的消息的id。由于消息存在缓存，因此接收到消息30分钟内有效。例如：`\[CQ:quote,id={msgId}]`
    
    
 - **其他**

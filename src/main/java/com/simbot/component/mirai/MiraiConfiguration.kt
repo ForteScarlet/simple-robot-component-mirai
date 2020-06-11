@@ -7,7 +7,9 @@ import net.mamoe.mirai.utils.BotConfiguration
 
 /**
  * Mirai配置类
- * 暂时没什么能配置的
+ *
+ * 可以配置各个缓存类的信息
+ *
  */
 class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     /** mirai官方配置类，默认为其默认值 */

@@ -4,6 +4,7 @@ import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotSender
 import com.forte.qqrobot.bot.LoginInfo
+import com.forte.qqrobot.log.QQLog
 import com.simbot.component.mirai.messages.MiraiLoginInfo
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -87,7 +88,12 @@ object MiraiBots {
         // 初始化
         this.msgProcessor = msgProcessor
         // 等待区注册监听
-        noListenBots.forEach{ registerListen(it.value) }
+        noListenBots.forEach{
+            registerListen(it.value)
+            val bot = it.value.bot
+            QQLog.debug("run.cache.contact", bot.id)
+            ContactCache.cache(bot)
+        }
         // 清空等待区
         noListenBots.clear()
     }

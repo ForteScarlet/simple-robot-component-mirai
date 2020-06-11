@@ -1,10 +1,10 @@
 package com.simbot.component.mirai
 
-import com.forte.utils.collections.CacheMap
 import com.simplerobot.modules.utils.KQCode
 import com.simplerobot.modules.utils.KQCodeUtils
 import com.simplerobot.modules.utils.MQCodeUtils
 import kotlinx.coroutines.runBlocking
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
@@ -458,7 +458,12 @@ object MiraiCodeFormatUtils {
             }
 
 
-            else -> MQCodeUtils.toMqCode(this.toString()).toKQCode()
+            else -> {
+                val string = this.toString()
+                return if(string.trim().startsWith("[mirai:")){
+                    MQCodeUtils.toMqCode(string).toKQCode().toString()
+                }else string
+            }
         }
         return kqCode.toString()
     }
@@ -467,241 +472,9 @@ object MiraiCodeFormatUtils {
 
 }
 
+/** at全体的KQCode */
 object AtAllKQCode: KQCode("at", "qq" to "all")
 
 
-
-/** 缓存撤回消息用的id，每一个bot都有一个Map */
-object RecallCache {
-    /** botCacheMap */
-    @JvmStatic
-    private val botCacheMap: MutableMap<Long, LRUCacheMap<String, MessageSource>> = ConcurrentHashMap()
-
-    /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
-    private val counter: AtomicInteger = AtomicInteger(0)
-
-    private const val CACHE_TIME: Long = 30
-
-    /** 缓存消息记录 */
-    @JvmStatic
-    fun cache(receipt: MessageReceipt<*>): String = cache(receipt.source)
-
-    /** 缓存消息记录 */
-    @JvmStatic
-    fun cache(source: MessageSource): String {
-        val id = source.bot.id
-        val key = source.toCacheKey()
-        return cache(id, key, source)
-    }
-
-    /**
-     * 记录一个缓存
-     */
-    private fun cache(botId: Long, key: String, source: MessageSource): String{
-        // 获取缓存map
-        val cacheMap = botCacheMap.computeIfAbsent(botId) { LRUCacheMap() }
-
-        // 缓存
-        cacheMap.putPlusMinutes(key, source, CACHE_TIME)
-
-        // 计数+1, 如果大于100，清除缓存
-        if(counter.addAndGet(1) >= 100){
-            counter.set(0)
-            synchronized(cacheMap){
-                cacheMap.detect()
-            }
-        }
-        return key
-    }
-
-
-    /** 获取缓存 */
-    @JvmStatic
-    fun get(key: String, botId: Long): MessageSource? {
-        // 获取缓存值，可能为null
-        return botCacheMap[botId]?.get(key)
-    }
-
-    /** 移除缓存 */
-    @JvmStatic
-    fun remove(key: String, botId: Long): MessageSource? {
-        // 获取缓存值，可能为null
-        return botCacheMap[botId]?.remove(key)
-    }
-
-}
-
-
-fun MessageSource.toCacheKey() = "${this.id}.${this.internalId}.${this.time}"
-
-
-/** 缓存请求相关消息用的id，每一个bot都有一个Map */
-object RequestCache {
-    /** botCacheMap */
-    @JvmStatic
-    private val friendRequestCacheMap: MutableMap<Long, LRUCacheMap<String, NewFriendRequestEvent>> = ConcurrentHashMap()
-
-    /** 可能是[MemberJoinRequestEvent] 其他人入群 或者 [BotInvitedJoinGroupRequestEvent] 被邀请入群 */
-    @JvmStatic
-    private val joinRequestCacheMap: MutableMap<Long, LRUCacheMap<String, Any>> = ConcurrentHashMap()
-
-    private const val CACHE_TIME: Long = 30
-
-    /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
-    private val counter: AtomicInteger = AtomicInteger(0)
-
-    /** 缓存friend request，消息记录1小时 */
-    @JvmStatic
-    fun cache(request: NewFriendRequestEvent): String {
-        // bot id
-        val id = request.botId()
-        val key = request.toKey()
-        joinRequestCacheMap.cache(id, key, request)
-//        // 获取缓存map
-//        val cacheMap = friendRequestCacheMap.computeIfAbsent(id) { CacheMap() }
-//        // 缓存30分钟
-//        cacheMap.putPlusMinutes(key, request, CACHE_TIME)
-//
-//        // 计数+1, 如果大于100，清除缓存
-//        if(counter.addAndGet(1) >= 100){
-//            counter.set(0)
-//            synchronized(cacheMap){
-//                cacheMap.detect()
-//            }
-//        }
-        return key
-    }
-
-
-    /** 缓存 join request，消息记录1小时 */
-    @JvmStatic
-    fun cache(request: MemberJoinRequestEvent): String {
-        // bot id
-        val id = request.botId()
-        val key = request.toKey()
-        joinRequestCacheMap.cache(id, key, request)
-        return key
-    }
-
-    /** 缓存invited join request，消息记录1小时 */
-    @JvmStatic
-    fun cache(request: BotInvitedJoinGroupRequestEvent): String {
-        // bot id
-        val id = request.botId()
-        val key = request.toKey()
-        // 缓存30分钟
-        joinRequestCacheMap.cache(id, key, request)
-        return key
-    }
-
-    /** 进行缓存 */
-    private fun <V> MutableMap<Long, LRUCacheMap<String, V>>.cache(botId: Long, key: String, value: V){
-        val cacheMap = this.computeIfAbsent(botId) { LRUCacheMap() }
-        // 缓存30分钟
-        cacheMap.putPlusMinutes(key, value, CACHE_TIME)
-
-        // 计数+1, 如果大于100，清除缓存
-        if(counter.addAndGet(1) >= 100){
-            counter.set(0)
-            synchronized(cacheMap){
-                cacheMap.detect()
-            }
-        }
-    }
-
-    /** 获取friend request缓存 */
-    @JvmStatic
-    fun getFriendRequest(botId: Long, key: String): NewFriendRequestEvent? {
-        // 获取缓存值，可能为null
-        return friendRequestCacheMap[botId]?.get(key)
-    }
-
-    /**
-     * 获取join request缓存
-     * 可能是[MemberJoinRequestEvent] 其他人入群 或者 [BotInvitedJoinGroupRequestEvent] 被邀请入群
-     *
-     */
-    @JvmStatic
-    fun getJoinRequest(botId: Long, key: String): Any? {
-        // 获取缓存值，可能为null
-        return joinRequestCacheMap[botId]?.get(key)
-    }
-
-    /** 移除一个friend request */
-    @JvmStatic
-    fun removeFriendRequest(botId: Long, key: String): Any? {
-        return friendRequestCacheMap[botId]?.remove(key)
-    }
-
-    /** 移除一个join request */
-    @JvmStatic
-    fun removeJoinRequest(botId: Long, key: String): Any? {
-        return joinRequestCacheMap[botId]?.remove(key)
-    }
-}
-
-
-/**
- * 图片缓存器
- */
-object ImageCache {
-    // image缓存map
-    @JvmStatic
-    private val imageCacheMap = CacheMap<String, Image>()
-
-    private const val CACHE_TIME: Long = 30
-
-    /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
-    private val counter: AtomicInteger = AtomicInteger(0)
-    /** 获取 */
-    @JvmStatic
-    operator fun get(key: String): Image? {
-        // 获取缓存, 并刷新时间
-        val image = imageCacheMap[key] ?: return null
-        imageCacheMap.putPlusMinutes(key, image, CACHE_TIME)
-        return image
-    }
-
-    /** 记录一个map */
-    @JvmStatic
-    operator fun set(key: String, image: Image): Image? {
-        val putImage = imageCacheMap.putPlusMinutes(key, image, CACHE_TIME)
-        if(counter.addAndGet(1) > 100){
-            counter.set(0)
-            imageCacheMap.detect()
-        }
-        return putImage
-
-    }
-
-    /** 进行缓存 */
-    @JvmStatic
-    fun cache(key: String, image: Image): Image? = this.set(key, image)
-
-
-}
-
-
-
-/** 转化为key */
-fun BotInvitedJoinGroupRequestEvent.toKey(): String = this.eventId.toString()
-
-/** 转化为key */
-fun MemberJoinRequestEvent.toKey(): String = this.eventId.toString()
-
-/** 转化为key */
-fun NewFriendRequestEvent.toKey(): String = this.eventId.toString()
-
-/** 获取botid */
-fun BotInvitedJoinGroupRequestEvent.botId(): Long = this.bot.id
-
-/** 获取botid */
-fun MemberJoinRequestEvent.botId(): Long = this.bot.id
-
-/** 获取botid */
-fun NewFriendRequestEvent.botId(): Long = this.bot.id
 
 

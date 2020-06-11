@@ -10,6 +10,7 @@ import com.simbot.component.mirai.messages.*
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.mute
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
@@ -119,13 +120,21 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
         // 获取QQ号
         val code = QQ.toLong()
         // 没有这个人则可能抛出异常
-        var to: Contact
         // 默认认为是给好友发消息
-        to = try {
+        val to: Contact = try {
             bot.getFriend(code)
         }catch (fe: NoSuchElementException){
-            // 不是好友, 则可能是当前的contact
-            contact ?: throw fe
+            // 不是好友
+            // 如果当前contact是群消息，则尝试获取群员
+            if(contact != null && contact is Group){
+                contact.getOrNull(code) ?: run{
+                    // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
+                    ContactCache[code, bot] ?: throw fe
+                }
+            }else{
+                // 不是好友，开始扫描全群缓存，查询不到缓存则会抛出异常
+               ContactCache[code, bot] ?: throw fe
+            }
         }
         val result = runBlocking {
             to.sendMsg(msg)
@@ -204,10 +213,9 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
             if(agree){
                 runBlocking { bot.acceptNewFriendRequest(request) }
             }else{
-                runBlocking { bot.rejectNewFriendRequest(request) }
+                runBlocking { bot.rejectNewFriendRequest(request, false) }
             }
             RequestCache.removeFriendRequest(botId, flag)
-            true
             true
         }else{
             false

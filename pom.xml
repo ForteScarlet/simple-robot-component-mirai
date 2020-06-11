@@ -6,7 +6,8 @@
 
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
-    <version>0.3-1.13</version>
+
+    <version>0.4-1.13</version>
 
     <properties>
         <kotlin.version>1.3.70</kotlin.version>
@@ -35,6 +36,13 @@
             <groupId>io.github.ForteScarlet</groupId>
             <artifactId>simple-robot-core</artifactId>
             <version>${simple-robot-core.version}</version>
+        </dependency>
+
+        <!-- concurrentlinkedhashmap -->
+        <dependency>
+            <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+            <artifactId>concurrentlinkedhashmap-lru</artifactId>
+            <version>1.4.2</version>
         </dependency>
 
         <!-- https://bintray.com/him188moe/mirai/mirai-core -->

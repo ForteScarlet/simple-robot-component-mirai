@@ -20,7 +20,6 @@ import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BiFunction
-import java.util.function.Function
 
 
 /**
@@ -59,7 +58,7 @@ fun KQCode.toMessage(contact: Contact): Message {
         //region CQ码解析为Message
         //region at
         "at" -> {
-            val id = this["qq"] ?: this["at"] ?: throw IllegalArgumentException("")
+            val id = this["qq"] ?: this["at"] ?: throw CQCodeParamNullPointerException("at", "qq", "at")
             if(id == "all") {
                 AtAll
             } else {
@@ -87,7 +86,7 @@ fun KQCode.toMessage(contact: Contact): Message {
         //region image
         "image" -> {
             // image 类型的CQ码，参数一般是file, destruct
-            val file = this["file"] ?: this["image"] ?: throw NullPointerException("can not found param file or image")
+            val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
             // file文件，可能是本地的或者网络的
             val image: Image = if(file.startsWith("http")){
                 // 网络图片 阻塞上传
@@ -111,8 +110,8 @@ fun KQCode.toMessage(contact: Contact): Message {
         //endregion
 
         //region record
-        "record" -> {
-            // 似乎暂不支持
+        "voice", "record" -> {
+            // 似乎暂不支持，不过可转发
             "[语音]".toMessage()
         }
         //endregion
@@ -261,7 +260,14 @@ fun KQCode.toMessage(contact: Contact): Message {
         //endregion
 
 
-
+        //region quote
+        // 引用回复
+        "quote" -> {
+            val key = this["id"] ?: this["quote"] ?: throw CQCodeParamNullPointerException("quote", "id")
+            val source = RecallCache.get(key, contact.bot.id) ?: return EmptyMessageChain
+            QuoteReply(source)
+        }
+        //endregion
 
 
 
@@ -284,12 +290,22 @@ fun KQCode.toMessage(contact: Contact): Message {
 }
 
 /**
+ * 转化函数
+ */
+@FunctionalInterface
+interface CQCodeHandler: (KQCode, Contact) -> Message, BiFunction<KQCode, Contact, Message> {
+    @JvmDefault
+    override fun apply(code: KQCode, contact: Contact): Message = this.invoke(code, contact)
+}
+
+
+/**
  * 可注册的额外解析器
  */
 object CQCodeParsingHandler {
 
     /** 注册额外的解析器 */
-    private val otherHandler: MutableMap<String, (KQCode, Contact) -> Message> by lazy { mutableMapOf<String, (KQCode, Contact) -> Message>() }
+    private val otherHandler: MutableMap<String, CQCodeHandler> by lazy { mutableMapOf<String, CQCodeHandler>() }
 
     /**
      * get
@@ -299,19 +315,21 @@ object CQCodeParsingHandler {
     /**
      * set, same as [registerHandler]
      */
-    operator fun set(cqType: String, handler: BiFunction<KQCode, Contact, Message>) {
+    internal operator fun set(cqType: String, handler: CQCodeHandler) {
         registerHandler(cqType, handler)
     }
 
     /**
-     * Java - 注册一个处理器。
+     * 注册一个处理器。
+     * @param cqType 要解析的类型
+     * @param handler 解析器
      */
     @JvmStatic
-    fun registerHandler(cqType: String, handler: BiFunction<KQCode, Contact, Message>) {
+    fun registerHandler(cqType: String, handler: CQCodeHandler) {
         if (otherHandler.containsKey(cqType)) {
             throw CQCodeParseHandlerRegisterException("failed.existed", cqType)
         }else{
-            otherHandler[cqType] = handler::apply
+            otherHandler[cqType] = handler
         }
     }
 
@@ -319,15 +337,7 @@ object CQCodeParsingHandler {
      * 获取所有处理器
      */
     @JvmStatic
-    fun handlers(): Map<String, (KQCode, Contact) -> Message> = otherHandler.toMap()
-
-    /**
-     * 获取所有处理器
-     */
-    @JvmStatic
-    fun handlersFunc(): Map<String, BiFunction<KQCode, Contact, Message>>   = otherHandler.asSequence().map { em -> em.key to BiFunction<KQCode, Contact, Message> { code, cont -> em.value(code, cont) } }.toMap()
-
-
+    fun handlers(): Map<String, CQCodeHandler> = otherHandler.toMap()
 
 }
 
@@ -350,32 +360,114 @@ object MiraiCodeFormatUtils {
 
         // 携带mirai码的字符串
         val msgStr = msg.asSequence().map {
-            when(it){
-                // Voice，toString为url
-                is Voice -> "[mirai:voice:${it.url}]"
-
-                // image, 缓存Image并替换image参数为file
-                is Image -> {
-                    ImageCache[it.imageId] = it
-                    it.toString()
-                }
-                // 其他情况，直接toString()
-                else -> it.toString()
-            }
+            it.toCqString()
+//            when(it){
+//                // Voice，toString为url
+//                is Voice -> "[mirai:voice:${it.url}]"
+//
+//                // image, 缓存Image
+//                is Image -> {
+//                    ImageCache[it.imageId] = it
+//                    it.toString()
+//                }
+//
+//                // 其他情况，先直接toString()
+//                else -> it.toString()
+//            }
         }.joinToString("")
 
-        val replaceToCq = MQCodeUtils.replaceToCq(msgStr)
-        // 转化voice类型的CQ码为record
-                .replace("[CQ:voice,voice=", "[CQ:record,file=")
+//        val replaceToCq = MQCodeUtils.replaceToCq(msgStr)
+//        // 转化voice类型的CQ码为record
+//                .replace("[CQ:voice,voice=", "[CQ:record,file=")
         // 移除"source"类型的cq码
-        return KQCodeUtils.removeByType("source", replaceToCq)
+//        return KQCodeUtils.removeByType("source", replaceToCq)
+        return msgStr
     }
 
+
+    fun SingleMessage.toCqString(): String {
+        if(this is MessageSource){
+            return ""
+        }
+        val kqCode: KQCode = when(this){
+            // voice, 转化为record类型的cq码
+            is Voice -> {
+                val voiceMq = MQCodeUtils.toMqCode(this.toString())
+                val value = voiceMq.param
+                val voiceKq = voiceMq.toKQCode()
+                voiceKq.type = "record"
+                voiceKq["file"] = value
+                voiceKq["url"] = this.url
+                voiceKq["fileName"] = this.fileName
+                voiceKq
+            }
+
+            // image, 追加file、url
+            is Image -> {
+                // 缓存image
+                ImageCache[this.imageId] = this
+                val imageMq = MQCodeUtils.toMqCode(this.toString())
+                val value = imageMq.param
+                val imageKq = imageMq.toKQCode()
+                imageKq["file"] = value
+                imageKq["url"] = runBlocking { queryUrl() }
+                if(this is FlashImage){
+                    imageKq["destruct"] = "true"
+                }
+                imageKq
+            }
+
+            is At -> {
+                val atMq = MQCodeUtils.toMqCode(this.toString())
+                val value = atMq.param
+                val atKq = atMq.toKQCode()
+                atKq["qq"] = value
+                atKq["display"] = this.display
+                atKq["target"] = this.target.toString()
+                atKq
+            }
+
+            // at all
+            is AtAll -> AtAllKQCode
+
+            // face -> id
+            is Face -> {
+                val faceMq = MQCodeUtils.toMqCode(this.toString())
+                val value = faceMq.param
+                val faceKq = faceMq.toKQCode()
+                faceKq["id"] = value
+                faceKq
+            }
+
+            // poke message, get id & type
+            is PokeMessage -> {
+                val pokeMq = MQCodeUtils.toMqCode(this.toString())
+                val pokeKq = pokeMq.toKQCode()
+                pokeKq["type"] = this.type.toString()
+                pokeKq["id"] = this.id.toString()
+                pokeKq
+            }
+
+            // 引用
+            is QuoteReply -> {
+                val quoteMq = MQCodeUtils.toMqCode(this.toString())
+                val quoteKq = quoteMq.toKQCode()
+                quoteKq["id"] = this.source.toCacheKey()
+                quoteKq["qq"] = this.source.fromId.toString()
+                quoteKq
+            }
+
+
+            else -> MQCodeUtils.toMqCode(this.toString()).toKQCode()
+        }
+        return kqCode.toString()
+    }
 
 
 
 }
 
+object AtAllKQCode: KQCode("at", "qq" to "all")
 
 
 
@@ -399,19 +491,19 @@ object RecallCache {
     @JvmStatic
     fun cache(source: MessageSource): String {
         val id = source.bot.id
-        val key = "${source.id}.${source.internalId}.${source.time}"
+        val key = source.toCacheKey()
         return cache(id, key, source)
     }
 
     /**
      * 记录一个缓存
      */
-    private fun cache(botId: Long, id: String, source: MessageSource): String{
+    private fun cache(botId: Long, key: String, source: MessageSource): String{
         // 获取缓存map
         val cacheMap = botCacheMap.computeIfAbsent(botId) { LRUCacheMap() }
 
         // 缓存
-        cacheMap.putPlusMinutes(id, source, CACHE_TIME)
+        cacheMap.putPlusMinutes(key, source, CACHE_TIME)
 
         // 计数+1, 如果大于100，清除缓存
         if(counter.addAndGet(1) >= 100){
@@ -420,7 +512,7 @@ object RecallCache {
                 cacheMap.detect()
             }
         }
-        return id
+        return key
     }
 
 
@@ -439,6 +531,10 @@ object RecallCache {
     }
 
 }
+
+
+fun MessageSource.toCacheKey() = "${this.id}.${this.internalId}.${this.time}"
+
 
 /** 缓存请求相关消息用的id，每一个bot都有一个Map */
 object RequestCache {

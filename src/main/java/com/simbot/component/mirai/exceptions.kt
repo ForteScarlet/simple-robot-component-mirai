@@ -33,3 +33,21 @@ open class CQCodeParseHandlerRegisterException: CQCodeParseHandlerException {
     constructor(pointless: Int, message: String?, cause: Throwable?, enableSuppression: Boolean, writableStackTrace: Boolean) : super(pointless, message, cause, enableSuppression, writableStackTrace)
 }
 
+/**
+ * CQCode Param null pointer
+ */
+open class CQCodeParamNullPointerException(type: String, vararg paramNames: String) : NullPointerException(getInfo(type, *paramNames)) {
+    companion object {
+        private fun getInfo(type: String, vararg paramNames: String): String {
+            val msg = "cq code [$type] can not found param "
+            val builder = StringBuilder(msg)
+            paramNames.forEachIndexed {index,paramName ->
+                builder.append("[").append(paramName).append("]")
+                if(index < paramNames.lastIndex){
+                    builder.append(" or ")
+                }
+            }
+            return builder.toString()
+        }
+    }
+}

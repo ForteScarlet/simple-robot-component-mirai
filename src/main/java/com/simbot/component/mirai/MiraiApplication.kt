@@ -31,15 +31,17 @@ class MiraiContext(
         manager: BotManager,
         msgParser: MsgParser,
         processor: MsgProcessor,
-        dependCenter: DependCenter
-) : SimpleRobotContext<MiraiBotSender, MiraiBotSender, MiraiBotSender>(
+        dependCenter: DependCenter,
+        config: MiraiConfiguration
+) : SimpleRobotContext<MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiConfiguration>(
         sender,
         setter,
         getter,
         manager,
         msgParser,
         processor,
-        dependCenter
+        dependCenter,
+        config
 ), Closeable {
      /**
       * close able, close all bots
@@ -148,7 +150,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun getComponentContext(defaultSenders: DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender>,
                                      manager: BotManager,
                                      msgParser: MsgParser, processor: MsgProcessor,
-                                     dependCenter: DependCenter): MiraiContext = MiraiContext(defaultSenders.sender, defaultSenders.getter, defaultSenders.setter, manager, msgParser, processor, dependCenter)
+                                     dependCenter: DependCenter, config: MiraiConfiguration): MiraiContext = MiraiContext(defaultSenders.sender, defaultSenders.getter, defaultSenders.setter, manager, msgParser, processor, dependCenter, config)
 
 
     @Deprecated("just see getDefaultSenders", ReplaceWith("null"))

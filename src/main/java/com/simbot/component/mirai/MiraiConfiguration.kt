@@ -8,7 +8,12 @@ import net.mamoe.mirai.utils.BotConfiguration
 /**
  * Mirai配置类
  *
- * 可以配置各个缓存类的信息
+ * TODO 配置各个缓存类的信息
+ * TODO 配置是否缓存图片信息
+ * TODO 配置是否自动下载图片到本地
+ * TODO 配置是否缓存图片链接到本地
+ * TODO 配置是否自动下载音频到本地
+ * TODO 配置是否缓存音频链接到本地
  *
  */
 class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){

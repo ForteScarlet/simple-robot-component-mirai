@@ -1,6 +1,7 @@
 package com.simbot.component.mirai.messages
 
 import com.forte.qqrobot.beans.messages.msgget.*
+import com.forte.qqrobot.beans.messages.result.StrangerInfo
 import com.forte.qqrobot.beans.messages.types.*
 import com.simbot.component.mirai.MiraiCodeFormatUtils
 import com.simbot.component.mirai.RecallCache
@@ -11,6 +12,7 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.MemberPermission
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.*
+import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
@@ -167,6 +169,7 @@ open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(ev
 
     /** 获取消息的字体  */
     override fun getFont(): String? = null
+
 }
 //endregion
 

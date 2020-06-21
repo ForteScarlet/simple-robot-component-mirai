@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.simbot.component.mirai.messages
 
 import com.forte.qqrobot.beans.messages.result.*
@@ -146,6 +148,34 @@ class MiraiGroupInfo(
 
 
     override fun getHeadUrl(): String = baseGroup.avatarUrl
+
+}
+
+
+/**
+ * 好友信息。
+ */
+class MiraiFriends(val friend: Friend): StrangerInfo {
+    /** QQ号  */
+    override fun getQQ(): String = friend.id.toString()
+
+    /** 获取原本的数据 originalData  */
+    override fun getOriginalData(): String = friend.toString()
+
+    /** 获取名称（昵称）  */
+    override fun getName(): String = friend.nameCardOrNick
+
+    /** 年龄  */
+    @Deprecated("just -1", ReplaceWith("-1"))
+    override fun getAge(): Int = -1
+
+    /** 性别  */
+    @Deprecated("just UNKNOWN", ReplaceWith("SexType.UNKNOWN", "com.forte.qqrobot.beans.messages.types.SexType"))
+    override fun getSex(): SexType = SexType.UNKNOWN
+
+    /** 等级  */
+    @Deprecated("just -1", ReplaceWith("-1"))
+    override fun getLevel(): Int = -1
 
 }
 

@@ -81,9 +81,12 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     /** 群列表 */
     override fun getGroupList(): GroupList = MiraiGroupList(bot.groups)
 
-    /** 陌生人信息 */
-    @Deprecated("Unsupported API: getStrangerInfo")
-    override fun getStrangerInfo(QQ: String?, cache: Boolean): StrangerInfo = super.getStrangerInfo(QQ, cache)
+    /**
+     * 陌生人信息
+     * @param QQ qq号。说是陌生人信息，但是mirai不能获取陌生人的消息，只能获取好友的。
+     * @param cache 此参数无效
+     */
+    override fun getStrangerInfo(QQ: String, cache: Boolean): StrangerInfo = MiraiFriends(bot.getFriend(QQ.toLong()))
 
     /** 获取群文件信息 */
     @Deprecated("Unsupported API: getFileInfo")

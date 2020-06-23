@@ -162,9 +162,6 @@ class MiraiFriends(val friend: Friend): StrangerInfo {
     /** 获取原本的数据 originalData  */
     override fun getOriginalData(): String = friend.toString()
 
-    /** 获取名称（昵称）  */
-    override fun getName(): String = friend.nameCardOrNick
-
     /** 年龄  */
     @Deprecated("just -1", ReplaceWith("-1"))
     override fun getAge(): Int = -1
@@ -176,6 +173,20 @@ class MiraiFriends(val friend: Friend): StrangerInfo {
     /** 等级  */
     @Deprecated("just -1", ReplaceWith("-1"))
     override fun getLevel(): Int = -1
+
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = nickname
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = friend.nick
+
+
 
 }
 
@@ -192,11 +203,6 @@ class MiraiGroupMemberInfo(
 
     /** 群名片  */
     override fun getCard(): String = member.nameCard
-
-    /** qq昵称  */
-    override fun getName(): String = member.nick
-
-    override fun getNickOrName(): String = member.nameCardOrNick
 
     /** 权限类型  */
     override fun getPowerType(): PowerType = member.toPowerType()
@@ -240,15 +246,28 @@ class MiraiGroupMemberInfo(
     @Deprecated("just false", ReplaceWith("false"))
     override fun isBlack(): Boolean = false
 
-    /**  qq昵称  */
-    override fun getNickName(): String = member.nick
-
     /** 获取群号  */
     override fun getCode(): String = member.group.id.toString()
 
     /** 所在城市  */
     @Deprecated("just null", ReplaceWith("null"))
     override fun getCity(): String? = null
+
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = member.nameCard
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = member.nick
+
+
+    override fun getRemarkOrNickname(): String = member.nameCardOrNick
+
 }
 
 
@@ -284,9 +303,6 @@ class MiraiGroupMemberList(
 
         /** 群号  */
         override fun getGroup(): String = member.group.id.toString()
-
-        /** QQ名  */
-        override fun getName(): String = member.nick
 
         /** 等级对应名称  */
         @Deprecated("just null", ReplaceWith("null"))
@@ -325,15 +341,27 @@ class MiraiGroupMemberList(
         @Deprecated("just false", ReplaceWith("false"))
         override fun isBlack(): Boolean = false
 
-        /** 获取群昵称  */
-        override fun getNickName(): String = member.group.name
-
         /** 所在城市  */
         @Deprecated("just null", ReplaceWith("null"))
         override fun getCity(): String? = null
 
         /** 头像  */
         override fun getHeadUrl(): String = member.avatarUrl
+
+        /**
+         * 获取备注信息，例如群备注，或者好友备注。
+         * @return 备注信息
+         */
+        override fun getRemark(): String = member.nameCard
+
+        /**
+         * 可以获取昵称
+         * @return nickname
+         */
+        override fun getNickname(): String = member.nick
+
+
+        override fun getRemarkOrNickname(): String = member.nameCardOrNick
     }
 
 }
@@ -467,6 +495,20 @@ class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
         override fun getOriginalData(): String = toString()
         override fun toString(): String = friend.toString()
         override fun getName(): String = friend.nick
+
+        /**
+         * 获取备注信息，例如群备注，或者好友备注。
+         * @return 备注信息
+         */
+        override fun getRemark(): String = nickname
+
+        override fun getRemarkOrNickname(): String = nickname
+
+        /**
+         * 可以获取昵称
+         * @return nickname
+         */
+        override fun getNickname(): String = friend.nick
     }
 
 }

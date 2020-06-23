@@ -7,10 +7,7 @@ import com.simbot.component.mirai.MiraiCodeFormatUtils
 import com.simbot.component.mirai.RecallCache
 import com.simbot.component.mirai.RequestCache
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.MemberPermission
-import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
@@ -154,8 +151,6 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
 open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(event), PrivateMsg {
 
     override val onTime: Long get() = event.time.toLong()
-//    override val contact: Contact get() = event.sender
-//    override val message: MessageChain get() = event.message
 
     /** 获取发送人的QQ号  */
     override fun getQQ(): String = contact.id.toString()
@@ -169,6 +164,22 @@ open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(ev
 
     /** 获取消息的字体  */
     override fun getFont(): String? = null
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname() = event.senderName
+
+    /**
+     * 获取备注信息
+     * @return 备注信息
+     */
+    override fun getRemark() = nickname
+
+
+    override fun getRemarkOrNickname() = nickname
+
 
 }
 //endregion
@@ -221,6 +232,24 @@ open class MiraiGroupMsg(event: GroupMessageEvent): MiraiMessageGet<GroupMessage
 
     /** 获取消息类型  */
     override fun getType(): GroupMsgType = GroupMsgType.NORMAL_MSG
+
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = event.sender.nameCard
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = event.sender.nick
+
+    /**
+     * nick or card
+     */
+    override fun getRemarkOrNickname(): String = event.sender.nameCardOrNick
+
 }
 
 //endregion

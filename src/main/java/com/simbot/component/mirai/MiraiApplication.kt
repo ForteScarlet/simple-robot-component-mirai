@@ -32,8 +32,9 @@ class MiraiContext(
         msgParser: MsgParser,
         processor: MsgProcessor,
         dependCenter: DependCenter,
-        config: MiraiConfiguration
-) : SimpleRobotContext<MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiConfiguration>(
+        config: MiraiConfiguration,
+        application: MiraiApplication
+) : SimpleRobotContext<MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiConfiguration, MiraiApplication>(
         sender,
         setter,
         getter,
@@ -41,16 +42,10 @@ class MiraiContext(
         msgParser,
         processor,
         dependCenter,
-        config
-), Closeable {
-     /**
-      * close able, close all bots
-     */
-    override fun close() {
-         MiraiBots.closeAll()
-    }
+        config,
+        application
+)
 
-}
 
 /**
  * mirai app
@@ -65,7 +60,7 @@ interface MiraiApp: Application<MiraiConfiguration>
  * @author ForteScarlet <\[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
-class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiContext>() {
+class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
 
     @Deprecated("just see getRootSenderFunction", ReplaceWith("null"))
     override fun getSetter(msgGet: MsgGet?, botManager: BotManager?): MiraiBotSender? = null
@@ -150,7 +145,8 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun getComponentContext(defaultSenders: DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender>,
                                      manager: BotManager,
                                      msgParser: MsgParser, processor: MsgProcessor,
-                                     dependCenter: DependCenter, config: MiraiConfiguration): MiraiContext = MiraiContext(defaultSenders.sender, defaultSenders.getter, defaultSenders.setter, manager, msgParser, processor, dependCenter, config)
+                                     dependCenter: DependCenter, config: MiraiConfiguration): MiraiContext
+            = MiraiContext(defaultSenders.sender, defaultSenders.getter, defaultSenders.setter, manager, msgParser, processor, dependCenter, config, this)
 
 
     @Deprecated("just see getDefaultSenders", ReplaceWith("null"))
@@ -224,8 +220,8 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     /**
      * 当关闭的时候执行的方法，会退出所有的bot，然后执行父类的close
      */
-    override fun close() {
-        botManager.bots().forEach { it.close() }
+    override fun doClose() {
+        MiraiBots.closeAll()
     }
 
 }

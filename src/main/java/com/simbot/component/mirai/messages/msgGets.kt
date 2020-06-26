@@ -1,7 +1,6 @@
 package com.simbot.component.mirai.messages
 
 import com.forte.qqrobot.beans.messages.msgget.*
-import com.forte.qqrobot.beans.messages.result.StrangerInfo
 import com.forte.qqrobot.beans.messages.types.*
 import com.simbot.component.mirai.MiraiCodeFormatUtils
 import com.simbot.component.mirai.RecallCache
@@ -9,7 +8,6 @@ import com.simbot.component.mirai.RequestCache
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.*
-import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
@@ -352,6 +350,7 @@ open class MiraiFriendAddEvent(event: FriendAddEvent): MiraiEventGet<FriendAddEv
  * 群成员增加事件
  */
 open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoinEvent>(event), GroupMemberIncrease {
+
     /** 入群者的ID */
     private val newMemberId by lazy { event.member.id.toString() }
 
@@ -370,9 +369,9 @@ open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoi
     /** 获取ID, 此处含义不大  */
     override fun getId(): String = eventId
 
-    /** 操作者的QQ号，似乎无法湖获取  */
+    /** 操作者的QQ号，似乎无法获取  */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getOperatorQQ(): String? = null
+    override fun getOperatorQQ(): String? = DeprecatedAPI.memberJoinOperatorQQ
 
     /** 获取类型  */
     override fun getType(): IncreaseType = increaseType

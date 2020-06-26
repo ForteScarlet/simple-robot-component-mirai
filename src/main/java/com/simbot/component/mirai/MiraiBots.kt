@@ -42,13 +42,13 @@ object MiraiBots {
      * 尝试获取一个bot，如果获取不到则会尝试构建一个。
      * 需要在从BotManager中验证存在后在通过此获取，否则BotManager中可能会缺失
      */
-    fun get(info: BotInfo, botConfiguration: BotConfiguration = BotConfiguration.Default): MiraiBotInfo {
+    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration = { BotConfiguration.Default }): MiraiBotInfo {
         val id = info.botCode
         // 构建一个，构建失败会抛出异常
         val miraiBotInfo = bots[id]
         return if(miraiBotInfo == null){
             // 不存在，尝试获取
-            val newBotInfo = MiraiBotInfo(info, botConfiguration)
+            val newBotInfo = MiraiBotInfo(info, botConfiguration(id))
             // 注册/等待并返回
             registerOrWait(newBotInfo)
             newBotInfo
@@ -91,7 +91,7 @@ object MiraiBots {
         noListenBots.forEach{
             registerListen(it.value)
             val bot = it.value.bot
-            QQLog.debug("run.cache.contact", bot.id)
+            QQLog.debug("run.cache.contact", bot.id.toString())
             ContactCache.cache(bot)
         }
         // 清空等待区

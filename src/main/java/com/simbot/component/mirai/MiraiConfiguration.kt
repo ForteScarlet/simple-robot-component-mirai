@@ -1,9 +1,14 @@
 package com.simbot.component.mirai
 
+import cn.hutool.crypto.SecureUtil
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
 import net.mamoe.mirai.utils.BotConfiguration
+import net.mamoe.mirai.utils.ExternalImage
+import net.mamoe.mirai.utils.SystemDeviceInfo
+import kotlin.random.Random
+import kotlin.random.nextInt
 
 /**
  * Mirai配置类
@@ -17,8 +22,24 @@ import net.mamoe.mirai.utils.BotConfiguration
  *
  */
 class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
-    /** mirai官方配置类，默认为其默认值 */
-    val botConfiguration: BotConfiguration = BotConfiguration.Default
+    /**
+     * mirai官方配置类获取函数，默认为其默认值
+     * 函数参数为bot的账号，得到一个config实例
+     * */
+    var botConfiguration: (String) -> BotConfiguration = {
+        code ->
+        val conf = BotConfiguration()
+        conf.deviceInfo = { MiraiSystemDeviceInfo(code) }
+        conf
+    }
+
+    /**
+     * 通过实例设置configuration
+     */
+    fun setBotConfiguration(configuration: BotConfiguration){
+        botConfiguration = { configuration }
+    }
+
 
     /** 账号不可为null */
     override fun registerBot(botCode: String?, path: String?) {
@@ -83,3 +104,61 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
 }
 
 
+/**
+ * [SystemDeviceInfo] 实例，尝试着固定下随机值
+ * @param code bot的账号
+ */
+open class MiraiSystemDeviceInfo
+@JvmOverloads
+constructor(code: String, seed: Long = 1): SystemDeviceInfo() {
+    private val random: Random = Random(code.toLong() * seed)
+
+    override val display: ByteArray = "MIRAI-SIMBOT.200122.001".toByteArray()
+    override val product: ByteArray = "mirai-simbot".toByteArray()
+    override val device: ByteArray = "mirai-simbot".toByteArray()
+    override val board: ByteArray = "mirai-simbot".toByteArray()
+    override val model: ByteArray = "mirai-simbot".toByteArray()
+
+    override val fingerprint: ByteArray =
+            "mamoe/mirai/mirai:10/MIRAI.200122.001/${getRandomString(7, '0'..'9', random)}:user/release-keys".toByteArray()
+    override val bootId: ByteArray = ExternalImage.generateUUID(SecureUtil.md5().digest(getRandomByteArray(16, random))).toByteArray()
+    override val procVersion: ByteArray =
+            "Linux version 3.0.31-${getRandomString(8, random)} (android-build@xxx.xxx.xxx.xxx.com)".toByteArray()
+
+    override val imsiMd5: ByteArray = SecureUtil.md5().digest(getRandomByteArray(16, random))
+    override val imei: String = getRandomString(15, '0'..'9', random)
+}
+
+
+/*
+ * 以下源代码修改自 net.mamoe.mirai.utils.SystemDeviceInfo.kt、
+ *
+ * 原源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license that can be found through the following link.
+ * https://github.com/mamoe/mirai/blob/master/LICENSE
+ */
+
+/**
+ * 生成长度为 [length], 元素为随机 `0..255` 的 [ByteArray]
+ */
+internal fun getRandomByteArray(length: Int, r: Random): ByteArray = ByteArray(length) { r.nextInt(0..255).toByte() }
+
+/**
+ * 随机生成长度为 [length] 的 [String].
+ */
+internal fun getRandomString(length: Int, r: Random): String =
+        getRandomString(length, r, *defaultRanges)
+
+private val defaultRanges: Array<CharRange> = arrayOf('a'..'z', 'A'..'Z', '0'..'9')
+
+/**
+ * 根据所给 [charRange] 随机生成长度为 [length] 的 [String].
+ */
+internal fun getRandomString(length: Int, charRange: CharRange, r: Random): String =
+        String(CharArray(length) { charRange.random(r) })
+
+/**
+ * 根据所给 [charRanges] 随机生成长度为 [length] 的 [String].
+ */
+internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRange): String =
+        String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })

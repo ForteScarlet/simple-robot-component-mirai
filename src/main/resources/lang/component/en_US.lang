@@ -1,2 +1,5 @@
 exception.CQCodeParseHandlerRegister.failed.existed=register failed：{0} existed
 run.cache.contact=Starting to cache contact information for bot [{0}]...
+
+# deprecated api
+mirai.api.deprecated=APIs not supported by mirai: {0}. The default value "{1}" will be returned. This API will only warn once.

@@ -1,2 +1,6 @@
 exception.CQCodeParseHandlerRegister.failed.existed=注册失败：{0} 解析器已存在
 run.cache.contact=开始初始化缓存账号[{0}]的联系人信息...
+
+# deprecated api
+mirai.api.deprecated=mirai不支持的API：{0}. 将会返回默认值"{1}". 此API仅会警告一次。
+

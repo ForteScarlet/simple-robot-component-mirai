@@ -214,9 +214,9 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
         val request = RequestCache.getFriendRequest(botId, flag)
         return if(request!=null){
             if(agree){
-                runBlocking { bot.acceptNewFriendRequest(request) }
+                runBlocking { request.accept() }
             }else{
-                runBlocking { bot.rejectNewFriendRequest(request, false) }
+                runBlocking { request.reject(false) }
             }
             RequestCache.removeFriendRequest(botId, flag)
             true
@@ -230,15 +230,16 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
         val botId = bot.id
         val request = RequestCache.getJoinRequest(botId, flag)
         return if(request!=null){
+
             when(request) {
                 // 是加群申请
                 is MemberJoinRequestEvent -> {
                     if(agree){
                         // 同意
-                        runBlocking { bot.acceptMemberJoinRequest(request) }
+                        runBlocking { request.accept() }
                     }else{
                         // 不同意
-                        runBlocking { bot.rejectMemberJoinRequest(request) }
+                        runBlocking { request.reject(false) }
                     }
                     RequestCache.removeJoinRequest(botId, flag)
                     true
@@ -247,10 +248,10 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
                 is BotInvitedJoinGroupRequestEvent -> {
                     if(agree){
                         // 同意
-                        runBlocking { bot.acceptInvitedJoinGroupRequest(request) }
+                        runBlocking { request.accept() }
                     }else{
                         // 不同意, 即忽略
-                        runBlocking { bot.ignoreInvitedJoinGroupRequest(request) }
+                        runBlocking { request.ignore() }
                     }
                     RequestCache.removeJoinRequest(botId, flag)
                     true

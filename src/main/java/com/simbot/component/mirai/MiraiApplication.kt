@@ -17,7 +17,6 @@ import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.firstIsInstanceOrNull
-import java.io.Closeable
 import java.util.concurrent.Executors
 import java.util.function.Function
 
@@ -202,7 +201,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         // 如果验证失败，会抛出异常的
         try {
             QQLog.debug("验证账号$code...")
-            return MiraiBotInfo(code, info.path, conf.botConfiguration)
+            return MiraiBotInfo(code, info.path, conf.botConfiguration(code))
         } catch (e: Exception) {
             throw BotVerifyException("failed", e, code, e.localizedMessage)
         }

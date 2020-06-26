@@ -73,14 +73,14 @@ class MiraiGroupInfo(
 
     /** 群类型ID  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getTypeId(): Int = -1
+    override fun getTypeId(): Int = DeprecatedAPI.groupInfoTypeId
 
     /** 群名称  */
     override fun getName(): String = groupName
 
     /** 建群时间  */
     @Deprecated("just -1L", ReplaceWith("-1L"))
-    override fun getCreateTime() = -1L
+    override fun getCreateTime() = DeprecatedAPI.groupInfoCreateTime
 
     /** 入群公告 */
     override fun getBoard(): String = entranceAnnouncement
@@ -90,48 +90,57 @@ class MiraiGroupInfo(
 
     /** 群成员上限  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getMaxMember(): Int = -1
+    override fun getMaxMember(): Int = DeprecatedAPI.groupInfoMaxMember
 
     /** 群搜索类型  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getSearchType(): Int = -1
+    override fun getSearchType(): Int = DeprecatedAPI.groupInfoSearchType
 
-    /** 等级信息  */
+    /**
+     * [getLevelNames]
+     */
+    private val _levelNames: MutableMap<String, String> by DeprecatedAPI.deprecated("GroupInfo.getLevelNames()"){ mutableMapOf<String, String>() }
+
+    /** 等级信息 */
     @Deprecated("just empty", ReplaceWith("mutableMapOf()"))
-    override fun getLevelNames(): MutableMap<String, String> = mutableMapOf()
+    override fun getLevelNames(): MutableMap<String, String> = _levelNames
 
     /** 群等级  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getLevel(): Int = -1
+    override fun getLevel(): Int = DeprecatedAPI.groupInfoLevel
 
     /** 获取群主和管理的QQ与昵称列表  */
     override fun getAdminNickList(): MutableMap<String, String> = managersIdAndNick
 
+
     /** 获取原本的数据 originalData  */
     override fun getOriginalData(): String = toString()
+
 
     override fun toString(): String = baseGroup.toString()
 
     /** 加群方式  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getOpenType(): Int = -1
+    override fun getOpenType(): Int = DeprecatedAPI.groupInfoOpenType
 
     /** 获取群地址、坐标信息  */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getPos(): String? = null
+    override fun getPos(): String? = DeprecatedAPI.groupInfoPos
 
     /** 群成员数量  */
     override fun getMemberNum(): Int = members.size
 
     /** 群类型  */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getType(): String? = null
+    override fun getType(): String? = DeprecatedAPI.groupInfoType
 
     /** 获取群介绍-完整  */
-    override fun getCompleteIntro(): String? = null
+    @Deprecated("just null", ReplaceWith("null"))
+    override fun getCompleteIntro(): String? = DeprecatedAPI.groupInfoCompleteIntro
 
     /** 获取群介绍-简略  */
-    override fun getSimpleIntro(): String? = null
+    @Deprecated("just null", ReplaceWith("null"))
+    override fun getSimpleIntro(): String? = DeprecatedAPI.groupInfoSimpleIntro
 
     /** 群主QQ号  */
     override fun getOwnerQQ(): String = baseGroup.owner.id.toString()
@@ -144,7 +153,7 @@ class MiraiGroupInfo(
 
     /** 获取群标签  */
     @Deprecated("empty", ReplaceWith("emptyArray()"))
-    override fun getTags(): Array<String> = emptyArray()
+    override fun getTags(): Array<String> = DeprecatedAPI.groupInfoTags
 
 
     override fun getHeadUrl(): String = baseGroup.avatarUrl
@@ -164,7 +173,7 @@ class MiraiFriends(val friend: Friend): StrangerInfo {
 
     /** 年龄  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getAge(): Int = -1
+    override fun getAge(): Int = DeprecatedAPI.friendAge
 
     /** 性别  */
     @Deprecated("just UNKNOWN", ReplaceWith("SexType.UNKNOWN", "com.forte.qqrobot.beans.messages.types.SexType"))
@@ -172,7 +181,7 @@ class MiraiFriends(val friend: Friend): StrangerInfo {
 
     /** 等级  */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getLevel(): Int = -1
+    override fun getLevel(): Int = -DeprecatedAPI.friendLevel
 
     /**
      * 获取备注信息，例如群备注，或者好友备注。
@@ -209,22 +218,22 @@ class MiraiGroupMemberInfo(
 
     /** 群成员等级名称  */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getLevelName(): String? = null
+    override fun getLevelName(): String? = DeprecatedAPI.memberLevelName
 
     /** 加群时间  */
     @Deprecated("just -1L", ReplaceWith("-1L"))
-    override fun getJoinTime(): Long = -1L
+    override fun getJoinTime(): Long = DeprecatedAPI.memberJoinTime
 
     /** 头像地址  */
     override fun getHeadImgUrl(): String = member.avatarUrl
 
     /** 获取性别 -1:男，1:女，0:未知   */
     @Deprecated("just unknwon", ReplaceWith("SexType.UNKNOWN", "com.forte.qqrobot.beans.messages.types.SexType"))
-    override fun getSex(): SexType = SexType.UNKNOWN
+    override fun getSex(): SexType = DeprecatedAPI.memberSex
 
     /** 头衔的有效期  */
     @Deprecated("just -1L", ReplaceWith("-1L"))
-    override fun getExTitleTime(): Long = -1L
+    override fun getExTitleTime(): Long = DeprecatedAPI.memberExTitleTime
 
     /** 获取原本的数据 originalData  */
     override fun getOriginalData(): String = toString()
@@ -233,25 +242,25 @@ class MiraiGroupMemberInfo(
 
     /** 是否允许修改群昵称  */
     @Deprecated("just true", ReplaceWith("true"))
-    override fun isAllowChangeNick(): Boolean = true
+    override fun isAllowChangeNick(): Boolean = DeprecatedAPI.memberAllowChangeNick
 
     /** 最后一次发言时间  */
     @Deprecated("just -1L", ReplaceWith("-1L"))
-    override fun getLastTime(): Long = -1L
+    override fun getLastTime(): Long = DeprecatedAPI.memberLastTime
 
     /** 禁言剩余时间  */
     override fun getBanTime(): Long = member.muteTimeRemaining.toLong()
 
     /** 是否为不良用户  */
     @Deprecated("just false", ReplaceWith("false"))
-    override fun isBlack(): Boolean = false
+    override fun isBlack(): Boolean = DeprecatedAPI.memberBlack
 
     /** 获取群号  */
     override fun getCode(): String = member.group.id.toString()
 
     /** 所在城市  */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getCity(): String? = null
+    override fun getCity(): String? = DeprecatedAPI.memberCity
 
     /**
      * 获取备注信息，例如群备注，或者好友备注。
@@ -306,22 +315,22 @@ class MiraiGroupMemberList(
 
         /** 等级对应名称  */
         @Deprecated("just null", ReplaceWith("null"))
-        override fun getLevelName(): String? = null
+        override fun getLevelName(): String? = DeprecatedAPI.memberListLevelName
 
         /** 加群时间  */
         @Deprecated("just -1L", ReplaceWith("-1L"))
-        override fun getJoinTime(): Long? = -1L
+        override fun getJoinTime(): Long? = DeprecatedAPI.memberListJoinTime
 
         /** 获取性别  */
         @Deprecated("just unknown", ReplaceWith("SexType.UNKNOWN", "com.forte.qqrobot.beans.messages.types.SexType"))
-        override fun getSex(): SexType = SexType.UNKNOWN
+        override fun getSex(): SexType = DeprecatedAPI.memberListSex
 
         /** 权限类型  */
         override fun getPower(): PowerType = member.toPowerType()
 
         /** 头衔到期时间  */
         @Deprecated("just -1L", ReplaceWith("-1L"))
-        override fun getExTitleTime(): Long = -1L
+        override fun getExTitleTime(): Long = DeprecatedAPI.memberListExTitleTime
 
         /** 获取原本的数据 originalData  */
         override fun getOriginalData(): String = toString()
@@ -331,19 +340,19 @@ class MiraiGroupMemberList(
 
         /** 是否允许修改群名片  */
         @Deprecated("just true", ReplaceWith("true"))
-        override fun isAllowChangeNick(): Boolean = true
+        override fun isAllowChangeNick(): Boolean = DeprecatedAPI.memberListAllowChangeNick
 
         /** 最后发言时间  */
         @Deprecated("just -1L", ReplaceWith("-1L"))
-        override fun getLastTime(): Long = -1L
+        override fun getLastTime(): Long = DeprecatedAPI.memberListLastTime
 
         /** 是否为不良用户  */
         @Deprecated("just false", ReplaceWith("false"))
-        override fun isBlack(): Boolean = false
+        override fun isBlack(): Boolean = DeprecatedAPI.memberListBlack
 
         /** 所在城市  */
         @Deprecated("just null", ReplaceWith("null"))
-        override fun getCity(): String? = null
+        override fun getCity(): String? = DeprecatedAPI.memberListCity
 
         /** 头像  */
         override fun getHeadUrl(): String = member.avatarUrl
@@ -377,7 +386,7 @@ class MiraiGroupTopNote(val group: Group): GroupTopNote{
      * 发布者QQ
      */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getQQ(): String? = null
+    override fun getQQ(): String? = DeprecatedAPI.groupNoteQQ
 
     /** 获取原本的数据 originalData  */
     override fun getOriginalData(): String = toString()
@@ -389,31 +398,31 @@ class MiraiGroupTopNote(val group: Group): GroupTopNote{
      * 已读人数数量
      */
     @Deprecated("just -1", ReplaceWith("-1"))
-    override fun getReadNum(): Int = -1
+    override fun getReadNum(): Int = DeprecatedAPI.groupNoteReadNum
 
     /**
      * 是否提醒群员修改群名片
      */
     @Deprecated("just false", ReplaceWith("false"))
-    override fun isShowEditCard(): Boolean = false
+    override fun isShowEditCard(): Boolean = DeprecatedAPI.groupNoteShowEditCard
 
     /**
      * 公告类型ID
      */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getTypeId(): String? = null
+    override fun getTypeId(): String? = DeprecatedAPI.groupNoteTypeId
 
     /**
      * ID
      */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getId(): String? = null
+    override fun getId(): String? = DeprecatedAPI.groupNoteId
 
     /**
      * 发布时间
      */
     @Deprecated("just -1L", ReplaceWith("-1L"))
-    override fun getTime(): Long = -1L
+    override fun getTime(): Long = DeprecatedAPI.groupNoteTime
 
     /**
      * 完整正文
@@ -424,7 +433,7 @@ class MiraiGroupTopNote(val group: Group): GroupTopNote{
      * 标题
      */
     @Deprecated("just null", ReplaceWith("null"))
-    override fun getTitle(): String? = null
+    override fun getTitle(): String? = DeprecatedAPI.groupNoteTitle
 
 
 }

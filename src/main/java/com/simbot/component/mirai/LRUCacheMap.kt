@@ -1,7 +1,6 @@
 package com.simbot.component.mirai
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
-import com.googlecode.concurrentlinkedhashmap.Weigher
 import com.googlecode.concurrentlinkedhashmap.Weighers
 import java.time.LocalDateTime
 import java.time.temporal.TemporalAmount

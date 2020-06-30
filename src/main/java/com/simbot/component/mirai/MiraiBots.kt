@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.alsoLogin
+import net.mamoe.mirai.closeAndJoin
 import net.mamoe.mirai.join
 import net.mamoe.mirai.utils.BotConfiguration
 import java.util.concurrent.ConcurrentHashMap
@@ -72,11 +73,7 @@ object MiraiBots {
 
 
     /** 移除一个bot，移除的时候记得登出 */
-    fun remove(id: String): MiraiBotInfo? {
-        val remove = bots.remove(id)
-        remove?.close()
-        return remove
-    }
+    fun remove(id: String): MiraiBotInfo? = bots.remove(id)
 
 
     /** 是否启用了监听，即判断消息处理器是否初始化 */
@@ -145,8 +142,9 @@ class MiraiBotInfo(private val id: String,
     val loginInfo: LoginInfo
 
     init {
-        // 先验证此bot是否已经被注册
-        if(MiraiBots[id] != null){
+        // 先验证此bot是否已经被注册或是否仍然在线
+        val botGet = MiraiBots[id]
+        if(botGet != null && botGet.bot.isOnline){
             // 已经注册
             throw IllegalArgumentException("id [$id] has already login")
         }
@@ -193,7 +191,9 @@ class MiraiBotInfo(private val id: String,
     override fun close() {
         // 关闭bot，并移除其相关信息
         runBlocking {
-            bot.close()
+            // close and remove
+            bot.closeAndJoin()
+            MiraiBots.remove(id)
         }
     }
 

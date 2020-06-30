@@ -139,7 +139,7 @@ object RequestCache {
     }
 
     /** 进行缓存 */
-    private inline fun <V> MutableMap<Long, LRUCacheMap<String, V>>.cache(botId: Long, key: String, value: V){
+    private fun <V> MutableMap<Long, LRUCacheMap<String, V>>.cache(botId: Long, key: String, value: V){
         val cacheMap = this.computeIfAbsent(botId) { LRUCacheMap() }
         // 缓存30分钟
         cacheMap.putPlusMinutes(key, value, CACHE_TIME)

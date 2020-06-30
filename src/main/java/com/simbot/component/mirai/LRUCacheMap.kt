@@ -13,7 +13,9 @@ import java.util.function.BiConsumer
  * 使用LRU的缓存Map
  * @param max 最大值上限
  */
-open class LRUCacheMap<T, R>(initialCapacity: Int = 8, loadFactor: Float = 0.75f, private val max: Long = 102400):
+open class LRUCacheMap<T, R>
+@JvmOverloads
+constructor(initialCapacity: Int = 8, private val max: Long = 102400):
         AbstractMap<T, R>() {
 
     private var lruLinkedMap: MutableMap<T, CacheReturn<R>> = LRULinkedHashMap(initialCapacity, max)
@@ -174,6 +176,7 @@ open class LRUCacheMap<T, R>(initialCapacity: Int = 8, loadFactor: Float = 0.75f
  * LRULinkedHashMap
  * 默认最多缓存`102400`个值
  */
+@Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 open class LRULinkedHashMap<T, R>
 @JvmOverloads
 constructor(initialCapacity: Int = 8, private val maxSize: Long = 102400) :

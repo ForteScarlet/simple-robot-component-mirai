@@ -1,5 +1,7 @@
 package com.simbot.component.mirai
 
+import cn.hutool.core.io.FileUtil
+import cn.hutool.core.io.resource.FileResource
 import com.simplerobot.modules.utils.KQCode
 import com.simplerobot.modules.utils.KQCodeUtils
 import com.simplerobot.modules.utils.MQCodeUtils
@@ -38,7 +40,7 @@ fun String.toWholeMessage(contact: Contact): Message {
            // 如果是CQ码，转化为KQCode并进行处理
            KQCode.of(it).toMessage(contact)
        }else{
-           PlainText(it)
+           it.toMessage()
        }
    }.reduce { acc, msg -> acc + msg }
 }
@@ -81,6 +83,7 @@ fun KQCode.toMessage(contact: Contact): Message {
         "image" -> {
             // image 类型的CQ码，参数一般是file, destruct
             val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
+
             // file文件，可能是本地的或者网络的
             val image: Image = if(file.startsWith("http")){
                 // 网络图片 阻塞上传
@@ -91,7 +94,8 @@ fun KQCode.toMessage(contact: Contact): Message {
                 // 先查询缓存中有没有这个东西
                 // 本地文件
                ImageCache[file] ?: runBlocking {
-                   contact.uploadImage(File(file)).also { ImageCache[file] = it }
+//                   contact.uploadImage(File(file)).also { ImageCache[file] = it }
+                   contact.uploadImage(FileUtil.file(file)).also { ImageCache[file] = it }
                }
             }
             // 如果是闪照则转化
@@ -388,7 +392,7 @@ object MiraiCodeFormatUtils {
             is Voice -> {
                 val voiceMq = MQCodeUtils.toMqCode(this.toString())
                 val value = voiceMq.param
-                val voiceKq = voiceMq.toKQCode()
+                val voiceKq = voiceMq.toKQCode().mutable()
                 voiceKq.type = "record"
                 voiceKq["file"] = value
                 voiceKq["url"] = this.url
@@ -402,7 +406,7 @@ object MiraiCodeFormatUtils {
                 ImageCache[this.imageId] = this
                 val imageMq = MQCodeUtils.toMqCode(this.toString())
                 val value = imageMq.param
-                val imageKq = imageMq.toKQCode()
+                val imageKq = imageMq.toKQCode().mutable()
                 imageKq["file"] = value
                 imageKq["url"] = runBlocking { queryUrl() }
                 if(this is FlashImage){
@@ -414,7 +418,7 @@ object MiraiCodeFormatUtils {
             is At -> {
                 val atMq = MQCodeUtils.toMqCode(this.toString())
                 val value = atMq.param
-                val atKq = atMq.toKQCode()
+                val atKq = atMq.toKQCode().mutable()
                 atKq["qq"] = value
                 atKq["display"] = this.display
                 atKq["target"] = this.target.toString()
@@ -428,7 +432,7 @@ object MiraiCodeFormatUtils {
             is Face -> {
                 val faceMq = MQCodeUtils.toMqCode(this.toString())
                 val value = faceMq.param
-                val faceKq = faceMq.toKQCode()
+                val faceKq = faceMq.toKQCode().mutable()
                 faceKq["id"] = value
                 faceKq
             }
@@ -436,7 +440,7 @@ object MiraiCodeFormatUtils {
             // poke message, get id & type
             is PokeMessage -> {
                 val pokeMq = MQCodeUtils.toMqCode(this.toString())
-                val pokeKq = pokeMq.toKQCode()
+                val pokeKq = pokeMq.toKQCode().mutable()
                 pokeKq["type"] = this.type.toString()
                 pokeKq["id"] = this.id.toString()
                 pokeKq
@@ -445,7 +449,7 @@ object MiraiCodeFormatUtils {
             // 引用
             is QuoteReply -> {
                 val quoteMq = MQCodeUtils.toMqCode(this.toString())
-                val quoteKq = quoteMq.toKQCode()
+                val quoteKq = quoteMq.toKQCode().mutable()
                 quoteKq["id"] = this.source.toCacheKey()
                 quoteKq["qq"] = this.source.fromId.toString()
                 quoteKq

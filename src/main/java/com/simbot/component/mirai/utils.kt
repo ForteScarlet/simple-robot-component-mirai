@@ -1,7 +1,23 @@
+/*
+ * Copyright (c) 2020. ForteScarlet All rights reserved.
+ * Project  component-mirai (Codes other than Mirai)
+ * File     utils.kt (Codes other than Mirai)
+ *
+ * You can contact the author through the following channels:
+ * github https://github.com/ForteScarlet
+ * gitee  https://gitee.com/ForteScarlet
+ * email  ForteScarlet@163.com
+ * QQ     1149159218
+ *
+ * The Mirai code is copyrighted by mamoe-mirai
+ * you can see mirai at https://github.com/mamoe/mirai
+ *
+ *
+ */
+
 package com.simbot.component.mirai
 
 import cn.hutool.core.io.FileUtil
-import cn.hutool.core.io.resource.FileResource
 import com.simplerobot.modules.utils.KQCode
 import com.simplerobot.modules.utils.KQCodeUtils
 import com.simplerobot.modules.utils.MQCodeUtils
@@ -13,7 +29,6 @@ import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.uploadImage
-import java.io.File
 import java.net.URL
 import java.util.function.BiFunction
 

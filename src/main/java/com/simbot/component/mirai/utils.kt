@@ -372,29 +372,7 @@ object MiraiCodeFormatUtils {
         }
 
         // 携带mirai码的字符串
-        val msgStr = msg.asSequence().map {
-            it.toCqString()
-//            when(it){
-//                // Voice，toString为url
-//                is Voice -> "[mirai:voice:${it.url}]"
-//
-//                // image, 缓存Image
-//                is Image -> {
-//                    ImageCache[it.imageId] = it
-//                    it.toString()
-//                }
-//
-//                // 其他情况，先直接toString()
-//                else -> it.toString()
-//            }
-        }.joinToString("")
-
-//        val replaceToCq = MQCodeUtils.replaceToCq(msgStr)
-//        // 转化voice类型的CQ码为record
-//                .replace("[CQ:voice,voice=", "[CQ:record,file=")
-        // 移除"source"类型的cq码
-//        return KQCodeUtils.removeByType("source", replaceToCq)
-        return msgStr
+        return msg.asSequence().map { it.toCqString() }.joinToString("")
     }
 
 
@@ -406,10 +384,8 @@ object MiraiCodeFormatUtils {
             // voice, 转化为record类型的cq码
             is Voice -> {
                 val voiceMq = MQCodeUtils.toMqCode(this.toString())
-                val value = voiceMq.param
                 val voiceKq = voiceMq.toKQCode().mutable()
                 voiceKq.type = "record"
-                voiceKq["file"] = value
                 voiceKq["url"] = this.url
                 voiceKq["fileName"] = this.fileName
                 voiceKq
@@ -420,9 +396,7 @@ object MiraiCodeFormatUtils {
                 // 缓存image
                 ImageCache[this.imageId] = this
                 val imageMq = MQCodeUtils.toMqCode(this.toString())
-                val value = imageMq.param
                 val imageKq = imageMq.toKQCode().mutable()
-                imageKq["file"] = value
                 imageKq["url"] = runBlocking { queryUrl() }
                 if(this is FlashImage){
                     imageKq["destruct"] = "true"
@@ -432,25 +406,18 @@ object MiraiCodeFormatUtils {
 
             is At -> {
                 val atMq = MQCodeUtils.toMqCode(this.toString())
-                val value = atMq.param
                 val atKq = atMq.toKQCode().mutable()
-                atKq["qq"] = value
                 atKq["display"] = this.display
                 atKq["target"] = this.target.toString()
                 atKq
             }
 
             // at all
-            is AtAll -> AtAllKQCode
+            is AtAll -> com.simplerobot.modules.utils.AtAll
+
 
             // face -> id
-            is Face -> {
-                val faceMq = MQCodeUtils.toMqCode(this.toString())
-                val value = faceMq.param
-                val faceKq = faceMq.toKQCode().mutable()
-                faceKq["id"] = value
-                faceKq
-            }
+            is Face -> MQCodeUtils.toMqCode(this.toString()).toKQCode()
 
             // poke message, get id & type
             is PokeMessage -> {
@@ -484,9 +451,6 @@ object MiraiCodeFormatUtils {
 
 
 }
-
-/** at全体的KQCode */
-object AtAllKQCode: KQCode("at", "qq" to "all")
 
 
 

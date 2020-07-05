@@ -117,7 +117,7 @@ abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME): Mi
     override fun getId(): String = msgId
 
 
-    override fun toString(): String = message.contentToString()
+    override fun toString(): String = "mirai content: ${message.contentToString()}"
 }
 
 /**
@@ -148,7 +148,7 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
     /** 获取消息的字体  */
     override fun getFont(): String? = null
 
-    override fun toString(): String = event.toString()
+    override fun toString(): String = "mirai event: $event"
 }
 //endregion
 

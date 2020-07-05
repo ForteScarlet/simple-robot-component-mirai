@@ -8,15 +8,15 @@
     <artifactId>component-mirai</artifactId>
 
     <!-- 1.0.0-1.16 2020/7/3 -->
-    <version>1.0.1-1.16</version>
+    <version>1.0.2-1.16</version>
 
     <properties>
         <kotlin.version>1.3.70</kotlin.version>
-        <cqcodeUtils.version>1.5.0-1.15</cqcodeUtils.version>
+<!--        <cqcodeUtils.version>1.6.0</cqcodeUtils.version>-->
         <mirai.version>1.0.2</mirai.version>
         <hutool.versin>5.3.8</hutool.versin>
 
-        <simple-robot-core.version>1.16.1</simple-robot-core.version>
+        <simple-robot-core.version>1.16.2</simple-robot-core.version>
         <kotlinx.version>1.3.5</kotlinx.version>
     </properties>
 

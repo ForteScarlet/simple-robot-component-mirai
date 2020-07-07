@@ -18,9 +18,7 @@
 package com.simbot.component.mirai
 
 import cn.hutool.core.io.FileUtil
-import com.simplerobot.modules.utils.KQCode
-import com.simplerobot.modules.utils.KQCodeUtils
-import com.simplerobot.modules.utils.MQCodeUtils
+import com.simplerobot.modules.utils.*
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
@@ -28,6 +26,7 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadImage
 import java.net.URL
 import java.util.function.BiFunction
@@ -234,10 +233,9 @@ fun KQCode.toMessage(contact: Contact): Message {
         //region xml message
         //对XML类型的CQ码做解析
         "xml" -> {
+            val xmlCode = this
             // 解析的参数
-            val action = this["action"] ?: "plugin"
-            val actionData = this["actionData"] ?: ""
-            val brief = this["brief"] ?: ""
+//            val action = this["action"] ?: "plugin"
             val flag: Int = this["flag"]?.toInt() ?: 3
             val url = this["url"] ?: ""
             val sourceName = this["sourceName"] ?: ""
@@ -245,20 +243,43 @@ fun KQCode.toMessage(contact: Contact): Message {
 
             // 构建xml
             return buildXmlMessage(60) {
-                // 一般为点击这条消息后跳转的链接
-                this.actionData = actionData
                 // action
-                this.action = action
-                /**
-                 * 摘要, 在官方客户端内消息列表中显示
+                xmlCode["action"]?.also { this.action = it }
+                // 一般为点击这条消息后跳转的链接
+                xmlCode["actionData"]?.also { this.actionData = it }
+                /*
+                   摘要, 在官方客户端内消息列表中显示
                  */
-                this.brief = brief
-                this.flag = flag
-                this.url = url
+                xmlCode["brief"]?.also { this.brief = it }
+                xmlCode["flag"]?.also { this.flag = it.toInt() }
+                xmlCode["url"]?.also { this.url = it }
                 // sourceName 好像是名称
-                this.sourceName = sourceName
+                xmlCode["sourceName"]?.also { this.sourceName = it }
                 // sourceIconURL 好像是图标
-                this.sourceIconURL = sourceIconURL
+                xmlCode["sourceIconURL"]?.also { this.sourceIconURL = it }
+
+                // builder
+//                val keys = xmlCode.params.keys
+
+                this.item {
+                    xmlCode["bg"]?.also { this.bg = it.toInt() }
+                    xmlCode["layout"]?.also { this.layout = it.toInt() }
+                    // picture(coverUrl: String)
+                    xmlCode["picture_coverUrl"]?.also { this.picture(it) }
+                    // summary(text: String, color: String = "#000000")
+                    xmlCode["summary_text"]?.also {
+                        val color: String = xmlCode["summary_color"] ?: "#000000"
+                        this.summary(it, color)
+                    }
+                    // title(text: String, size: Int = 25, color: String = "#000000")
+                    xmlCode["title_text"]?.also {
+                        val size: Int = xmlCode["title_size"]?.toInt() ?: 25
+                        val color: String = xmlCode["title_color"] ?: "#000000"
+                        this.title(it, size, color)
+                    }
+
+                }
+
             }
         }
         //endregion
@@ -272,6 +293,15 @@ fun KQCode.toMessage(contact: Contact): Message {
         }
         //endregion
 
+
+        //region rich 或 service, 对应serviceMessage。
+        "rich", "service" -> {
+            val content: String = this["content"] ?: "{}"
+            // 如果没有serviceId，认为其为lightApp
+            val serviceId: Int = this["serviceId"]?.toInt() ?: return LightApp(content)
+            ServiceMessage(serviceId, content)
+        }
+        //endregion
 
         //region quote
         // 引用回复
@@ -437,7 +467,30 @@ object MiraiCodeFormatUtils {
                 quoteKq
             }
 
+            // 富文本
+            is RichMessage -> when(this) {
+                // app
+                is LightApp -> {
+                    val code = MutableKQCode("app")
+                    code["content"] = this.content
+                    code
+                }
+                // service message
+                is ServiceMessage -> {
+                    val code = MutableKQCode("service")
+                    code["content"] = this.content
+                    code["serviceId"] = this.serviceId.toString()
+                    code
+                }
+                else -> {
+                    val string = this.toString()
+                    return if(string.trim().startsWith("[mirai:")){
+                        MQCodeUtils.toMqCode(string).toKQCode().toString()
+                    }else string
+                }
+            }
 
+            // 其他东西，不做特殊处理
             else -> {
                 val string = this.toString()
                 return if(string.trim().startsWith("[mirai:")){

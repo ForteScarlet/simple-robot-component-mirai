@@ -105,16 +105,20 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
 - **at**
 
-    参数：\[`qq`|`at`](at的人的QQ号)
+    参数：
+    - \[`qq`|`at`](at的人的QQ号)
     
     
 - **face**
     
-    参数：\[`face`|`id`](face表情的数字ID)
+    参数：
+    - \[`face`|`id`](face表情的数字ID)
     
 - **image**    
 
-    参数：\[`file`|`image`](图片的ID或本地文件或网络文件。)\[`destruct`](是否为闪照，参数为true即为闪照，可忽略)
+    参数：
+    - \[`file`|`image`](图片的ID或本地文件或网络文件。)
+    - \[`destruct`](是否为闪照，参数为true即为闪照，可忽略)
     
     注①：file参数中的值，如果为`http`开头则会认定为网络图片。
     注②：file参数中的值，图片ID一般为接收到的图片的ID，接收到的图片ID存在缓存期，默认缓存30分钟，每次获取此图片则会刷新此时间。也就是说当你30分钟内不再发送此图片，则之后也无法发送了。
@@ -145,7 +149,9 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
 - **shake**
 
-    参数：\[`type`](互动表情的数字类型，如果此参数忽略则会直接使用戳一戳)\[`id`](类型下的数字ID。默认-1)
+    参数：
+    - \[`type`](互动表情的数字类型，如果此参数忽略则会直接使用戳一戳)
+    - \[`id`](类型下的数字ID。默认-1)
     
     参考(摘自Mirai源码：`HummerMessage.kt`)：     
     ```kotlin
@@ -224,7 +230,8 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
 - **music**
 
-    参数：\[`type`](音乐类型)
+    参数：
+    - \[`type`](音乐类型)
     
     注①：mirai中没有直接进行的music分享解析，可参考下文的XML类型。
     注②：后续可能会追加预设解析。
@@ -233,14 +240,19 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
     
 - **emoji**    
 
-    参数：\[`id`](emoji的id)
+    参数：
+    - \[`id`](emoji的id)
     
     注①：emoji直接发送就行，用不着cq码，所以这个类型的CQ码会被解析为文本消息：`emoji($id)`
     
 
 - **location**
 
-    参数：\[`lat`](纬度)\[`lon`](经度)\[`title`](分享地点的名称)\[`content`](分享地点的具体地址)
+    参数：
+    - \[`lat`](纬度)
+    - \[`lon`](经度)
+    - \[`title`](分享地点的名称)
+    - \[`content`](分享地点的具体地址)
 
     注①：会被直接解析为文本消息：`位置($lat,$lon)[$title]:$content`
     
@@ -261,29 +273,56 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
 - **contact**
 
-    参数：\[`id`](联系人分享类型)
+    参数：
+    - \[`id`](联系人分享类型)
     
     注①：暂不支持此类型解析，可考虑参考XML消息。会被解析为文本消息：`$typeName: $id`
 
     
 - **xml**    
     
-    参数：\[`action`](一般为点击这条消息后跳转的链接)\[`actionData`]()\[`brief`](摘要, 在官方客户端内消息列表中显示)\[`flag`]()\[`url`](//TODO: 2019/12/3 unknown)\[`sourceName`](sourceName 好像是名称)\[`sourceIconURL`](sourceIconURL 好像是图标)
+    参数：
+    - \[`action`](一般为点击这条消息后跳转的链接)
+    - \[`actionData`]()
+    - \[`brief`](摘要, 在官方客户端内消息列表中显示)
+    - \[`flag`](未知, mirai的XmlMessageBuilder中的可选参数)
+    - \[`url`](//TODO: 2019/12/3 unknown)
+    - \[`sourceName`](sourceName 好像是名称)
+    - \[`sourceIconURL`](sourceIconURL 好像是图标)
+    - \[bg](未知, mirai的XmlMessageBuilder中`item{ this.bg = ... }`的可选参数)
+    - \[layout](未知, mirai的XmlMessageBuilder中`item{ this.layout = ... }`的可选参数)
+    - \[picture_coverUrl](未知, mirai的XmlMessageBuilder中`item{ this.picture(...) }`的可选参数)
+    - \[summary_text](未知, mirai的XmlMessageBuilder中`item{ this.summary(...) }`的的可选参数)
+    - \[summary_color](未知, mirai的XmlMessageBuilder中`item{ this.summary(...) }`的的可选参数)
+    - \[title_text](未知, mirai的XmlMessageBuilder中`item{ this.title(...) }`的的可选参数)
+    - \[title_size](未知, mirai的XmlMessageBuilder中`item{ this.title(...) }`的的可选参数)
+    - \[title_color](未知, mirai的XmlMessageBuilder中`item{ this.title(...) }`的的可选参数)
     
     
     注①：以上参数都是mirai定义的，有注释的我都写上了
+    注②：以上参数还挺多的，我可能会在cqCodeUtils模组或者此组件中提供模板类
     
     
 - **app** 与 **json**
 
-    参数：\[`content`](json内容，默认为`{}`)    
+    参数：
+    - \[`content`](json内容，默认为`{}`)    
     
     注①：因为说json大部分都是小程序类型，因此app与json合并解析，使用的都是`LightApp`类。
     
+    
+- **rich** 与 **service**
+
+    参数：
+    - \[`content`](json内容，默认为`{}`)    
+    - \[`serviceId`](构建`ServiceMessage`所需参数，如果没有则使用`LightApp`进行解析)    
+        
+    注①：一般json还是用LightApp类。
    
 - **quote** 
 
-    参数：\[`id`|`quote`](引用回复的消息ID)
+    参数：
+    - \[`id`|`quote`](引用回复的消息ID)
     
     注①：使用方法即创建"quote"类型的CQ码放在消息开头即可。参数id为需要回复的消息的id。由于消息存在缓存，因此接收到消息30分钟内有效。例如：`\[CQ:quote,id={msgId}]`
    

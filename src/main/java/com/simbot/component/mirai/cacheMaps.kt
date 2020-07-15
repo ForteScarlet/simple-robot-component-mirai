@@ -129,7 +129,7 @@ object RequestCache {
         // bot id
         val id = request.botId()
         val key = request.toKey()
-        joinRequestCacheMap.cache(id, key, request)
+        friendRequestCacheMap.cache(id, key, request)
         return key
     }
 

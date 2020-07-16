@@ -37,8 +37,8 @@ import java.util.function.BiFunction
  * 此处可解析部分CQ码并转化为Message
  * 然后发送此消息
  */
-suspend fun <C: Contact> C.sendMsg(msg: String): MessageReceipt<Contact> {
-    return this.sendMessage(msg.toWholeMessage(this))
+suspend fun <C: Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
+    return this.sendMessage(msg.toWholeMessage(this, cacheMaps))
 }
 
 
@@ -47,12 +47,12 @@ suspend fun <C: Contact> C.sendMsg(msg: String): MessageReceipt<Contact> {
  * 一般解析其中的CQ码
  * 等核心支持CAT码中转后转化为CAT码
  */
-fun String.toWholeMessage(contact: Contact): Message {
+fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 切割，解析CQ码并拼接最终结果
    return KQCodeUtils.split(this).asSequence().map {
        if(it.trim().startsWith("[CQ:")){
            // 如果是CQ码，转化为KQCode并进行处理
-           KQCode.of(it).toMessage(contact)
+           KQCode.of(it).toMessage(contact, cacheMaps)
        }else{
            it.toMessage()
        }
@@ -62,7 +62,7 @@ fun String.toWholeMessage(contact: Contact): Message {
 /**
  * KQCode转化为Message对象
  */
-fun KQCode.toMessage(contact: Contact): Message {
+fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 判断类型，有些东西有可能并不存在与CQ码规范中，例如XML
     return when(this.type) {
         //region CQ码解析为Message
@@ -98,18 +98,20 @@ fun KQCode.toMessage(contact: Contact): Message {
             // image 类型的CQ码，参数一般是file, destruct
             val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
 
+            val imageCache = cacheMaps.imageCache
+
             // file文件，可能是本地的或者网络的
             val image: Image = if(file.startsWith("http")){
                 // 网络图片 阻塞上传
                 runBlocking {
-                    contact.uploadImage(URL(file)).also {  ImageCache[file] = it }
+                    contact.uploadImage(URL(file)).also {  imageCache[file] = it }
                 }
             }else{
                 // 先查询缓存中有没有这个东西
                 // 本地文件
-               ImageCache[file] ?: runBlocking {
+               imageCache[file] ?: runBlocking {
 //                   contact.uploadImage(File(file)).also { ImageCache[file] = it }
-                   contact.uploadImage(FileUtil.file(file)).also { ImageCache[file] = it }
+                   contact.uploadImage(FileUtil.file(file)).also { imageCache[file] = it }
                }
             }
             // 如果是闪照则转化
@@ -307,7 +309,7 @@ fun KQCode.toMessage(contact: Contact): Message {
         // 引用回复
         "quote" -> {
             val key = this["id"] ?: this["quote"] ?: throw CQCodeParamNullPointerException("quote", "id")
-            val source = RecallCache.get(key, contact.bot.id) ?: return EmptyMessageChain
+            val source = cacheMaps.recallCache.get(key, contact.bot.id) ?: return EmptyMessageChain
             QuoteReply(source)
         }
         //endregion
@@ -396,17 +398,17 @@ object MiraiCodeFormatUtils {
      * 字符串替换，替换消息中的`[mirai:`字符串为`[CQ:`
      */
     @JvmStatic
-    fun mi2cq(msg: MessageChain?): String? {
+    fun mi2cq(msg: MessageChain?, cacheMaps: CacheMaps): String? {
         if(msg == null){
             return null
         }
 
         // 携带mirai码的字符串
-        return msg.asSequence().map { it.toCqString() }.joinToString("")
+        return msg.asSequence().map { it.toCqString(cacheMaps) }.joinToString("")
     }
 
 
-    fun SingleMessage.toCqString(): String {
+    fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
         if(this is MessageSource){
             return ""
         }
@@ -424,7 +426,7 @@ object MiraiCodeFormatUtils {
             // image, 追加file、url
             is Image -> {
                 // 缓存image
-                ImageCache[this.imageId] = this
+                cacheMaps.imageCache[this.imageId] = this
                 val imageMq = MQCodeUtils.toMqCode(this.toString())
                 val imageKq = imageMq.toKQCode().mutable()
                 imageKq["url"] = runBlocking { queryUrl() }

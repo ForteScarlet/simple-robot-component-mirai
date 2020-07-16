@@ -12,6 +12,52 @@ public void listenFriendDelete(FriendDelete friendDelete){
 - setFriendAddRequest相关的事件中，friendName参数可以为null了（实际上此参数也属无用参数。）
 - 优化内部部分代码，提高获取CodeNumber的效率(不再有字符串转化了)，移除无意义的lazy(event相关)
 
+- 调整缓存类的使用方式，变更为注入形式，现在你可以通过修改配置文件来配置缓存类的缓存清理临界值和缓存时间了。
+缓存的相关配置如下：
+```properties
+# suppress inspection "UnusedProperty" for whole file
+# RecallCacheConfiguration
+# 消息缓存中，清理缓存临界值, 当计数器达到指定值则触发一次清理
+simbot.mirai.cache.recall.check=1000
+# 缓存时间
+simbot.mirai.cache.recall.cacheTime=3600000
+# 内部缓存的初始容量
+simbot.mirai.cache.recall.initialCapacity=32
+# 缓存的最大容量
+simbot.mirai.cache.recall.max=102400
+
+# RequestCacheConfiguration
+# 以下是请求信息缓存相关的配置，分为好友请求和群请求。
+simbot.mirai.cache.request.check=1000
+simbot.mirai.cache.request.cacheTime=3600000
+simbot.mirai.cache.request.friend.initialCapacity=32
+simbot.mirai.cache.request.friend.max=102400
+simbot.mirai.cache.request.join.initialCapacity=32
+simbot.mirai.cache.request.join.max=102400
+
+# ImageCacheConfiguration
+# 以下是图片信息缓存相关的配置
+simbot.mirai.cache.image.check=1000
+simbot.mirai.cache.image.cacheTime=3600000
+simbot.mirai.cache.image.initialCapacity=32
+simbot.mirai.cache.image.max=102400
+
+# ContactCacheConfiguration
+# 以下是非好友联系人信息缓存相关的配置
+simbot.mirai.cache.contact.check=1000
+simbot.mirai.cache.contact.cacheTime=3600000
+simbot.mirai.cache.contact.initialCapacity=32
+simbot.mirai.cache.contact.max=102400
+```
+
+- 追加配置以选择送信器的送信方式：
+```properties
+# 送信器的类型，目前有两个类型，一个是BLOCK(阻塞), 一个是COROUTINE(协程)。
+# 默认为BLOCK
+# 注意，使用协程模式的时候你无法获取发送的消息的ID等一些相关的返回值信息。
+simbot.mirai.senderType=COROUTINE
+```
+
 
 # 1.0.4-1.16
 - 修复新好友添加事件无效的bug

@@ -156,13 +156,15 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * @return RootSenderList构建函数
      */
     override fun getRootSenderFunction(botManager: BotManager): Function<MsgGet, RootSenderList> {
+        val cacheMaps = dependCenter.get(CacheMaps::class.java)
+        val senderRunner = dependCenter.get(SenderRunner::class.java)
         return Function {
             //            var bot: Bot
             var contact: Contact? = null
             if (it is MiraiMessageGet<*>) {
                 contact = it.contact
             }
-            MultipleMiraiBotSender(contact, it, botManager, conf)
+            MultipleMiraiBotSender(contact, it, botManager, cacheMaps, senderRunner, conf)
         }
     }
 
@@ -198,7 +200,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * @return RootSenderList构建函数
      */
     override fun getDefaultSenders(botManager: BotManager): DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender> {
-        val defaultSender = DefaultMiraiBotSender(null, botManager, conf)
+        val cacheMaps = dependCenter.get(CacheMaps::class.java)
+        val senderRunner = dependCenter.get(SenderRunner::class.java)
+        val defaultSender = DefaultMiraiBotSender(null, cacheMaps, senderRunner, botManager, conf)
         return DefaultSenders(defaultSender, defaultSender, defaultSender)
     }
 
@@ -210,8 +214,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * @return
      */
     override fun runServer(dependCenter: DependCenter, manager: ListenerManager, msgProcessor: MsgProcessor, msgParser: MsgParser): String {
+        val cacheMaps = dependCenter.get(CacheMaps::class.java)
         // 启动服务，即注册监听
-        MiraiBots.startListen(msgProcessor)
+        MiraiBots.startListen(msgProcessor, cacheMaps)
 
 //         在一条新线程中执行挂起，防止程序终止
         Thread({
@@ -231,11 +236,13 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * @param info 用于验证的bot，使用启动的path作为密码来执行登录
      */
     override fun verifyBot(code: String, info: BotInfo): BotInfo {
+        val cacheMaps = dependCenter.get(CacheMaps::class.java)
+        val senderRunner = dependCenter.get(SenderRunner::class.java)
         // 验证账号, 构建一个BotInfo
         // 如果验证失败，会抛出异常的
         try {
             QQLog.debug("验证账号$code...")
-            return MiraiBotInfo(code, info.path, conf.botConfiguration(code))
+            return MiraiBotInfo(code, info.path, conf.botConfiguration(code), cacheMaps, senderRunner)
         } catch (e: Exception) {
             throw BotVerifyException("failed", e, code, e.localizedMessage)
         }

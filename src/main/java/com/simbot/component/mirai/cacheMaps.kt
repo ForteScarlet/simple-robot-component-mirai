@@ -17,6 +17,7 @@
 
 package com.simbot.component.mirai
 
+import com.forte.config.Conf
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
@@ -25,34 +26,67 @@ import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.MessageSource
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+
+/**
+ * 记录缓存库的Data类
+ */
+open class CacheMaps(
+        val recallCache: RecallCache,
+        val requestCache: RequestCache,
+        val imageCache: ImageCache,
+        val contactCache: ContactCache
+)
 
 
 /** 缓存撤回消息用的id，每一个bot都有一个Map */
-object RecallCache {
+open class RecallCache(
+        /**
+         * 清理缓存临界值, 当计数器达到1000则触发一次清理
+         */
+        val check: Int,
+        /**
+         * 默认缓存30分钟
+         */
+        private val cacheTime: Long,
+        /**
+         * 内部缓存的初始容量
+         */
+        private val initialCapacity: Int,
+
+        /**
+         * 缓存的最大容量
+         */
+        private val max: Long
+) {
+    /** by config */
+    constructor(config: RecallCacheConfiguration): this(config.check, config.cacheTime, config.initialCapacity, config.max)
+
     /** botCacheMap */
-    @JvmStatic
+//    @JvmStatic
     private val botCacheMap: MutableMap<Long, LRUCacheMap<String, MessageSource>> = ConcurrentHashMap()
 
     /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
+//    @JvmStatic
     private val counter: AtomicInteger = AtomicInteger(0)
 
     /**
-     * 清理缓存临界值
+     * lru cache
      */
-    private const val CHECK: Int = 1000
-
-    private const val CACHE_TIME: Long = 30
-
-    /** 缓存消息记录 */
-    @JvmStatic
-    fun cache(receipt: MessageReceipt<*>): String = cache(receipt.source)
+    private val lruCacheMap: LRUCacheMap<String, MessageSource>
+    get() = LRUCacheMap(initialCapacity, max)
 
     /** 缓存消息记录 */
-    @JvmStatic
-    fun cache(source: MessageSource): String {
+//    @JvmStatic
+    open fun cache(receipt: MessageReceipt<*>): String = cache(receipt.source)
+
+    /** 缓存消息记录 */
+//    @JvmStatic
+    open fun cache(source: MessageSource): String {
         val id = source.bot.id
         val key = source.toCacheKey()
         return cache(id, key, source)
@@ -63,13 +97,13 @@ object RecallCache {
      */
     private fun cache(botId: Long, key: String, source: MessageSource): String{
         // 获取缓存map
-        val cacheMap = botCacheMap.computeIfAbsent(botId) { LRUCacheMap() }
+        val cacheMap = botCacheMap.computeIfAbsent(botId) { lruCacheMap }
 
         // 缓存
-        cacheMap.putPlusMinutes(key, source, CACHE_TIME)
+        cacheMap.putPlusMinutes(key, source, cacheTime)
 
         // 计数+1, 如果大于100，清除缓存
-        if(counter.addAndGet(1) >= CHECK){
+        if(counter.addAndGet(1) >= check){
             counter.set(0)
             synchronized(botCacheMap){
                 botCacheMap.forEach{it.value.detect()}
@@ -80,15 +114,15 @@ object RecallCache {
 
 
     /** 获取缓存 */
-    @JvmStatic
-    fun get(key: String, botId: Long): MessageSource? {
+//    @JvmStatic
+    open fun get(key: String, botId: Long): MessageSource? {
         // 获取缓存值，可能为null
         return botCacheMap[botId]?.get(key)
     }
 
     /** 移除缓存 */
-    @JvmStatic
-    fun remove(key: String, botId: Long): MessageSource? {
+//    @JvmStatic
+    open fun remove(key: String, botId: Long): MessageSource? {
         // 获取缓存值，可能为null
         return botCacheMap[botId]?.remove(key)
     }
@@ -100,69 +134,100 @@ fun MessageSource.toCacheKey() = "${this.id}.${this.internalId}.${this.time}"
 
 
 /** 缓存请求相关消息用的id，每一个bot都有一个Map */
-object RequestCache {
+open class RequestCache(
+        /**
+         * 清理缓存临界值, 当计数器达到1000则触发一次清理
+         */
+        private val check: Int,
+        /**
+         * 默认缓存5分钟
+         */
+        private val cacheTime: Long,
+        /**
+         * 内部缓存的初始容量
+         */
+        private val friendRequestInitialCapacity: Int,
+        /**
+         * 缓存的最大容量
+         */
+        private val friendRequestMax: Long,
+        /**
+         * 内部缓存的初始容量
+         */
+        private val joinRequestInitialCapacity: Int,
+        /**
+         * 缓存的最大容量
+         */
+        private val joinRequestMax: Long
+) {
+    constructor(config: RequestCacheConfiguration): this(config.check, config.cacheTime, config.friendRequestInitialCapacity, config.friendRequestMax, config.joinRequestInitialCapacity, config.joinRequestMax)
+
     /** botCacheMap */
-    @JvmStatic
+//    @JvmStatic
     private val friendRequestCacheMap: MutableMap<Long, LRUCacheMap<String, NewFriendRequestEvent>> = ConcurrentHashMap()
 
     /** 可能是[MemberJoinRequestEvent] 其他人入群 或者 [BotInvitedJoinGroupRequestEvent] 被邀请入群 */
-    @JvmStatic
+//    @JvmStatic
     private val joinRequestCacheMap: MutableMap<Long, LRUCacheMap<String, Any>> = ConcurrentHashMap()
 
     /**
-     * 清理缓存临界值
+     * [friendRequestCacheMap] 使用的缓存
      */
-    private const val CHECK: Int = 1000
+    private val friendRequestLruCacheMap: LRUCacheMap<String, NewFriendRequestEvent>
+        get() = LRUCacheMap(friendRequestInitialCapacity, friendRequestMax)
 
     /**
-     * 这玩意，只缓存5分钟就行了
+     * [MemberJoinRequestEvent] 使用的缓存
      */
-    private const val CACHE_TIME: Long = 5
+    private val joinRequestLruCacheMap: LRUCacheMap<String, Any>
+        get() = LRUCacheMap(joinRequestInitialCapacity, joinRequestMax)
+
+
 
     /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
+//    @JvmStatic
     private val counter: AtomicInteger = AtomicInteger(0)
 
     /** 缓存friend request，消息记录1小时 */
-    @JvmStatic
-    fun cache(request: NewFriendRequestEvent): String {
+//    @JvmStatic
+    open fun cache(request: NewFriendRequestEvent): String {
         // bot id
         val id = request.botId()
         val key = request.toKey()
-        friendRequestCacheMap.cache(id, key, request)
+        friendRequestCacheMap.cache(id, key, request) { friendRequestLruCacheMap }
         return key
     }
 
 
     /** 缓存 join request，消息记录1小时 */
-    @JvmStatic
-    fun cache(request: MemberJoinRequestEvent): String {
+//    @JvmStatic
+    open fun cache(request: MemberJoinRequestEvent): String {
         // bot id
         val id = request.botId()
         val key = request.toKey()
-        joinRequestCacheMap.cache(id, key, request)
+        joinRequestCacheMap.cache(id, key, request) { joinRequestLruCacheMap }
         return key
     }
 
     /** 缓存invited join request，消息记录1小时 */
-    @JvmStatic
-    fun cache(request: BotInvitedJoinGroupRequestEvent): String {
+//    @JvmStatic
+    open fun cache(request: BotInvitedJoinGroupRequestEvent): String {
         // bot id
         val id = request.botId()
         val key = request.toKey()
         // 缓存30分钟
-        joinRequestCacheMap.cache(id, key, request)
+        joinRequestCacheMap.cache(id, key, request) { joinRequestLruCacheMap }
         return key
     }
 
     /** 进行缓存 */
-    private fun <V> MutableMap<Long, LRUCacheMap<String, V>>.cache(botId: Long, key: String, value: V){
-        val cacheMap = this.computeIfAbsent(botId) { LRUCacheMap() }
+    private inline fun <V> MutableMap<Long, LRUCacheMap<String, V>>.cache(botId: Long, key: String, value: V, crossinline lruFactory: () -> LRUCacheMap<String, V>){
+        val cacheMap = this.computeIfAbsent(botId) { lruFactory() }
         // 缓存30分钟
-        cacheMap.putPlusMinutes(key, value, CACHE_TIME)
+        cacheMap.put(key, value, LocalDateTime.now().plus(cacheTime, ChronoUnit.MILLIS))
 
         // 计数+1, 如果大于100，清除缓存
-        if(counter.addAndGet(1) >= CHECK){
+        if(counter.addAndGet(1) >= check){
             counter.set(0)
             synchronized(this){
                 this.forEach { it.value.detect() }
@@ -171,8 +236,8 @@ object RequestCache {
     }
 
     /** 获取friend request缓存 */
-    @JvmStatic
-    fun getFriendRequest(botId: Long, key: String): NewFriendRequestEvent? {
+//    @JvmStatic
+    open fun getFriendRequest(botId: Long, key: String): NewFriendRequestEvent? {
         // 获取缓存值，可能为null
         return friendRequestCacheMap[botId]?.get(key)
     }
@@ -182,21 +247,21 @@ object RequestCache {
      * 可能是[MemberJoinRequestEvent] 其他人入群 或者 [BotInvitedJoinGroupRequestEvent] 被邀请入群
      *
      */
-    @JvmStatic
-    fun getJoinRequest(botId: Long, key: String): Any? {
+//    @JvmStatic
+    open fun getJoinRequest(botId: Long, key: String): Any? {
         // 获取缓存值，可能为null
         return joinRequestCacheMap[botId]?.get(key)
     }
 
     /** 移除一个friend request */
-    @JvmStatic
-    fun removeFriendRequest(botId: Long, key: String): Any? {
+//    @JvmStatic
+    open fun removeFriendRequest(botId: Long, key: String): Any? {
         return friendRequestCacheMap[botId]?.remove(key)
     }
 
     /** 移除一个join request */
-    @JvmStatic
-    fun removeJoinRequest(botId: Long, key: String): Any? {
+//    @JvmStatic
+    open fun removeJoinRequest(botId: Long, key: String): Any? {
         return joinRequestCacheMap[botId]?.remove(key)
     }
 }
@@ -205,34 +270,49 @@ object RequestCache {
 /**
  * 图片缓存器
  */
-object ImageCache {
-    // image缓存map
-    @JvmStatic
-    private val imageCacheMap by lazy { LRUCacheMap<String, Image>() }
-    /**
-     * 清理缓存临界值
-     */
-    private const val CHECK: Int = 1000
+open class ImageCache(
+        /**
+         * 清理缓存临界值, 当计数器达到1000则触发一次清理
+         */
+        private val check: Int,
+        /**
+         * 默认缓存30分钟
+         */
+        private val cacheTime: Long,
+        /**
+         * 内部缓存的初始容量
+         */
+        private val initialCapacity: Int,
+        /**
+         * 缓存的最大容量
+         */
+        private val max: Long
+) {
+    constructor(config: ImageCacheConfiguration): this(config.check, config.cacheTime, config.initialCapacity, config.max)
 
-    private const val CACHE_TIME: Long = 30
+
+    // image缓存map
+//    @JvmStatic
+    private val imageCacheMap by lazy { LRUCacheMap<String, Image>(initialCapacity, max) }
+
 
     /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
+//    @JvmStatic
     private val counter: AtomicInteger = AtomicInteger(0)
     /** 获取 */
-    @JvmStatic
-    operator fun get(key: String): Image? {
+//    @JvmStatic
+    open operator fun get(key: String): Image? {
         // 获取缓存, 并刷新时间
         val image = imageCacheMap[key] ?: return null
-        imageCacheMap.putPlusMinutes(key, image, CACHE_TIME)
+        imageCacheMap.putPlusMinutes(key, image, cacheTime)
         return image
     }
 
     /** 记录一个map */
-    @JvmStatic
-    operator fun set(key: String, image: Image): Image? {
-        val putImage = imageCacheMap.putPlusMinutes(key, image, CACHE_TIME)
-        if(counter.addAndGet(1) > CHECK){
+//    @JvmStatic
+    open operator fun set(key: String, image: Image): Image? {
+        val putImage = imageCacheMap.putPlusMinutes(key, image, cacheTime)
+        if(counter.addAndGet(1) > check){
             counter.set(0)
             imageCacheMap.detect()
         }
@@ -265,21 +345,40 @@ fun NewFriendRequestEvent.botId(): Long = this.bot.id
 /**
  * 发送消息的缓存器，只会在发送给非当前消息群的人的消息的时候触发缓存
  */
-object ContactCache {
+open class ContactCache(
+        /**
+         * 清理缓存临界值, 当计数器达到1000则触发一次清理
+         */
+        private val check: Int,
+        /**
+         * 默认缓存15分钟
+         */
+        private val cacheTime: Long,
+        /**
+         * 内部缓存的初始容量
+         */
+        private val initialCapacity: Int,
+
+        /**
+         * 缓存的最大容量
+         */
+        private val max: Long
+)
+{
+
+    constructor(config: ContactCacheConfiguration): this(config.check, config.cacheTime, config.initialCapacity, config.max)
 
     // contact缓存map
-    @JvmStatic
+//    @JvmStatic
     private val contactCacheMap: MutableMap<Long, LRUCacheMap<Long, Contact>> by lazy { ConcurrentHashMap<Long, LRUCacheMap<Long, Contact>>() }
 
-    private const val CACHE_TIME: Long = 15
 
-    /**
-     * 清理缓存临界值
-     */
-    private const val CHECK: Int = 1000
+    private val lruCacheMap: LRUCacheMap<Long, Contact>
+    get() = LRUCacheMap(initialCapacity, max)
+
 
     /** 计数器，当计数器达到100的时候，触发缓存清除 */
-    @JvmStatic
+//    @JvmStatic
     private val counter: AtomicInteger = AtomicInteger(0)
 
     /**
@@ -287,8 +386,8 @@ object ContactCache {
      */
     private fun getBotCacheMap(botId: Long): LRUCacheMap<Long, Contact> {
         return contactCacheMap[botId] ?: run {
-            val newMap = LRUCacheMap<Long, Contact>()
-            contactCacheMap.compute(botId) {_, old -> old ?: newMap }
+            val newMap = lruCacheMap
+            contactCacheMap.compute(botId) {_, old -> old ?: lruCacheMap }
             newMap
         }
     }
@@ -296,7 +395,7 @@ object ContactCache {
     /**
      * 缓存所有信息
      */
-    fun cache(bot: Bot) {
+    open fun cache(bot: Bot) {
         val cacheMap = getBotCacheMap(bot.id)
         bot.groups.asSequence().flatMap { g -> g.members.asSequence() }.forEach {
             // 计入缓存
@@ -310,15 +409,15 @@ object ContactCache {
      * @param key 要获取的contact的id
      * @param bot 哪个bot要获取contact，之所以是bot是因为如果获取不到的话要用bot来缓存信息
      */
-    @JvmStatic
-    operator fun get(key: Long, bot: Bot): Contact? {
+//    @JvmStatic
+    open operator fun get(key: Long, bot: Bot): Contact? {
         val botId = bot.id
         // 此bot的缓存map
         val cacheMap = getBotCacheMap(botId)
         // 获取缓存
         return cacheMap[key]?.also {
             // 如果存在，刷新其缓存时间
-            cacheMap.putPlusMinutes(key, it, CACHE_TIME)
+            cacheMap.putPlusMinutes(key, it, cacheTime)
         } ?: run {
             // 查询不到，尝试遍历并缓存所有的群聊群员。
             var find: Contact? = null
@@ -331,7 +430,7 @@ object ContactCache {
                 cacheMap.putIfAbsent(memberId, it)
             }
             // 此时进行缓存清理计数
-            if(counter.addAndGet(1) > CHECK){
+            if(counter.addAndGet(1) > check){
                 counter.set(0)
                 synchronized(contactCacheMap){
                     contactCacheMap.forEach { it.value.detect() }

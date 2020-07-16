@@ -22,6 +22,7 @@ import com.forte.qqrobot.beans.messages.QQCodeAble
 import com.forte.qqrobot.beans.messages.msgget.*
 import com.forte.qqrobot.beans.messages.result.StrangerInfo
 import com.forte.qqrobot.beans.messages.types.*
+import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.MiraiCodeFormatUtils
 import com.simbot.component.mirai.RecallCache
 import com.simbot.component.mirai.RequestCache
@@ -96,7 +97,7 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(open val event: E): MsgGet {
  *
  * 且实现[MsgGet]接口
  */
-abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME): MiraiBaseMsgGet<ME>(event) {
+abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME, private val cacheMaps: CacheMaps): MiraiBaseMsgGet<ME>(event) {
 //    protected open val messageEvent = event
 
     /**
@@ -108,10 +109,10 @@ abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME): Mi
     val message: MessageChain get() = event.message
 
     /** 消息id */
-    private val msgId: String = RecallCache.cache(message.source)
+    private val msgId: String = cacheMaps.recallCache.cache(message.source)
 
     /** 消息正文，目前会将mirai码替换为CQ码 */
-    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(message)
+    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(message, cacheMaps)
 
     // bot id
     override var botId: String = contact.bot.id.toString()
@@ -169,7 +170,7 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
  * Mirai的好友消息事件
  * @param event 监听到的事件
  */
-open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(event), PrivateMsg {
+open class MiraiFriendMsg(event: MessageEvent, cacheMaps: CacheMaps): MiraiMessageGet<MessageEvent>(event, cacheMaps), PrivateMsg {
 
     override val onTime: Long get() = event.time.toLong()
 
@@ -210,7 +211,7 @@ open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(ev
 /**
  * 群临时会话消息，同样属于私信
  */
-open class MiraiTempMsg(event: TempMessageEvent): MiraiFriendMsg(event) {
+open class MiraiTempMsg(event: TempMessageEvent, cacheMaps: CacheMaps): MiraiFriendMsg(event, cacheMaps) {
     override fun getType(): PrivateMsgType = PrivateMsgType.FROM_GROUP
     override fun getCodeNumber(): Long = event.sender.id
 }
@@ -222,7 +223,7 @@ open class MiraiTempMsg(event: TempMessageEvent): MiraiFriendMsg(event) {
  * Mirai的群消息事件
  * @param event 监听到的事件
  */
-open class MiraiGroupMsg(event: GroupMessageEvent): MiraiMessageGet<GroupMessageEvent>(event), GroupMsg {
+open class MiraiGroupMsg(event: GroupMessageEvent, cacheMaps: CacheMaps): MiraiMessageGet<GroupMessageEvent>(event, cacheMaps), GroupMsg {
 
 //    override val messageEvent: GroupMessageEvent = event
 
@@ -283,7 +284,7 @@ open class MiraiGroupMsg(event: GroupMessageEvent): MiraiMessageGet<GroupMessage
 /**
  * bot被邀请入群事件
  */
-open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupRequestEvent): MiraiEventGet<BotInvitedJoinGroupRequestEvent>(eventEvent), GroupAddRequest {
+open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<BotInvitedJoinGroupRequestEvent>(eventEvent), GroupAddRequest {
     private val invitorId = eventEvent.invitorId.toString()
     private val groupId = eventEvent.groupId.toString()
 
@@ -298,7 +299,7 @@ open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupR
     override fun getId(): String = flag
 
     /** 获取标识  */
-    override fun getFlag(): String = RequestCache.cache(event)
+    override fun getFlag(): String = cacheMaps.requestCache.cache(event)
 
     /** 加群类型，此处为被邀请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.INVITE
@@ -309,7 +310,7 @@ open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupR
 /**
  * 加群申请
  */
-open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent): MiraiEventGet<MemberJoinRequestEvent>(eventEvent), GroupAddRequest {
+open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<MemberJoinRequestEvent>(eventEvent), GroupAddRequest {
     private val fromId = event.fromId.toString()
     private val groupId = event.groupId.toString()
 
@@ -324,7 +325,7 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent): Mira
     override fun getId(): String = flag
 
     /** 获取标识  */
-    override fun getFlag(): String = RequestCache.cache(event)
+    override fun getFlag(): String = cacheMaps.requestCache.cache(event)
 
     /** 加群类型，此处为申请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.ADD
@@ -336,9 +337,9 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent): Mira
 /**
  * 好友添加申请
  */
-open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent): MiraiEventGet<NewFriendRequestEvent>(eventEvent), FriendAddRequest {
+open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<NewFriendRequestEvent>(eventEvent), FriendAddRequest {
     private val fromId = event.fromId.toString()
-    private val requestFlag = RequestCache.cache(eventEvent)
+    private val requestFlag = cacheMaps.requestCache.cache(eventEvent)
 
     /** 请求人QQ  */
     override fun getQQ(): String = fromId
@@ -549,11 +550,11 @@ abstract class MiraiMessageRecallEvent<out MRE: MessageRecallEvent>(event: MRE):
 /**
  * 群消息撤回
  */
-open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
+open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall, private val cacheMaps: CacheMaps): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
 
-    private val recallMessage = RecallCache.get("${event.messageId}.${event.messageInternalId}.${event.messageTime}", event.bot.id)
+    private val recallMessage = cacheMaps.recallCache.get("${event.messageId}.${event.messageInternalId}.${event.messageTime}", event.bot.id)
 
-    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage)
+    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage, cacheMaps)
 
     private val groupId = event.group.id.toString()
     private val operatorId = event.getOperatorId().toString()

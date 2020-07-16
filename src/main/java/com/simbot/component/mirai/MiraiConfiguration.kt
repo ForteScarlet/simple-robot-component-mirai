@@ -18,6 +18,7 @@
 package com.simbot.component.mirai
 
 import cn.hutool.crypto.SecureUtil
+import com.forte.config.Conf
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
@@ -30,15 +31,14 @@ import kotlin.random.nextInt
 /**
  * Mirai配置类
  *
- * TODO 配置各个缓存类的信息
- * TODO 配置是否缓存图片信息
- * TODO 配置是否自动下载图片到本地
- * TODO 配置是否缓存图片链接到本地
- * TODO 配置是否自动下载音频到本地
- * TODO 配置是否缓存音频链接到本地
  *
  */
 class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
+
+    @Conf("mirai.senderType", comment = "送信器类型")
+    var senderType: SenderRunnerType = SenderRunnerType.BLOCK
+
+
     /**
      * mirai官方配置类获取函数，默认为其默认值
      * 函数参数为bot的账号，得到一个config实例
@@ -56,7 +56,6 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     fun setBotConfiguration(configuration: BotConfiguration){
         botConfiguration = { configuration }
     }
-
 
     /** 账号不可为null */
     override fun registerBot(botCode: String?, path: String?) {

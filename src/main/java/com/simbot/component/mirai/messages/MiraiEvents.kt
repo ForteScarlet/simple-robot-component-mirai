@@ -26,7 +26,7 @@ import com.forte.qqrobot.beans.messages.result.StrangerInfo
  */
 object MiraiEvents {
     /**
-     * h好友删除事件，对应的数据接口为 [FriendDelete]，其内容与 [StrangerInfo] 一致 。
+     * 好友删除事件，对应的数据接口为 [FriendDelete]，其内容与 [StrangerInfo] 一致 。
      * mirai中的部分限制也是相同的，例如无法获取age与sex。
      */
     const val friendDeleteEvent: String = "FRIEND_EVENT"

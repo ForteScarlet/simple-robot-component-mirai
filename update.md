@@ -1,5 +1,5 @@
 # 1.1.0-1.16
-- 暂时以mirai层面来支持好友删除事件。
+- 暂时以mirai层面来支持好友删除事件。 [#2](https://github.com/ForteScarlet/simple-robot-component-mirai/issues/2)
 使用方法：
 ```java
 @Listen.ByName(MiraiEvents.friendDeleteEvent)

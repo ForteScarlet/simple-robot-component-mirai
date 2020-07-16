@@ -9,6 +9,7 @@ import net.mamoe.mirai.message.data.buildXmlMessage
 /**
  * CQ码音乐分享获取Xml格式的卡片分享
  */
+@Deprecated("未完成")
 interface CqMusicXml {
     val serviceMessage: ServiceMessage
 }
@@ -26,7 +27,7 @@ interface CqMusicXml {
 /**
  * type = qq
  */
-
+@Deprecated("未完成")
 internal class MusicQQ(id: String) : CqMusicXml {
 
     companion object Xml {

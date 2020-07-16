@@ -23,11 +23,15 @@ import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
 import com.forte.qqrobot.depend.DependCenter
 import com.forte.qqrobot.exception.BotVerifyException
+import com.forte.qqrobot.exception.EnumFactoryException
+import com.forte.qqrobot.factory.MsgGetTypeFactory
 import com.forte.qqrobot.listener.invoker.AtDetection
 import com.forte.qqrobot.listener.invoker.ListenerFilter
 import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
+import com.simbot.component.mirai.messages.MiraiEvents
+import com.simbot.component.mirai.messages.MiraiFriendDeleteEvent
 import com.simbot.component.mirai.messages.MiraiMessageGet
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
@@ -112,6 +116,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      */
     override fun resourceInit() {
         registerMiraiAtFilter()
+        registerMiraiEvent()
     }
 
     /**
@@ -129,6 +134,18 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         }
     }
 
+    /**
+     * 注册mirai可提供的额外事件
+     */
+    private fun registerMiraiEvent(){
+        val msgGetTypeFactory = MsgGetTypeFactory.getInstance()
+        try {
+            msgGetTypeFactory.register(MiraiEvents.friendDeleteEvent, MiraiFriendDeleteEvent::class.java)
+        }catch (e: EnumFactoryException) {
+            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendDeleteEvent, e.localizedMessage)
+            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendDeleteEvent, e.localizedMessage)
+        }
+    }
 
     /**
      * 根据 [getSender], [getSetter], [getGetter] 三个函数构建一个RootSenderList

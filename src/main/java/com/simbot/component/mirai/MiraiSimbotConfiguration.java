@@ -17,9 +17,13 @@
 
 package com.simbot.component.mirai;
 
+import com.forte.qqrobot.anno.depend.Beans;
+
 /**
  * just a empty class
+ * 暂时没用什么可配置的
  * @author ForteScarlet
  */
+@Beans
 public class MiraiSimbotConfiguration {
 }

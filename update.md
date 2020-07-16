@@ -1,3 +1,18 @@
+# 1.1.0-1.16
+- 暂时以mirai层面来支持好友删除事件。
+使用方法：
+```java
+@Listen.ByName(MiraiEvents.friendDeleteEvent)
+public void listenFriendDelete(FriendDelete friendDelete){
+    // do somthing...
+}
+```
+核心的后续更新中可能会追加支持通用接口。
+
+- setFriendAddRequest相关的事件中，friendName参数可以为null了（实际上此参数也属无用参数。）
+- 优化内部部分代码，提高获取CodeNumber的效率(不再有字符串转化了)，移除无意义的lazy(event相关)
+
+
 # 1.0.4-1.16
 - 修复新好友添加事件无效的bug
 
@@ -20,7 +35,7 @@
 
 # 0.6.2-1.15
 - 对一些不支持的api增加warning日志提示。
-注：此处的api指的是获取到的实例，例如通过GETTER得到的`GroupInfo`，而sender中直接调用的api依旧会抛出异常。
+注：此处的api指的是获取到的实例，例如通过GETTER得到的`GroupInfo`，而sender中直接调用的api如果不支持则其依旧会抛出异常。
 - 优化登录设备配置，现在默认情况下，会根据登录的账号提供一个不变的随机设备号。并提供一个默认的设备信息类：MiraiSystemDeviceInfo，详细内容可查看此类。
 - mirai更新到`1.1-EA`
 

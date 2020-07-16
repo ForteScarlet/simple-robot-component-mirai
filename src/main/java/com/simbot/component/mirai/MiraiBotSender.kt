@@ -226,7 +226,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     }
 
     /** 处理好友申请 */
-    override fun setFriendAddRequest(flag: String, friendName: String, agree: Boolean): Boolean {
+    override fun setFriendAddRequest(flag: String, friendName: String?, agree: Boolean): Boolean {
         val botId = bot.id
         val request = RequestCache.getFriendRequest(botId, flag)
         return if(request!=null){

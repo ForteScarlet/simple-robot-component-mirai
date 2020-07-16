@@ -17,3 +17,5 @@
 
 exception.CQCodeParseHandlerRegister.failed.existed=登録に失敗しました：{0} が存在しました
 run.cache.contact=アカウント[{0}]の連絡先情報のキャッシュを開始します...
+
+mirai.event.register.failed=Mirai追加監視イベント[{0}]の登録に失敗しました。関連する監視を使用できなくなります。 情報：{1}

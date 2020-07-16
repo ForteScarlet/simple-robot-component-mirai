@@ -304,6 +304,14 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor) {
             MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
         }
         //endregion
+
+
+        //region 好友删除事件
+        bot.subscribeAlways<FriendDeleteEvent> {
+            MiraiFriendDeleteEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
         //endregion
 
     }

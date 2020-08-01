@@ -1,5 +1,5 @@
 # 1.2.0-1.16
-- 更新核心到`1.16.2`，使用原生方法支持好友删除事件`@Listen(MsgGetTypes.friendDelete)`或`@OnFriendDelete`
+- 更新核心到`1.16.3`，使用原生方法支持好友删除事件: `@Listen(MsgGetTypes.friendDelete)`或`@OnFriendDelete`
 - 调整各大缓存Map的检查机制，当一个缓存Map的`check`的值小于0的时候, 将不会进行清理检测。
 - 简单修改/优化部分内部代码结构。
 - 追加`Reply`类来实现快捷回复/请求响应。

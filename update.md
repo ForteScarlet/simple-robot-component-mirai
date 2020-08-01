@@ -24,6 +24,7 @@
 ```
 关于`Reply`的所有内容，可以查看`com.simbot.component.mirai.messages.Reply.kt`中的内容。
 注：Reply虽然实现了Map接口，但其本质为**不可变**Map。
+`Reply`在未来计划会整合至核心中。
 
 
 # 1.1.0-1.16

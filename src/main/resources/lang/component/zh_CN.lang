@@ -1,3 +1,4 @@
+# suppress inspection "UnusedProperty" for whole file
 #
 # Copyright (c) 2020. ForteScarlet All rights reserved.
 # Project  component-mirai (Codes other than Mirai)
@@ -14,11 +15,8 @@
 #
 #
 #
-
 exception.CQCodeParseHandlerRegister.failed.existed=注册失败：{0} 解析器已存在
 run.cache.contact=开始初始化缓存账号[{0}]的联系人信息...
-
 # deprecated api
-mirai.api.deprecated=mirai不支持的API：{0}. 将会返回默认值"{1}". 此API仅会警告一次。
-
+mirai.api.deprecated=mirai不支持的API：{0}. 将会返回默认值[{1}]. 此API仅会警告一次。
 mirai.event.register.failed=mirai额外监听事件[{0}]注册失败，你将无法使用相关监听。info: {1}

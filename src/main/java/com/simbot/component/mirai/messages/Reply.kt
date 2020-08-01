@@ -17,6 +17,8 @@
  *
  */
 
+@file:Suppress("unused")
+
 package com.simbot.component.mirai.messages
 
 import com.simbot.component.mirai.collections.SingletonMap
@@ -24,6 +26,7 @@ import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.MessageEvent
+import net.mamoe.mirai.message.data.QuoteReply
 
 /**
  * 提供一些通过返回值进行快捷回复的功能
@@ -50,6 +53,8 @@ import net.mamoe.mirai.message.MessageEvent
  */
 open class Reply
 protected constructor(map: Map<String, Any> = mapOf()): Map<String, Any> by map {
+
+
     companion object {
         /**
          * 获得builder
@@ -61,7 +66,17 @@ protected constructor(map: Map<String, Any> = mapOf()): Map<String, Any> by map 
          * 获得消息回复的Reply
          */
         @JvmStatic
-        fun getMessageReply(reply: String) = Builder().reply(reply).build()
+        @JvmOverloads
+        fun getMessageReply(reply: String, quote: Boolean = true, at: Boolean = true): Reply {
+            val builder = Builder().reply(reply)
+            if(quote){
+               builder.quote()
+            }
+            if(at){
+                builder.at()
+            }
+            return builder.build()
+        }
 
         /**
          * @see AgreeReply
@@ -96,6 +111,29 @@ protected constructor(map: Map<String, Any> = mapOf()): Map<String, Any> by map 
             map["reply"] = reply
             return this
         }
+
+        /**
+         * 回复的时候是否进行引用
+         * 需要在[reply]之后使用，且只支持在消息回复中生效
+         */
+        fun quote(): Builder {
+            map["quote"] = true
+            return this
+        }
+
+        fun quote(id: String): Builder {
+            map["quote"] = id
+            return this
+        }
+
+        /**
+         * at回复的人。只会在群聊生效
+         */
+        fun at(): Builder {
+            map["at"] = true
+            return this
+        }
+
 
         /**
          * 同意申请

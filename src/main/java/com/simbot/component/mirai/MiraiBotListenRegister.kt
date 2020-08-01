@@ -27,18 +27,12 @@ import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
+import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.QuoteReply
+import net.mamoe.mirai.message.data.asMessageChain
 
-///**
-// * 为bot注册对应监听的工具类，为Java用
-// */
-//object MiraiBotListenRegister {
-//    /** 注册监听 */
-//    @JvmStatic
-//    fun register(info: MiraiBotInfo, msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
-//        info.register(msgProcessor, cacheMaps)
-//    }
-//}
+
 
 
 //region 响应判断
@@ -75,12 +69,33 @@ suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent, cacheMaps: C
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         val reply = result["reply"]
+        val quote = result["quote"]
+        val at = result["at"]
         if (reply != null) {
-            if(reply is Message) {
-                event.reply(reply)
+            var replyMsg = if(reply is Message) {
+                reply.asMessageChain()
             }else {
-                event.reply(reply.toString().toWholeMessage(event.subject, cacheMaps))
+                reply.toString().toWholeMessage(event.subject, cacheMaps).asMessageChain()
             }
+
+            // 是群聊的时候
+            if(event is GroupMessageEvent){
+                // at送信人
+                if(at is Boolean && at){
+                    replyMsg = At(event.sender) + replyMsg
+                }
+                // 引用回复
+                if(quote is Boolean && quote){
+                    replyMsg = QuoteReply(event.source) + replyMsg
+                }else if(quote is String){
+                    val quoteSource = cacheMaps.recallCache.get(quote, event.bot.id)
+                    if(quoteSource != null){
+                        replyMsg = QuoteReply(quoteSource) + replyMsg
+                    }
+                }
+            }
+            // reply
+            event.reply(replyMsg)
         }
     }
 }

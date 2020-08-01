@@ -54,7 +54,7 @@ interface SenderRunner {
  */
 object BlockSenderRunner: SenderRunner {
     override fun <T> run(runner: suspend CoroutineScope.() -> T): T {
-        println("block!")
+//        println("block!")
         return runBlocking(block = runner)
     }
 }
@@ -64,7 +64,7 @@ object BlockSenderRunner: SenderRunner {
  */
 object CoroutineSenderRunner: SenderRunner {
     override fun <T> run(runner: suspend CoroutineScope.() -> T): T? {
-        println("coroutine!")
+//        println("coroutine!")
         GlobalScope.launch { runner(this) }
         return null
     }

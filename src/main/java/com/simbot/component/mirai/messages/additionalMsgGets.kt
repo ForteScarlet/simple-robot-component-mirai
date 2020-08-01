@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2020. ForteScarlet All rights reserved.
  * Project  component-mirai
- * File     MiraiEvents.kt
+ * File     additionalMsgGets.kt
  *
  * You can contact the author through the following channels:
  * github https://github.com/ForteScarlet
@@ -19,19 +19,4 @@
 
 package com.simbot.component.mirai.messages
 
-import com.forte.qqrobot.beans.messages.result.StrangerInfo
 
-/**
- * 定义mirai组件所提供的额外监听事件
- */
-object MiraiEvents {
-    /**
-     * 核心1.6.2后已经内置了此类型的监听。
-     */
-    @Deprecated("just use FriendDelete")
-    const val friendDeleteEvent: String = "FRIEND_EVENT"
-
-
-
-
-}

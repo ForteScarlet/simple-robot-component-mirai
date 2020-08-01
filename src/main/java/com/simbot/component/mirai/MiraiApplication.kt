@@ -138,13 +138,14 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 注册mirai可提供的额外事件
      */
     private fun registerMiraiEvent(){
-        val msgGetTypeFactory = MsgGetTypeFactory.getInstance()
-        try {
-            msgGetTypeFactory.register(MiraiEvents.friendDeleteEvent, MiraiFriendDeleteEvent::class.java)
-        }catch (e: EnumFactoryException) {
-            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendDeleteEvent, e.localizedMessage)
-            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendDeleteEvent, e.localizedMessage)
-        }
+//        val msgGetTypeFactory = MsgGetTypeFactory.getInstance()
+//        try {
+//            msgGetTypeFactory.register(MiraiEvents.friendDeleteEvent, MiraiFriendDeleteEvent::class.java)
+//        }catch (e: Throwable) {
+//            // 捕获一切异常
+//            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendDeleteEvent, e.localizedMessage)
+//            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendDeleteEvent, e.localizedMessage)
+//        }
     }
 
     /**

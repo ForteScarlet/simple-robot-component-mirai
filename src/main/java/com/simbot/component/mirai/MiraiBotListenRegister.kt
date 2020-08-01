@@ -27,6 +27,7 @@ import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
+import net.mamoe.mirai.message.data.Message
 
 ///**
 // * 为bot注册对应监听的工具类，为Java用
@@ -75,7 +76,11 @@ suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent, cacheMaps: C
     if (result is Map<*, *>) {
         val reply = result["reply"]
         if (reply != null) {
-            event.reply(reply.toString().toWholeMessage(event.subject, cacheMaps))
+            if(reply is Message) {
+                event.reply(reply)
+            }else {
+                event.reply(reply.toString().toWholeMessage(event.subject, cacheMaps))
+            }
         }
     }
 }

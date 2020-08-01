@@ -17,7 +17,6 @@
 
 package com.simbot.component.mirai
 
-import com.forte.config.Conf
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
@@ -29,8 +28,15 @@ import net.mamoe.mirai.message.data.MessageSource
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+
+/**
+ * inline class for check clear
+ */
+@Suppress("MemberVisibilityCanBePrivate")
+internal inline class Check(val check: Int) {
+    fun clearCheck(count: Int): Boolean = check in 1 .. count
+}
 
 /**
  * 记录缓存库的Data类
@@ -48,7 +54,7 @@ open class RecallCache(
         /**
          * 清理缓存临界值, 当计数器达到1000则触发一次清理
          */
-        val check: Int,
+        check: Int,
         /**
          * 默认缓存30分钟
          */
@@ -66,11 +72,17 @@ open class RecallCache(
     /** by config */
     constructor(config: RecallCacheConfiguration): this(config.check, config.cacheTime, config.initialCapacity, config.max)
 
+    /**
+     * [Check]
+     * 代表检测当前计数是否可以进行清理
+     */
+    private val check: Check = Check(check)
+
     /** botCacheMap */
 //    @JvmStatic
     private val botCacheMap: MutableMap<Long, LRUCacheMap<String, MessageSource>> = ConcurrentHashMap()
 
-    /** 计数器，当计数器达到100的时候，触发缓存清除 */
+    /** 计数器，当计数器达到指定次数的时候，触发缓存清除 */
 //    @JvmStatic
     private val counter: AtomicInteger = AtomicInteger(0)
 
@@ -103,7 +115,7 @@ open class RecallCache(
         cacheMap.putPlusMinutes(key, source, cacheTime)
 
         // 计数+1, 如果大于100，清除缓存
-        if(counter.addAndGet(1) >= check){
+        if(check.clearCheck(counter.addAndGet(1))){
             counter.set(0)
             synchronized(botCacheMap){
                 botCacheMap.forEach{it.value.detect()}
@@ -138,7 +150,7 @@ open class RequestCache(
         /**
          * 清理缓存临界值, 当计数器达到1000则触发一次清理
          */
-        private val check: Int,
+        check: Int,
         /**
          * 默认缓存5分钟
          */
@@ -161,6 +173,12 @@ open class RequestCache(
         private val joinRequestMax: Long
 ) {
     constructor(config: RequestCacheConfiguration): this(config.check, config.cacheTime, config.friendRequestInitialCapacity, config.friendRequestMax, config.joinRequestInitialCapacity, config.joinRequestMax)
+
+    /**
+     * [Check]
+     * 代表检测当前计数是否可以进行清理
+     */
+    private val check: Check = Check(check)
 
     /** botCacheMap */
 //    @JvmStatic
@@ -227,7 +245,8 @@ open class RequestCache(
         cacheMap.put(key, value, LocalDateTime.now().plus(cacheTime, ChronoUnit.MILLIS))
 
         // 计数+1, 如果大于100，清除缓存
-        if(counter.addAndGet(1) >= check){
+//        if(check > 0 && counter.addAndGet(1) >= check){
+        if(check.clearCheck(counter.addAndGet(1))){
             counter.set(0)
             synchronized(this){
                 this.forEach { it.value.detect() }
@@ -273,8 +292,9 @@ open class RequestCache(
 open class ImageCache(
         /**
          * 清理缓存临界值, 当计数器达到1000则触发一次清理
+         * 会被转化为[Check]
          */
-        private val check: Int,
+        check: Int,
         /**
          * 默认缓存30分钟
          */
@@ -290,8 +310,13 @@ open class ImageCache(
 ) {
     constructor(config: ImageCacheConfiguration): this(config.check, config.cacheTime, config.initialCapacity, config.max)
 
+    /**
+     * [Check]
+     * 代表检测当前计数是否可以进行清理
+     */
+    private val check: Check = Check(check)
 
-    // image缓存map
+    /** image缓存map */
 //    @JvmStatic
     private val imageCacheMap by lazy { LRUCacheMap<String, Image>(initialCapacity, max) }
 
@@ -312,7 +337,7 @@ open class ImageCache(
 //    @JvmStatic
     open operator fun set(key: String, image: Image): Image? {
         val putImage = imageCacheMap.putPlusMinutes(key, image, cacheTime)
-        if(counter.addAndGet(1) > check){
+        if(check.clearCheck(counter.addAndGet(1))){
             counter.set(0)
             imageCacheMap.detect()
         }
@@ -320,6 +345,7 @@ open class ImageCache(
 
     }
 }
+
 
 
 
@@ -349,7 +375,7 @@ open class ContactCache(
         /**
          * 清理缓存临界值, 当计数器达到1000则触发一次清理
          */
-        private val check: Int,
+        check: Int,
         /**
          * 默认缓存15分钟
          */
@@ -367,6 +393,12 @@ open class ContactCache(
 {
 
     constructor(config: ContactCacheConfiguration): this(config.check, config.cacheTime, config.initialCapacity, config.max)
+
+    /**
+     * [Check]
+     * 代表检测当前计数是否可以进行清理
+     */
+    private val check: Check = Check(check)
 
     // contact缓存map
 //    @JvmStatic
@@ -430,7 +462,7 @@ open class ContactCache(
                 cacheMap.putIfAbsent(memberId, it)
             }
             // 此时进行缓存清理计数
-            if(counter.addAndGet(1) > check){
+            if(check.clearCheck(counter.addAndGet(1))){
                 counter.set(0)
                 synchronized(contactCacheMap){
                     contactCacheMap.forEach { it.value.detect() }

@@ -698,22 +698,13 @@ open class MiraiBotUnmuteEvent(event:BotUnmuteEvent): Unmute<BotUnmuteEvent>(eve
 // ctrl shift Z
 
 /**
- * 好友删除事件的接口，未来核心中提供的通用接口不出意外的话也是此名称
- * 目前暂时复用 [StrangerInfo] 接口
- */
-interface FriendDelete: MsgGet, NickOrRemark, QQCodeAble {
-    fun getQQ(): String
-}
-
-/**
  * 好友删除事件
  * 目前为Mirai组件提供的额外监听, 命名为FriendDelete
  */
 open class MiraiFriendDeleteEvent(event: FriendDeleteEvent): MiraiEventGet<FriendDeleteEvent>(event), FriendDelete {
     private val friend = event.friend
 
-    override fun getQQ(): String = friend.id.toString()
-
+    private val friendId = friend.id.toString()
 
     /**
      * 获取备注信息，例如群备注，或者好友备注。
@@ -732,7 +723,7 @@ open class MiraiFriendDeleteEvent(event: FriendDeleteEvent): MiraiEventGet<Frien
      * 假如一个消息封装中存在多个QQ号信息，例如同时存在处理者与被处理者，一般情况下我们认为其返回值为被处理者。
      * @see .getCode
      */
-    override fun getQQCode(): String = getQQ()
+    override fun getQQCode(): String = friendId
 
     override fun getCodeNumber(): Long = friend.id
 

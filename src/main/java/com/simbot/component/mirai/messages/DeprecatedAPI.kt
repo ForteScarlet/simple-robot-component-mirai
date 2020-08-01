@@ -244,11 +244,4 @@ object DeprecatedAPI {
 
 }
 
-fun main() {
-    Language.init()
 
-    println(DeprecatedAPI.memberJoinOperatorQQ)
-    println(DeprecatedAPI.memberJoinOperatorQQ)
-    println(DeprecatedAPI.memberJoinOperatorQQ)
-
-}

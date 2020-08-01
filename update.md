@@ -1,3 +1,29 @@
+# 1.2.0-1.16
+- 更新核心到`1.16.2`，使用原生方法支持好友删除事件`@Listen(MsgGetTypes.friendDelete)`或`@OnFriendDelete`
+- 调整各大缓存Map的检查机制，当一个缓存Map的`check`的值小于0的时候, 将不会进行清理检测。
+- 追加`Reply`类来实现快捷回复/请求响应。
+以加群申请为例，在kotlin环境下，你可以这样来同意所有的请求：
+```kotlin
+    /**
+     * 直接同意入群申请
+     */
+    @OnGroupAddRequest
+    fun group() = Reply.agreeReply
+```
+在java环境下，你可以这样：
+```java
+    /**
+     * 同意所有入群请求
+     */
+    @OnGroupAddRequest
+    public Reply agree(){
+        return Reply.getAgreeReply();
+    }
+```
+关于`Reply`的所有内容，可以查看`com.simbot.component.mirai.messages.Reply.kt`中的内容。
+注：Reply虽然实现了Map接口，但其本质为**不可变**Map。
+
+
 # 1.1.0-1.16
 - 暂时以mirai层面来支持好友删除事件。 [#2](https://github.com/ForteScarlet/simple-robot-component-mirai/issues/2)
 使用方法：
@@ -17,7 +43,7 @@ public void listenFriendDelete(FriendDelete friendDelete){
 ```properties
 # suppress inspection "UnusedProperty" for whole file
 # RecallCacheConfiguration
-# 消息缓存中，清理缓存临界值, 当计数器达到指定值则触发一次清理
+# 消息缓存中，清理缓存临界值, 当计数器达到指定值则触发一次清理。check值小于等于0的时候将不会触发清理。
 simbot.mirai.cache.recall.check=1000
 # 缓存时间
 simbot.mirai.cache.recall.cacheTime=3600000
@@ -27,9 +53,10 @@ simbot.mirai.cache.recall.initialCapacity=32
 simbot.mirai.cache.recall.max=102400
 
 # RequestCacheConfiguration
-# 以下是请求信息缓存相关的配置，分为好友请求和群请求。
+# 以下是请求信息缓存相关的配置，好友请求和群请求共用以下两个配置。
 simbot.mirai.cache.request.check=1000
 simbot.mirai.cache.request.cacheTime=3600000
+# 以下是请求信息缓存相关的配置，分为好友请求和群请求。
 simbot.mirai.cache.request.friend.initialCapacity=32
 simbot.mirai.cache.request.friend.max=102400
 simbot.mirai.cache.request.join.initialCapacity=32

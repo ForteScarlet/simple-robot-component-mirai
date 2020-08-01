@@ -18,13 +18,17 @@
 package com.simbot.component.mirai
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
+import com.googlecode.concurrentlinkedhashmap.Weigher
 import com.googlecode.concurrentlinkedhashmap.Weighers
+import org.apache.commons.collections.map.AbstractHashedMap
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.temporal.TemporalAmount
 import java.time.temporal.TemporalUnit
 import java.util.*
 import java.util.concurrent.ConcurrentMap
 import java.util.function.BiConsumer
+import kotlin.collections.LinkedHashMap
 
 /**
  * 使用LRU的缓存Map
@@ -35,7 +39,7 @@ open class LRUCacheMap<T, R>
 constructor(initialCapacity: Int = 8, private val max: Long = 102400):
         AbstractMap<T, R>() {
 
-    private var lruLinkedMap: MutableMap<T, CacheReturn<R>> = LRULinkedHashMap(initialCapacity, max)
+    private var lruLinkedMap: MutableMap<T, CacheReturn<R>> = CacheLRULinkedHashMap<T, R>(initialCapacity, max)
 
     /**
      * 获取
@@ -196,10 +200,24 @@ constructor(initialCapacity: Int = 8, private val max: Long = 102400):
 @Suppress("DELEGATED_MEMBER_HIDES_SUPERTYPE_OVERRIDE")
 open class LRULinkedHashMap<T, R>
 @JvmOverloads
-constructor(initialCapacity: Int = 8, private val maxSize: Long = 102400) :
+constructor(initialCapacity: Int = 8, private val maxSize: Long = 102400, builder: ConcurrentLinkedHashMap.Builder<T, R>.() -> Unit = {
+    this.initialCapacity(initialCapacity)
+            .maximumWeightedCapacity(maxSize)
+            .weigher(Weighers.singleton())
+}) :
         AbstractMap<T, R>(),
-        ConcurrentMap<T, R> by ConcurrentLinkedHashMap.Builder<T, R>()
-                .initialCapacity(initialCapacity)
-                .maximumWeightedCapacity(maxSize)
-                .weigher(Weighers.singleton())
-                .build()
+        ConcurrentMap<T, R> by ConcurrentLinkedHashMap.Builder<T, R>().also(builder).build()
+
+
+
+/**
+ * 针对[LRUCacheMap.CacheReturn]进行权重判断的缓存Map
+ */
+open class CacheLRULinkedHashMap<T, R>(initialCapacity: Int = 8, private val maxSize: Long = 102400):
+        LRULinkedHashMap<T, LRUCacheMap.CacheReturn<R>>(initialCapacity, maxSize, {
+            this.initialCapacity(initialCapacity)
+                    .maximumWeightedCapacity(maxSize)
+                    .weigher(Weighers.singleton())
+
+
+        })

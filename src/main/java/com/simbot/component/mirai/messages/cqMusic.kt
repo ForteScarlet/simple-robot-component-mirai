@@ -3,7 +3,6 @@
 package com.simbot.component.mirai.messages
 
 import net.mamoe.mirai.message.data.ServiceMessage
-import net.mamoe.mirai.message.data.buildXmlMessage
 
 
 /**

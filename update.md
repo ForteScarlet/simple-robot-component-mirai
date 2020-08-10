@@ -2,12 +2,16 @@
 - 追加实现mirai的好友头像更换事件。
 ```java
     @Listen.ByName(MiraiEvents.friendAvatarChangedEvent)
-    public void event1() { }
+    public void event1(FriendAvatarChanged avatarChanged) {
+        // ... do
+    }
 
     // 或
 
     @OnFriendAvatarChanged
-    public void event2() { }
+    public void event2(FriendAvatarChanged avatarChanged) { 
+        // ... do
+    }
 ```
 
 - 追加一些可配置的信息：

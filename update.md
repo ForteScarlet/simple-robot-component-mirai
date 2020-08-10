@@ -36,8 +36,6 @@ simbot.mirai.reconnectionRetryTimes=
 # 可选：ANDROID_PHONE ANDROID_PAD
 simbot.mirai.protocol=ANDROID_PAD
 
-
-
 ```
 
 # 1.2.1-1.16

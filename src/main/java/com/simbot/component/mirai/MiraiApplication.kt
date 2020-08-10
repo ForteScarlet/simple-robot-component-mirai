@@ -31,6 +31,7 @@ import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
 import com.simbot.component.mirai.messages.MiraiEvents
+import com.simbot.component.mirai.messages.MiraiFriendAvatarChangedEvent
 import com.simbot.component.mirai.messages.MiraiFriendDeleteEvent
 import com.simbot.component.mirai.messages.MiraiMessageGet
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -138,14 +139,15 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 注册mirai可提供的额外事件
      */
     private fun registerMiraiEvent(){
-//        val msgGetTypeFactory = MsgGetTypeFactory.getInstance()
-//        try {
-//            msgGetTypeFactory.register(MiraiEvents.friendDeleteEvent, MiraiFriendDeleteEvent::class.java)
-//        }catch (e: Throwable) {
-//            // 捕获一切异常
-//            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendDeleteEvent, e.localizedMessage)
-//            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendDeleteEvent, e.localizedMessage)
-//        }
+        val msgGetTypeFactory = MsgGetTypeFactory.getInstance()
+        try {
+            QQLog.debug("mirai.event.register", MiraiEvents.friendAvatarChangedEvent)
+            msgGetTypeFactory.register(MiraiEvents.friendAvatarChangedEvent, MiraiFriendAvatarChangedEvent::class.java)
+        }catch (e: Throwable) {
+            // 捕获一切异常
+            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendDeleteEvent, e.localizedMessage)
+            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendDeleteEvent, e.localizedMessage)
+        }
     }
 
     /**

@@ -20,3 +20,5 @@ run.cache.contact=开始初始化缓存账号[{0}]的联系人信息...
 # deprecated api
 mirai.api.deprecated=mirai不支持的API：{0}. 将会返回默认值[{1}]. 此API仅会警告一次。
 mirai.event.register.failed=mirai额外监听事件[{0}]注册失败，你将无法使用相关监听。info: {1}
+
+mirai.event.register=注册mirai的特殊事件：{0}

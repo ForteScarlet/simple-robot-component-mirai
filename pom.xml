@@ -46,20 +46,13 @@
             <groupId>io.github.ForteScarlet</groupId>
             <artifactId>simple-robot-core</artifactId>
             <version>${simple-robot-core.version}</version>
-            <!-- 当前版本处理转义问题 -->
-            <exclusions>
-                <exclusion>
-                    <groupId>io.github.ForteScarlet.simple-robot-module</groupId>
-                    <artifactId>mod-cqcodeutils</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>
-            <artifactId>mod-cqcodeutils</artifactId>
-            <version>${cqcodeUtils.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>-->
+<!--            <artifactId>mod-cqcodeutils</artifactId>-->
+<!--            <version>${cqcodeUtils.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -106,6 +99,14 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
             <version>${kotlin.version}</version>
+            <scope>test</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>love.forte.simple-robot</groupId>
+            <artifactId>module-ding</artifactId>
+            <version>0.1-1.16</version>
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
@@ -432,15 +433,6 @@
                 </plugins>
             </build>
         </profile>
-<!--        <profile>-->
-<!--            <id>disable-java8-doclint</id>-->
-<!--            <activation>-->
-<!--                <jdk>[1.8,)</jdk>-->
-<!--            </activation>-->
-<!--            <properties>-->
-<!--                <additionalparam>-Xdoclint:none</additionalparam>-->
-<!--            </properties>-->
-<!--        </profile>-->
     </profiles>
 
 </project>

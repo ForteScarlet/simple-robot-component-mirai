@@ -20,12 +20,9 @@ package com.simbot.component.mirai.messages
 import com.forte.qqrobot.beans.messages.NickOrRemark
 import com.forte.qqrobot.beans.messages.QQCodeAble
 import com.forte.qqrobot.beans.messages.msgget.*
-import com.forte.qqrobot.beans.messages.result.StrangerInfo
 import com.forte.qqrobot.beans.messages.types.*
 import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.MiraiCodeFormatUtils
-import com.simbot.component.mirai.RecallCache
-import com.simbot.component.mirai.RequestCache
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.*
@@ -34,7 +31,6 @@ import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
 import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.source
-import java.util.concurrent.TimeUnit
 
 
 //region 基础MsgGet抽象类
@@ -729,10 +725,52 @@ open class MiraiFriendDeleteEvent(event: FriendDeleteEvent): MiraiEventGet<Frien
 
     override fun getRemarkOrNickname(): String = friend.nameCardOrNick
 
+    override fun getQQHeadUrl(): String = friend.avatarUrl
 }
 //endregion
 
+//region 好友更换头像事件
+/**
+ *  好友更换头像事件
+ *  内容类似于[FriendDelete]
+ */
+interface FriendAvatarChanged: EventGet, QQCodeAble, NickOrRemark
 
+/**
+ * 好友更换头像事件 实现类
+ * @see FriendAvatarChanged
+ */
+open class MiraiFriendAvatarChangedEvent(event: FriendAvatarChangedEvent): MiraiEventGet<FriendAvatarChangedEvent>(event), FriendAvatarChanged {
+    private val friend = event.friend
+
+    private val friendId = friend.id.toString()
+
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = friend.nick
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = friend.nick
+
+    /**
+     * 获取QQ号信息。
+     * 假如一个消息封装中存在多个QQ号信息，例如同时存在处理者与被处理者，一般情况下我们认为其返回值为被处理者。
+     * @see .getCode
+     */
+    override fun getQQCode(): String = friendId
+
+    override fun getCodeNumber(): Long = friend.id
+
+    override fun getRemarkOrNickname(): String = friend.nameCardOrNick
+
+    override fun getQQHeadUrl(): String = friend.avatarUrl
+}
+//endregion
 
 //endregion
 

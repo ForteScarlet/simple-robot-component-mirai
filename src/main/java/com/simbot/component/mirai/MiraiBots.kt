@@ -61,7 +61,7 @@ object MiraiBots {
      * 尝试获取一个bot，如果获取不到则会尝试构建一个。
      * 需要在从BotManager中验证存在后在通过此获取，否则BotManager中可能会缺失
      */
-    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration = { BotConfiguration.Default }, cacheMaps: CacheMaps, senderRunner: SenderRunner): MiraiBotInfo {
+    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration = { BotConfiguration() }, cacheMaps: CacheMaps, senderRunner: SenderRunner): MiraiBotInfo {
         val id = info.botCode
         // 构建一个，构建失败会抛出异常
         val miraiBotInfo = bots[id]

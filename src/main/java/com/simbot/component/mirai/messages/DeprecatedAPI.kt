@@ -23,7 +23,6 @@ import com.forte.qqrobot.log.QQLogLang
 
 /**
  * 统一存放不支持的API的信息，使用lazy来使他们被获取的时候提示警告信息。
- * TODO
  */
 object DeprecatedAPI {
 

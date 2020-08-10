@@ -31,6 +31,10 @@ object MiraiEvents {
     @Deprecated("just use FriendDelete")
     const val friendDeleteEvent: String = "FRIEND_EVENT"
 
+    /**
+     * 好友更换头像事件
+     */
+    const val friendAvatarChangedEvent: String = "FRIEND_AVATAR_CHANGED_EVENT"
 
 
 

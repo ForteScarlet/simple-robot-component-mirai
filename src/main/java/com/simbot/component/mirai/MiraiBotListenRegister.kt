@@ -20,7 +20,9 @@ package com.simbot.component.mirai
 import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
+import net.mamoe.mirai.event.ListeningStatus
 import net.mamoe.mirai.event.events.*
+import net.mamoe.mirai.event.subscribe
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.FriendMessageEvent
@@ -200,141 +202,176 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
 
     //region 消息监听相关事件
 
-    bot.subscribeMessages {
-        this.always {
-            // 首先缓存此消息
-            cacheMaps.recallCache.cache(this.source)
-            val result = when (this) {
-                // 好友消息
-                is FriendMessageEvent -> {
-                    MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
-                }
-                // 群消息
-                is GroupMessageEvent -> {
-                    MiraiGroupMsg(this, cacheMaps).onMsg(msgProcessor)
-                }
-                // 群临时会话消息
-                is TempMessageEvent -> {
-                    MiraiTempMsg(this, cacheMaps).onMsg(msgProcessor)
-                }
-                // 其他类型, 没其他类型了吧？
-                else -> null
+//    bot.subscribe<FriendMessageEvent> {
+//        val result = MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
+//        result.quickReplyMessage(this, cacheMaps)
+//        ListeningStatus.LISTENING
+//    }
+
+    bot.subscribeAlways<MessageEvent> {
+        // 首先缓存此消息
+        cacheMaps.recallCache.cache(this.source)
+        val result = when (this) {
+            // 好友消息
+            is FriendMessageEvent -> {
+                MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
             }
-            // try to quick reply
-            result.quickReplyMessage(this, cacheMaps)
-        }
-
-        //endregion
-
-
-        // region 申请相关事件
-
-        // 被邀请入群事件监听
-        bot.subscribeAlways<BotInvitedJoinGroupRequestEvent> {
-            val result = MiraiBotInvitedJoinGroupRequestEvent(this, cacheMaps).onMsg(msgProcessor)
-            // try to quick reply
-            result.quickReply(this, cacheMaps)
-        }
-
-        // 其他人申请入群事件监听
-        bot.subscribeAlways<MemberJoinRequestEvent> {
-            val result = MiraiMemberJoinRequestEvent(this, cacheMaps).onMsg(msgProcessor)
-            // try to quick reply
-            result.quickReply(this, cacheMaps)
-        }
-
-        // 新好友申请事件监听
-        bot.subscribeAlways<NewFriendRequestEvent> {
-            val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this, cacheMaps)
-            val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
-            // try to quick reply
-            result.quickReply(this, cacheMaps)
-        }
-
-        // endregion
-
-        //region 群成员/好友增减事件
-
-        //region 成功添加了一个新好友
-        bot.subscribeAlways<FriendAddEvent> {
-            MiraiFriendAddEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region 群成员增加事件
-        bot.subscribeAlways<MemberJoinEvent> {
-            MiraiMemberJoinEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region 群成员减少事件
-        bot.subscribeAlways<MemberLeaveEvent> {
-            MiraiMemberLeaveEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-
-        //endregion
-
-        //region 权限变动事件
-        // 成员权限变动
-        bot.subscribeAlways<MemberPermissionChangeEvent> {
-            MiraiMemberPermissionChangeEvent(this).onMsg(msgProcessor)
-        }
-        // bot权限变动
-        bot.subscribeAlways<BotGroupPermissionChangeEvent> {
-            MiraiBotGroupPermissionChangeEvent(this).onMsg(msgProcessor)
-        }
-
-        //endregion
-
-        //region 消息撤回事件
-        bot.subscribeAlways<MessageRecallEvent> {
-            when (this) {
-                //region 群消息撤回
-                is MessageRecallEvent.GroupRecall -> {
-                    MiraiGroupRecall(this, cacheMaps).onMsg(msgProcessor)
-                }
-                //endregion
-                //region 好友消息撤回
-                is MessageRecallEvent.FriendRecall -> {
-                    MiraiPrivateRecall(this).onMsg(msgProcessor)
-                }
-                //endregion
+            // 群消息
+            is GroupMessageEvent -> {
+                MiraiGroupMsg(this, cacheMaps).onMsg(msgProcessor)
             }
+            // 群临时会话消息
+            is TempMessageEvent -> {
+                MiraiTempMsg(this, cacheMaps).onMsg(msgProcessor)
+            }
+            // 其他类型, 没其他类型了吧？
+            else -> null
         }
-        //endregion
-
-        //region 禁言相关
-
-        //region 群友被禁言
-        bot.subscribeAlways<MemberMuteEvent> {
-            MiraiMemberMuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region 群友被解除禁言
-        bot.subscribeAlways<MemberUnmuteEvent> {
-            MiraiMemberUnmuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region bot被禁言
-        bot.subscribeAlways<BotMuteEvent> {
-            MiraiBotMuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region bot被取消禁言
-        bot.subscribeAlways<BotUnmuteEvent> {
-            MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-
-
-        //region 好友删除事件
-        bot.subscribeAlways<FriendDeleteEvent> {
-            MiraiFriendDeleteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-
-        //endregion
-
+        // try to quick reply
+        result.quickReplyMessage(this, cacheMaps)
     }
 
+//    bot.subscribeMessages {
+//        this.always {
+//            // 首先缓存此消息
+//            cacheMaps.recallCache.cache(this.source)
+//            val result = when (this) {
+//                // 好友消息
+//                is FriendMessageEvent -> {
+//                    MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
+//                }
+//                // 群消息
+//                is GroupMessageEvent -> {
+//                    MiraiGroupMsg(this, cacheMaps).onMsg(msgProcessor)
+//                }
+//                // 群临时会话消息
+//                is TempMessageEvent -> {
+//                    MiraiTempMsg(this, cacheMaps).onMsg(msgProcessor)
+//                }
+//                // 其他类型, 没其他类型了吧？
+//                else -> null
+//            }
+//            // try to quick reply
+//            result.quickReplyMessage(this, cacheMaps)
+//        }
+//    }
+    //endregion
+
+
+
+    // region 申请相关事件
+
+    // 被邀请入群事件监听
+    bot.subscribeAlways<BotInvitedJoinGroupRequestEvent> {
+        val result = MiraiBotInvitedJoinGroupRequestEvent(this, cacheMaps).onMsg(msgProcessor)
+        // try to quick reply
+        result.quickReply(this, cacheMaps)
+    }
+
+    // 其他人申请入群事件监听
+    bot.subscribeAlways<MemberJoinRequestEvent> {
+        val result = MiraiMemberJoinRequestEvent(this, cacheMaps).onMsg(msgProcessor)
+        // try to quick reply
+        result.quickReply(this, cacheMaps)
+    }
+
+    // 新好友申请事件监听
+    bot.subscribeAlways<NewFriendRequestEvent> {
+        val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this, cacheMaps)
+        val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
+        // try to quick reply
+        result.quickReply(this, cacheMaps)
+    }
+
+    // endregion
+
+    //region 群成员/好友增减事件
+
+    //region 成功添加了一个新好友
+    bot.subscribeAlways<FriendAddEvent> {
+        MiraiFriendAddEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region 群成员增加事件
+    bot.subscribeAlways<MemberJoinEvent> {
+        MiraiMemberJoinEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region 群成员减少事件
+    bot.subscribeAlways<MemberLeaveEvent> {
+        MiraiMemberLeaveEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+    //endregion
+
+    //region 权限变动事件
+    // 成员权限变动
+    bot.subscribeAlways<MemberPermissionChangeEvent> {
+        MiraiMemberPermissionChangeEvent(this).onMsg(msgProcessor)
+    }
+    // bot权限变动
+    bot.subscribeAlways<BotGroupPermissionChangeEvent> {
+        MiraiBotGroupPermissionChangeEvent(this).onMsg(msgProcessor)
+    }
+
+    //endregion
+
+    //region 消息撤回事件
+    bot.subscribeAlways<MessageRecallEvent> {
+        when (this) {
+            //region 群消息撤回
+            is MessageRecallEvent.GroupRecall -> {
+                MiraiGroupRecall(this, cacheMaps).onMsg(msgProcessor)
+            }
+            //endregion
+            //region 好友消息撤回
+            is MessageRecallEvent.FriendRecall -> {
+                MiraiPrivateRecall(this).onMsg(msgProcessor)
+            }
+            //endregion
+        }
+    }
+    //endregion
+
+    //region 禁言相关
+
+    //region 群友被禁言
+    bot.subscribeAlways<MemberMuteEvent> {
+        MiraiMemberMuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region 群友被解除禁言
+    bot.subscribeAlways<MemberUnmuteEvent> {
+        MiraiMemberUnmuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region bot被禁言
+    bot.subscribeAlways<BotMuteEvent> {
+        MiraiBotMuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region bot被取消禁言
+    bot.subscribeAlways<BotUnmuteEvent> {
+        MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+
+    //region 好友删除事件
+    bot.subscribeAlways<FriendDeleteEvent> {
+        MiraiFriendDeleteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+    //region 好友更换头像事件
+    bot.subscribeAlways<FriendAvatarChangedEvent> {
+        MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+
+
+    //endregion
 
 }

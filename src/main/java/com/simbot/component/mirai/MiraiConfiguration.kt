@@ -25,6 +25,9 @@ import com.forte.qqrobot.exception.ConfigurationException
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.ExternalImage
 import net.mamoe.mirai.utils.SystemDeviceInfo
+import java.io.Serializable
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -47,6 +50,7 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         code ->
         val conf = BotConfiguration()
         conf.deviceInfo = { MiraiSystemDeviceInfo(code) }
+//        conf.parentCoroutineContext = SimpleEmptyCoroutineContext()
         conf
     }
 
@@ -178,3 +182,25 @@ internal fun getRandomString(length: Int, charRange: CharRange, r: Random): Stri
  */
 internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRange): String =
         String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })
+
+
+
+/**
+ * An empty coroutine context.
+ * @see kotlin.coroutines.EmptyCoroutineContext
+ */
+@SinceKotlin("1.3")
+class SimpleEmptyCoroutineContext : CoroutineContext, Serializable {
+    companion object {
+        private const val serialVersionUID:Long = 0x0123456
+    }
+    override fun <E : CoroutineContext.Element> get(key: CoroutineContext.Key<E>): E? = null
+    override fun <R> fold(initial: R, operation: (R, CoroutineContext.Element) -> R): R = initial
+    override fun plus(context: CoroutineContext): CoroutineContext = context
+    override fun minusKey(key: CoroutineContext.Key<*>): CoroutineContext = this
+    override fun hashCode(): Int = 0
+    override fun equals(other: Any?): Boolean {
+        return other is SimpleEmptyCoroutineContext
+    }
+    public override fun toString(): String = "SimpleEmptyCoroutineContext"
+}

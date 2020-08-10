@@ -22,9 +22,7 @@ import com.forte.config.Conf
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
-import net.mamoe.mirai.utils.BotConfiguration
-import net.mamoe.mirai.utils.ExternalImage
-import net.mamoe.mirai.utils.SystemDeviceInfo
+import net.mamoe.mirai.utils.*
 import java.io.Serializable
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
@@ -37,9 +35,40 @@ import kotlin.random.nextInt
  */
 class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
 
-    @Conf("mirai.senderType", comment = "送信器类型")
+    @field:Conf("mirai.senderType", comment = "送信器类型")
     var senderType: SenderRunnerType = SenderRunnerType.BLOCK
 
+    /**
+     * mirai心跳周期. 过长会导致被服务器断开连接. 单位毫秒
+     * @see BotConfiguration.heartbeatPeriodMillis
+     */
+    @field:Conf("mirai.heartbeatPeriodMillis", comment = "mirai心跳周期. 过长会导致被服务器断开连接.")
+    var heartbeatPeriodMillis: Long = BotConfiguration.Default.heartbeatPeriodMillis
+
+    /**
+     * 每次心跳时等待结果的时间.
+     * 一旦心跳超时, 整个网络服务将会重启 (将消耗约 1s). 除正在进行的任务 (如图片上传) 会被中断外, 事件和插件均不受影响.
+     * @see BotConfiguration.heartbeatTimeoutMillis
+     */
+    @field:Conf("mirai.heartbeatTimeoutMillis", comment = "每次心跳时等待结果的时间.")
+    var heartbeatTimeoutMillis: Long = BotConfiguration.Default.heartbeatTimeoutMillis
+
+    /** 心跳失败后的第一次重连前的等待时间. */
+    @field:Conf("mirai.firstReconnectDelayMillis")
+    var firstReconnectDelayMillis: Long = BotConfiguration.Default.firstReconnectDelayMillis
+
+    /** 重连失败后, 继续尝试的每次等待时间 */
+    @field:Conf("mirai.reconnectPeriodMillis")
+    var reconnectPeriodMillis: Long = BotConfiguration.Default.reconnectPeriodMillis
+
+    /** 最多尝试多少次重连 */
+    @field:Conf("mirai.reconnectionRetryTimes")
+    var reconnectionRetryTimes: Int = BotConfiguration.Default.reconnectionRetryTimes
+
+
+    /** 使用协议类型 */
+    @field:Conf("mirai.protocol")
+    var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.Default.protocol
 
     /**
      * mirai官方配置类获取函数，默认为其默认值
@@ -49,7 +78,12 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         code ->
         val conf = BotConfiguration()
         conf.deviceInfo = { MiraiSystemDeviceInfo(code) }
-//        conf.parentCoroutineContext = SimpleEmptyCoroutineContext()
+        conf.heartbeatPeriodMillis = this.heartbeatPeriodMillis
+        conf.heartbeatTimeoutMillis = this.heartbeatTimeoutMillis
+        conf.firstReconnectDelayMillis = this.firstReconnectDelayMillis
+        conf.reconnectPeriodMillis = this.reconnectPeriodMillis
+        conf.reconnectionRetryTimes = this.reconnectionRetryTimes
+        conf.protocol = this.protocol
         conf
     }
 
@@ -184,22 +218,22 @@ internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRang
 
 
 
-/**
- * An empty coroutine context.
- * @see kotlin.coroutines.EmptyCoroutineContext
- */
-@SinceKotlin("1.3")
-class SimpleEmptyCoroutineContext : CoroutineContext, Serializable {
-    companion object {
-        private const val serialVersionUID:Long = 0x0123456
-    }
-    override fun <E : CoroutineContext.Element> get(key: CoroutineContext.Key<E>): E? = null
-    override fun <R> fold(initial: R, operation: (R, CoroutineContext.Element) -> R): R = initial
-    override fun plus(context: CoroutineContext): CoroutineContext = context
-    override fun minusKey(key: CoroutineContext.Key<*>): CoroutineContext = this
-    override fun hashCode(): Int = 0
-    override fun equals(other: Any?): Boolean {
-        return other is SimpleEmptyCoroutineContext
-    }
-    public override fun toString(): String = "SimpleEmptyCoroutineContext"
-}
+///**
+// * An empty coroutine context.
+// * @see kotlin.coroutines.EmptyCoroutineContext
+// */
+//@SinceKotlin("1.3")
+//class SimpleEmptyCoroutineContext : CoroutineContext, Serializable {
+//    companion object {
+//        private const val serialVersionUID:Long = 0x0123456
+//    }
+//    override fun <E : CoroutineContext.Element> get(key: CoroutineContext.Key<E>): E? = null
+//    override fun <R> fold(initial: R, operation: (R, CoroutineContext.Element) -> R): R = initial
+//    override fun plus(context: CoroutineContext): CoroutineContext = context
+//    override fun minusKey(key: CoroutineContext.Key<*>): CoroutineContext = this
+//    override fun hashCode(): Int = 0
+//    override fun equals(other: Any?): Boolean {
+//        return other is SimpleEmptyCoroutineContext
+//    }
+//    public override fun toString(): String = "SimpleEmptyCoroutineContext"
+//}

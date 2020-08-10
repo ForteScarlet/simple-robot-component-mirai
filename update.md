@@ -1,3 +1,45 @@
+# 1.3.0-1.16
+- 追加实现mirai的好友头像更换事件。
+```java
+    @Listen.ByName(MiraiEvents.friendAvatarChangedEvent)
+    public void event1() { }
+
+    // 或
+
+    @OnFriendAvatarChanged
+    public void event2() { }
+```
+
+- 追加一些可配置的信息：
+```properties
+# suppress inspection "UnusedProperty" for whole file
+
+# mirai心跳周期. 过长会导致被服务器断开连接. 单位毫秒
+simbot.mirai.heartbeatPeriodMillis=60000
+
+# 每次心跳时等待结果的时间.
+# 一旦心跳超时, 整个网络服务将会重启 (将消耗约 1s). 除正在进行的任务 (如图片上传) 会被中断外, 事件和插件均不受影响.
+# . 单位毫秒
+simbot.mirai.heartbeatTimeoutMillis=5000
+
+# 心跳失败后的第一次重连前的等待时间. 默认5000ms
+simbot.mirai.firstReconnectDelayMillis=5000
+
+# 重连失败后, 继续尝试的每次等待时间 默认5000ms
+simbot.mirai.reconnectPeriodMillis=5000
+
+# 最多尝试多少次重连. 此处默认值为Integer.MAX_VALUE
+simbot.mirai.reconnectionRetryTimes=
+
+# 使用的协议类型，值为枚举 [net.mamoe.mirai.utils.BotConfiguration.MiraiProtocol] 中的值。
+# 默认为ANDROID_PAD
+# 可选：ANDROID_PHONE ANDROID_PAD
+simbot.mirai.protocol=ANDROID_PAD
+
+
+
+```
+
 # 1.2.1-1.16
 - `Reply`追加支持回复消息的时候使用引用回复，且默认为true。
 - `Reply`追加支持回复消息的时候使用at，且默认为true。

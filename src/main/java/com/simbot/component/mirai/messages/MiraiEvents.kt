@@ -19,6 +19,9 @@
 
 package com.simbot.component.mirai.messages
 
+import com.forte.qqrobot.anno.Listen
+import kotlin.annotation.AnnotationTarget.*
+
 /**
  * 定义mirai组件所提供的额外监听事件
  */
@@ -35,5 +38,13 @@ object MiraiEvents {
     const val friendAvatarChangedEvent: String = "FRIEND_AVATAR_CHANGED_EVENT"
 
 
-
 }
+
+/*
+    此处提供一些额外的监听事件的整合注解
+ */
+@Retention(AnnotationRetention.RUNTIME) //注解会在class字节码文件中存在，在运行时可以通过反射获取到
+@Target(allowedTargets = [CLASS, FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER]) //接口、类、枚举、注解、方法
+@Listen.ByName(MiraiEvents.friendAvatarChangedEvent)
+annotation class OnFriendAvatarChanged
+

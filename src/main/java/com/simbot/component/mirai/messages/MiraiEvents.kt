@@ -19,8 +19,6 @@
 
 package com.simbot.component.mirai.messages
 
-import com.forte.qqrobot.beans.messages.result.StrangerInfo
-
 /**
  * 定义mirai组件所提供的额外监听事件
  */

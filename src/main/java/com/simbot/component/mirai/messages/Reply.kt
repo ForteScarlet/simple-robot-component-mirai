@@ -26,7 +26,6 @@ import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.MessageEvent
-import net.mamoe.mirai.message.data.QuoteReply
 
 /**
  * 提供一些通过返回值进行快捷回复的功能

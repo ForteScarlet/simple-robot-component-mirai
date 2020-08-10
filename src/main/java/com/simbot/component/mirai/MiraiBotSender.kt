@@ -34,8 +34,6 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.mute
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
-import java.util.concurrent.Executor
-import kotlin.coroutines.EmptyCoroutineContext
 
 
 /**

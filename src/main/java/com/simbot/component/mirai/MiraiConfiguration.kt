@@ -27,7 +27,6 @@ import net.mamoe.mirai.utils.ExternalImage
 import net.mamoe.mirai.utils.SystemDeviceInfo
 import java.io.Serializable
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.random.Random
 import kotlin.random.nextInt
 

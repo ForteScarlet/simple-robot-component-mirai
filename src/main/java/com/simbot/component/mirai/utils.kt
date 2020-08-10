@@ -18,7 +18,10 @@
 package com.simbot.component.mirai
 
 import cn.hutool.core.io.FileUtil
-import com.simplerobot.modules.utils.*
+import com.simplerobot.modules.utils.KQCode
+import com.simplerobot.modules.utils.KQCodeUtils
+import com.simplerobot.modules.utils.MQCodeUtils
+import com.simplerobot.modules.utils.MutableKQCode
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
@@ -26,7 +29,6 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadImage
 import java.net.URL
 import java.util.function.BiFunction

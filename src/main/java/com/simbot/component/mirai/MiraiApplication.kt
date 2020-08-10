@@ -23,7 +23,6 @@ import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
 import com.forte.qqrobot.depend.DependCenter
 import com.forte.qqrobot.exception.BotVerifyException
-import com.forte.qqrobot.exception.EnumFactoryException
 import com.forte.qqrobot.factory.MsgGetTypeFactory
 import com.forte.qqrobot.listener.invoker.AtDetection
 import com.forte.qqrobot.listener.invoker.ListenerFilter
@@ -32,7 +31,6 @@ import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
 import com.simbot.component.mirai.messages.MiraiEvents
 import com.simbot.component.mirai.messages.MiraiFriendAvatarChangedEvent
-import com.simbot.component.mirai.messages.MiraiFriendDeleteEvent
 import com.simbot.component.mirai.messages.MiraiMessageGet
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking

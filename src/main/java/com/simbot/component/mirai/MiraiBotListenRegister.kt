@@ -20,11 +20,8 @@ package com.simbot.component.mirai
 import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
-import net.mamoe.mirai.event.ListeningStatus
 import net.mamoe.mirai.event.events.*
-import net.mamoe.mirai.event.subscribe
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
@@ -33,8 +30,6 @@ import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.QuoteReply
 import net.mamoe.mirai.message.data.asMessageChain
-
-
 
 
 //region 响应判断

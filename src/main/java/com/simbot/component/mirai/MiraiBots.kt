@@ -18,7 +18,6 @@
 package com.simbot.component.mirai
 
 import com.forte.qqrobot.MsgProcessor
-import com.forte.qqrobot.anno.depend.Beans
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotSender
 import com.forte.qqrobot.bot.LoginInfo

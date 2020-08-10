@@ -22,9 +22,9 @@ import com.forte.config.Conf
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
-import net.mamoe.mirai.utils.*
-import java.io.Serializable
-import kotlin.coroutines.CoroutineContext
+import net.mamoe.mirai.utils.BotConfiguration
+import net.mamoe.mirai.utils.ExternalImage
+import net.mamoe.mirai.utils.SystemDeviceInfo
 import kotlin.random.Random
 import kotlin.random.nextInt
 

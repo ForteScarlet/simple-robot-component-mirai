@@ -28,12 +28,16 @@ import kotlin.annotation.AnnotationTarget.*
 object MiraiEvents {
     /**
      * 核心1.6.2后已经内置了此类型的监听。
+     * @since 1.1.0-1.16
+     * @deprecated 核心已整合此事件。
+     * 1.3.0-1.16+ 之后重新进行向下兼容，但是依旧为过时状态
      */
-    @Deprecated("just use FriendDelete")
-    const val friendDeleteEvent: String = "FRIEND_EVENT"
+    @Deprecated("just use friendDelete", replaceWith = ReplaceWith("@OnFriendDelete", "com.forte.qqrobot.anno.template.OnFriendDelete"))
+    const val friendDeleteEvent: String = "friendDelete"
 
     /**
      * 好友更换头像事件
+     * @since 1.3.0-1.16
      */
     const val friendAvatarChangedEvent: String = "FRIEND_AVATAR_CHANGED_EVENT"
 
@@ -42,6 +46,10 @@ object MiraiEvents {
 
 /*
     此处提供一些额外的监听事件的整合注解
+ */
+
+/**
+ * 针对于额外的事件[MiraiEvents.friendAvatarChangedEvent]的整合注解。
  */
 @Retention(AnnotationRetention.RUNTIME) //注解会在class字节码文件中存在，在运行时可以通过反射获取到
 @Target(allowedTargets = [CLASS, FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER]) //接口、类、枚举、注解、方法

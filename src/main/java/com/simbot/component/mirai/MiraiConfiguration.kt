@@ -22,6 +22,7 @@ import com.forte.config.Conf
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.exception.ConfigurationException
+import com.simbot.component.mirai.logger.SimbotMiraiLogger
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.ExternalImage
 import net.mamoe.mirai.utils.SystemDeviceInfo

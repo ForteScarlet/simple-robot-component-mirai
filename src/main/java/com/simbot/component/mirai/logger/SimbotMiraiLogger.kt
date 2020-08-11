@@ -17,7 +17,7 @@
  *
  */
 
-package com.simbot.component.mirai
+package com.simbot.component.mirai.logger
 
 import com.forte.plusutils.consoleplus.console.Colors
 import com.forte.plusutils.consoleplus.console.colors.FontColorTypes

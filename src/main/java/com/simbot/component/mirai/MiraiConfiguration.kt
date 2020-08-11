@@ -21,11 +21,13 @@ import cn.hutool.crypto.SecureUtil
 import com.forte.config.Conf
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
+import com.forte.qqrobot.bot.BotInfoImpl
 import com.forte.qqrobot.exception.ConfigurationException
 import com.simbot.component.mirai.logger.SimbotMiraiLogger
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.ExternalImage
 import net.mamoe.mirai.utils.SystemDeviceInfo
+import java.util.AbstractMap.SimpleEntry
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -124,11 +126,33 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     }
 
     /** 账号不可为null */
-    override fun registerBot(botCode: String?, path: String?) {
+    override fun registerBot(botCode: String?, path: String) {
         if(botCode == null){
             throw IllegalArgumentException("bot code can not be null.")
         }
-        super.registerBot(botCode, path)
+        doRegisterBot(botCode, path)
+    }
+
+    /**
+     * 使用[FixBotInfoImpl]来代替[BotInfoImpl]
+     */
+    override fun registerBotAsDefault(botCode: String, path: String) {
+        val botInfo = FixBotInfoImpl(botCode, path, null, null)
+        setDefaultBotInfo(botInfo)
+        // 注册一个bot信息
+        advanceBotInfo.add(SimpleEntry<String, BotInfo>(botCode, botInfo))
+    }
+
+    /**
+     * 使用[FixBotInfoImpl]来代替[BotInfoImpl]
+     */
+    private fun doRegisterBot(botCode: String, path: String){
+        val botInfo = FixBotInfoImpl(botCode, path, null, null)
+        if (getDefaultBotInfo() == null) {
+            setDefaultBotInfo(botInfo)
+        }
+        // 注册一个bot信息
+        advanceBotInfo.add(SimpleEntry<String, BotInfo>(botCode, botInfo))
     }
 
     /** 变更切割方式 */
@@ -245,5 +269,8 @@ internal fun getRandomString(length: Int, charRange: CharRange, r: Random): Stri
  */
 internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRange): String =
         String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })
+
+
+
 
 

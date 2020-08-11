@@ -44,8 +44,8 @@ class SimbotBotMiraiLogger(private val bot: Bot) : MiraiLoggerPlatformBase() {
     override val identity: String = "Mirai-${
     Colors.builder()
             .add(bot.id.toString(), FontColorTypes.DARK_GREEN)
-            .build().toString()
-    }"
+            .build()
+}"
 
     /**
      * 颜色标记

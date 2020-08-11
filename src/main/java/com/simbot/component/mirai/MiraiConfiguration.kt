@@ -70,6 +70,22 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     @field:Conf("mirai.protocol")
     var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.Default.protocol
 
+    /** 关闭mirai bot logger */
+    @field:Conf("mirai.noBotLog")
+    var noBotLog: Boolean = false
+
+    /** 关闭mirai网络日志 */
+    @field:Conf("mirai.noNetworkLog")
+    var noNetworkLog: Boolean = false
+
+    /** bot log切换使用Simbot的log */
+    @field:Conf("mirai.useSimbotBotLog")
+    var useSimbotBotLog: Boolean = false
+
+    /** 网络log 切换使用Simbot的log */
+    @field:Conf("mirai.useSimbotNetworkLog")
+    var useSimbotNetworkLog: Boolean = false
+
     /**
      * mirai官方配置类获取函数，默认为其默认值
      * 函数参数为bot的账号，得到一个config实例
@@ -84,6 +100,18 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         conf.reconnectPeriodMillis = this.reconnectPeriodMillis
         conf.reconnectionRetryTimes = this.reconnectionRetryTimes
         conf.protocol = this.protocol
+        if(noBotLog){
+            conf.noBotLog()
+        }
+        if(noNetworkLog){
+            conf.noNetworkLog()
+        }
+        if(useSimbotBotLog){
+            conf.botLoggerSupplier = { SimbotMiraiLogger }
+        }
+        if(useSimbotNetworkLog){
+            conf.networkLoggerSupplier = { SimbotMiraiLogger }
+        }
         conf
     }
 

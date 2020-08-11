@@ -152,6 +152,7 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
 //            if (path.endsWith("/")) {
 //                path = path.substring(0, path.length - 1)
 //            }
+//            println(path)
             registerBot(code, path)
         }
     }

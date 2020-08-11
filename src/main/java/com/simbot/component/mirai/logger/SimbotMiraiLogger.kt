@@ -24,7 +24,9 @@ import com.forte.plusutils.consoleplus.console.colors.FontColorTypes
 import com.forte.qqrobot.log.QQLog
 import net.mamoe.mirai.utils.MiraiLoggerPlatformBase
 
-
+/**
+ * 默认使用的普通日志实现，不会区分bot
+ */
 object SimbotMiraiLogger : MiraiLoggerPlatformBase() {
     /**
      * 日志的标记. 在 Mirai 中, identity 可为

@@ -148,7 +148,7 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
 
             val first = botInfoStr.indexOf(":")
             val code = botInfoStr.substring(0, first).trim { it <= ' ' }
-            var path = botInfoStr.substring(first + 1).trim { it <= ' ' }
+            val path = botInfoStr.substring(first + 1).trim { it <= ' ' }
 //            if (path.endsWith("/")) {
 //                path = path.substring(0, path.length - 1)
 //            }
@@ -246,23 +246,3 @@ internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRang
         String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })
 
 
-
-///**
-// * An empty coroutine context.
-// * @see kotlin.coroutines.EmptyCoroutineContext
-// */
-//@SinceKotlin("1.3")
-//class SimpleEmptyCoroutineContext : CoroutineContext, Serializable {
-//    companion object {
-//        private const val serialVersionUID:Long = 0x0123456
-//    }
-//    override fun <E : CoroutineContext.Element> get(key: CoroutineContext.Key<E>): E? = null
-//    override fun <R> fold(initial: R, operation: (R, CoroutineContext.Element) -> R): R = initial
-//    override fun plus(context: CoroutineContext): CoroutineContext = context
-//    override fun minusKey(key: CoroutineContext.Key<*>): CoroutineContext = this
-//    override fun hashCode(): Int = 0
-//    override fun equals(other: Any?): Boolean {
-//        return other is SimpleEmptyCoroutineContext
-//    }
-//    public override fun toString(): String = "SimpleEmptyCoroutineContext"
-//}

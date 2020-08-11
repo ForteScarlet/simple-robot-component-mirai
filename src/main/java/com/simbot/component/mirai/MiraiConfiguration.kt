@@ -137,7 +137,7 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
             return
         }
         // 替换特殊字符：转义:\\, 逗号:\,
-        var registerBotsStr = registerBots.replace("\\\\", "转义").replace("\\,", "逗号")
+        val registerBotsStr = registerBots.replace("\\\\", "转义").replace("\\,", "逗号")
 
         // 根据逗号切割
         for (botInfo in registerBotsStr.split(",").toTypedArray()) {
@@ -149,9 +149,9 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
             val first = botInfoStr.indexOf(":")
             val code = botInfoStr.substring(0, first).trim { it <= ' ' }
             var path = botInfoStr.substring(first + 1).trim { it <= ' ' }
-            if (path.endsWith("/")) {
-                path = path.substring(0, path.length - 1)
-            }
+//            if (path.endsWith("/")) {
+//                path = path.substring(0, path.length - 1)
+//            }
             registerBot(code, path)
         }
     }

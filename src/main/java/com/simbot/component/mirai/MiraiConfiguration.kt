@@ -79,11 +79,11 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     @field:Conf("mirai.noNetworkLog")
     var noNetworkLog: Boolean = false
 
-    /** bot log切换使用Simbot的log */
+    /** mirai bot log切换使用simbot的log */
     @field:Conf("mirai.useSimbotBotLog")
     var useSimbotBotLog: Boolean = false
 
-    /** 网络log 切换使用Simbot的log */
+    /** mirai 网络log 切换使用simbot的log */
     @field:Conf("mirai.useSimbotNetworkLog")
     var useSimbotNetworkLog: Boolean = false
 

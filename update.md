@@ -1,3 +1,22 @@
+# 1.4.1-1.16
+
+- 追加几项可配置的配置信息：
+```properties
+
+
+# 关闭mirai bot logger
+simbot.mirai.noBotLog=false
+
+# 关闭mirai网络日志
+simbot.mirai.noNetworkLog=false
+
+# mirai bot log切换使用simbot的log
+simbot.mirai.useSimbotBotLog=false
+
+# mirai 网络log 切换使用simbot的log
+simbot.mirai.useSimbotNetworkLog=false
+```
+
 # 1.3.0-1.16
 - 追加实现mirai的好友头像更换事件。
 ```java

@@ -267,24 +267,6 @@
                 </dependencies>
             </plugin>
 
-            <!--
-            第2步：生成Javadoc和Source jar文件，您必须配置javadoc和源Maven插件。
-            在pom.xml的build一级目录下的plugins里面加入下面：
-            -->
-            <!-- java 版本 -->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <version>3.7.0</version>-->
-<!--                <configuration>-->
-<!--                    <source>1.8</source>-->
-<!--                    <target>1.8</target>-->
-<!--                    <compilerArgs>-->
-<!--                        <arg>-parameters</arg>-->
-<!--                    </compilerArgs>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-
             <!-- java源码 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -417,15 +399,6 @@
                 </plugins>
             </build>
         </profile>
-<!--        <profile>-->
-<!--            <id>disable-java8-doclint</id>-->
-<!--            <activation>-->
-<!--                <jdk>[1.8,)</jdk>-->
-<!--            </activation>-->
-<!--            <properties>-->
-<!--                <additionalparam>-Xdoclint:none</additionalparam>-->
-<!--            </properties>-->
-<!--        </profile>-->
     </profiles>
 
 </project>

@@ -50,25 +50,25 @@ object MiraiBots {
 
 
     /** 增加一个bot，如果此bot已经存在则会抛出异常 */
-    operator fun set(id: String, bot: MiraiBotInfo){
+    fun set(id: String, bot: MiraiBotInfo, cacheMaps: CacheMaps){
         bots[id] = bot
         // 注册或等待
-        registerOrWait(bot)
+        registerOrWait(bot, cacheMaps)
     }
 
     /**
      * 尝试获取一个bot，如果获取不到则会尝试构建一个。
      * 需要在从BotManager中验证存在后在通过此获取，否则BotManager中可能会缺失
      */
-    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration = { BotConfiguration.Default }): MiraiBotInfo {
+    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration = { BotConfiguration() }, cacheMaps: CacheMaps, senderRunner: SenderRunner): MiraiBotInfo {
         val id = info.botCode
         // 构建一个，构建失败会抛出异常
         val miraiBotInfo = bots[id]
         return if(miraiBotInfo == null){
             // 不存在，尝试获取
-            val newBotInfo = MiraiBotInfo(info, botConfiguration(id))
+            val newBotInfo = MiraiBotInfo(info, botConfiguration(id), cacheMaps, senderRunner)
             // 注册/等待并返回
-            registerOrWait(newBotInfo)
+            registerOrWait(newBotInfo, cacheMaps)
             newBotInfo
         }else{
             miraiBotInfo
@@ -76,10 +76,10 @@ object MiraiBots {
     }
 
     /** 注册监听或等待 */
-    private fun registerOrWait(info: MiraiBotInfo){
+    private fun registerOrWait(info: MiraiBotInfo, cacheMaps: CacheMaps){
         if(started()){
             // 启动了监听，注册
-            registerListen(info)
+            registerListen(info, cacheMaps)
         }else{
             noListenBots[info.botCode] = info
         }
@@ -98,23 +98,23 @@ object MiraiBots {
 
 
     /** 启用监听 */
-    fun startListen(msgProcessor: MsgProcessor){
+    fun startListen(msgProcessor: MsgProcessor, cacheMaps: CacheMaps){
         // 初始化
         this.msgProcessor = msgProcessor
         // 等待区注册监听
         noListenBots.forEach{
-            registerListen(it.value)
+            registerListen(it.value, cacheMaps)
             val bot = it.value.bot
             QQLog.debug("run.cache.contact", bot.id.toString())
-            ContactCache.cache(bot)
+            cacheMaps.contactCache.cache(bot)
         }
         // 清空等待区
         noListenBots.clear()
     }
 
     /** 注册监听 */
-    private fun registerListen(info: MiraiBotInfo){
-        info.register(msgProcessor)
+    private fun registerListen(info: MiraiBotInfo, cacheMaps: CacheMaps){
+        info.register(msgProcessor, cacheMaps)
     }
 
     /** 等待所有bot下线 */
@@ -145,11 +145,14 @@ object MiraiBots {
  */
 class MiraiBotInfo(private val id: String,
                    private val pwd: String,
-                   private val botConfiguration: BotConfiguration
+                   private val botConfiguration: BotConfiguration,
+                   private val cacheMaps: CacheMaps,
+                   private val senderRunner: SenderRunner
 ): BotInfo {
 
     /** 使用info的构造 */
-    constructor(botInfo: BotInfo, botConfiguration: BotConfiguration): this(botInfo.botCode, botInfo.path, botConfiguration)
+    constructor(botInfo: BotInfo, botConfiguration: BotConfiguration,
+                cacheMaps: CacheMaps, senderRunner: SenderRunner): this(botInfo.botCode, botInfo.path, botConfiguration, cacheMaps, senderRunner)
 
     /** bot信息 */
     val bot: Bot
@@ -168,10 +171,10 @@ class MiraiBotInfo(private val id: String,
         // 输入账号密码，填入配置，阻塞登录
         bot = runBlocking { Bot(id.toLong(), pwd, botConfiguration).alsoLogin() }
         // 将自己记录在MiraiBots中
-        MiraiBots[id] = this
+        MiraiBots.set(id, this, cacheMaps)
 
         // bot sender
-        botSender = BotSender(MiraiBotSender(bot))
+        botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))
 
         // login info
         loginInfo = MiraiLoginInfo(bot)

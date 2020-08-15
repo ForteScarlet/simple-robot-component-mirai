@@ -1,3 +1,4 @@
+# suppress inspection "UnusedProperty" for whole file
 #
 # Copyright (c) 2020. ForteScarlet All rights reserved.
 # Project  component-mirai (Codes other than Mirai)
@@ -14,6 +15,10 @@
 #
 #
 #
-
 exception.CQCodeParseHandlerRegister.failed.existed=登録に失敗しました：{0} が存在しました
 run.cache.contact=アカウント[{0}]の連絡先情報のキャッシュを開始します...
+# deprecated api
+mirai.api.deprecated=miraiでサポートされていないAPI：{0}。デフォルト値「{1}」が返されます。このAPIは一度だけ警告します。
+mirai.event.register.failed=Mirai追加監視イベント[{0}]の登録に失敗しました。関連する監視を使用できなくなります。 情報：{1}
+
+mirai.event.register=miraiの特別イベント登録：{0}

@@ -22,22 +22,14 @@ import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.event.subscribeMessages
 import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
-
-/**
- * 为bot注册对应监听的工具类，为Java用
- */
-object MiraiBotListenRegister {
-    /** 注册监听 */
-    @JvmStatic
-    fun register(info: MiraiBotInfo, msgProcessor: MsgProcessor) {
-        info.register(msgProcessor)
-    }
-}
+import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.QuoteReply
+import net.mamoe.mirai.message.data.asMessageChain
 
 
 //region 响应判断
@@ -70,12 +62,37 @@ internal fun <M : MiraiBaseMsgGet<*>> M.onMsg(msgProcessor: MsgProcessor): Liste
  * Listen result 快捷回复
  * message event相关的
  */
-suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent) {
+suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         val reply = result["reply"]
+        val quote = result["quote"]
+        val at = result["at"]
         if (reply != null) {
-            event.reply(reply.toString().toWholeMessage(event.subject))
+            var replyMsg = if(reply is Message) {
+                reply.asMessageChain()
+            }else {
+                reply.toString().toWholeMessage(event.subject, cacheMaps).asMessageChain()
+            }
+
+            // 是群聊的时候
+            if(event is GroupMessageEvent){
+                // at送信人
+                if(at is Boolean && at){
+                    replyMsg = At(event.sender) + replyMsg
+                }
+                // 引用回复
+                if(quote is Boolean && quote){
+                    replyMsg = QuoteReply(event.source) + replyMsg
+                }else if(quote is String){
+                    val quoteSource = cacheMaps.recallCache.get(quote, event.bot.id)
+                    if(quoteSource != null){
+                        replyMsg = QuoteReply(quoteSource) + replyMsg
+                    }
+                }
+            }
+            // reply
+            event.reply(replyMsg)
         }
     }
 }
@@ -83,7 +100,7 @@ suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent) {
 /**
  * Listen result 快捷处理，invited join request相关的
  */
-suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent) {
+suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         // reply: agree/accpet and ignore/reject
@@ -94,12 +111,12 @@ suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent) 
                 // accept
                 event.accept()
                 // remove cache
-                RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
             } else if (reply.isReject() || reply.isIgnore()) {
                 // 不同意申请，即忽略请求
                 event.ignore()
                 // remove cache
-                RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
             }
         }
     }
@@ -108,7 +125,7 @@ suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent) 
 /**
  * Listen result 快捷处理，member join request相关的
  */
-suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent) {
+suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         // accept or agree
@@ -120,19 +137,19 @@ suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent) {
                     // accept
                     event.accept()
                     // remove cache
-                    RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                    cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
                 }
                 reply.isReject() -> {
                     // 不同意申请
                     event.reject()
                     // remove cache
-                    RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                    cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
                 }
                 reply.isIgnore() -> {
                     // 忽略
                     event.ignore()
                     // remove cache
-                    RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                    cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
                 }
             }
         }
@@ -142,7 +159,7 @@ suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent) {
 /**
  * Listen result 快捷处理，new friend request相关的
  */
-suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent) {
+suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         // accept or agree
@@ -154,13 +171,13 @@ suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent) {
                     // accept
                     event.accept()
                     // remove cache
-                    RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                    cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
                 }
                 reply.isReject() -> {
                     // 不同意申请
                     event.reject()
                     // remove cache
-                    RequestCache.removeFriendRequest(event.botId(), event.toKey())
+                    cacheMaps.requestCache.removeFriendRequest(event.botId(), event.toKey())
                 }
             }
         }
@@ -175,138 +192,183 @@ suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent) {
  * 注册监听
  *
  */
-fun MiraiBotInfo.register(msgProcessor: MsgProcessor) {
+fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     val bot = this.bot
 
     //region 消息监听相关事件
 
-    bot.subscribeMessages {
-        this.always {
-            // 首先缓存此消息
-            RecallCache.cache(this.source)
-            val result = when (this) {
-                // 好友消息
-                is FriendMessageEvent -> {
-                    MiraiFriendMsg(this).onMsg(msgProcessor)
-                }
-                // 群消息
-                is GroupMessageEvent -> {
-                    MiraiGroupMsg(this).onMsg(msgProcessor)
-                }
-                // 群临时会话消息
-                is TempMessageEvent -> {
-                    MiraiTempMsg(this).onMsg(msgProcessor)
-                }
-                // 其他类型, 没其他类型了吧？
-                else -> null
+//    bot.subscribe<FriendMessageEvent> {
+//        val result = MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
+//        result.quickReplyMessage(this, cacheMaps)
+//        ListeningStatus.LISTENING
+//    }
+
+    bot.subscribeAlways<MessageEvent> {
+        // 首先缓存此消息
+        cacheMaps.recallCache.cache(this.source)
+        val result = when (this) {
+            // 好友消息
+            is FriendMessageEvent -> {
+                MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
             }
-            // try to quick reply
-            result.quickReplyMessage(this)
-        }
-
-        //endregion
-
-
-        // region 申请相关事件
-
-        // 被邀请入群事件监听
-        bot.subscribeAlways<BotInvitedJoinGroupRequestEvent> {
-            val result = MiraiBotInvitedJoinGroupRequestEvent(this).onMsg(msgProcessor)
-            // try to quick reply
-            result.quickReply(this)
-        }
-
-        // 其他人申请入群事件监听
-        bot.subscribeAlways<MemberJoinRequestEvent> {
-            val result = MiraiMemberJoinRequestEvent(this).onMsg(msgProcessor)
-            // try to quick reply
-            result.quickReply(this)
-        }
-
-        // 新好友申请事件监听
-        bot.subscribeAlways<NewFriendRequestEvent> {
-            val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this)
-            val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
-            // try to quick reply
-            result.quickReply(this)
-        }
-
-        // endregion
-
-        //region 群成员/好友增减事件
-
-        //region 成功添加了一个新好友
-        bot.subscribeAlways<FriendAddEvent> {
-            MiraiFriendAddEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region 群成员增加事件
-        bot.subscribeAlways<MemberJoinEvent> {
-            MiraiMemberJoinEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region 群成员减少事件
-        bot.subscribeAlways<MemberLeaveEvent> {
-            MiraiMemberLeaveEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-
-        //endregion
-
-        //region 权限变动事件
-        // 成员权限变动
-        bot.subscribeAlways<MemberPermissionChangeEvent> {
-            MiraiMemberPermissionChangeEvent(this).onMsg(msgProcessor)
-        }
-        // bot权限变动
-        bot.subscribeAlways<BotGroupPermissionChangeEvent> {
-            MiraiBotGroupPermissionChangeEvent(this).onMsg(msgProcessor)
-        }
-
-        //endregion
-
-        //region 消息撤回事件
-        bot.subscribeAlways<MessageRecallEvent> {
-            when (this) {
-                //region 群消息撤回
-                is MessageRecallEvent.GroupRecall -> {
-                    MiraiGroupRecall(this).onMsg(msgProcessor)
-                }
-                //endregion
-                //region 好友消息撤回
-                is MessageRecallEvent.FriendRecall -> {
-                    MiraiPrivateRecall(this).onMsg(msgProcessor)
-                }
-                //endregion
+            // 群消息
+            is GroupMessageEvent -> {
+                MiraiGroupMsg(this, cacheMaps).onMsg(msgProcessor)
             }
+            // 群临时会话消息
+            is TempMessageEvent -> {
+                MiraiTempMsg(this, cacheMaps).onMsg(msgProcessor)
+            }
+            // 其他类型, 没其他类型了吧？
+            else -> null
         }
-        //endregion
-
-        //region 禁言相关
-
-        //region 群友被禁言
-        bot.subscribeAlways<MemberMuteEvent> {
-            MiraiMemberMuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region 群友被解除禁言
-        bot.subscribeAlways<MemberUnmuteEvent> {
-            MiraiMemberUnmuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region bot被禁言
-        bot.subscribeAlways<BotMuteEvent> {
-            MiraiBotMuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //region bot被取消禁言
-        bot.subscribeAlways<BotUnmuteEvent> {
-            MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
-        }
-        //endregion
-        //endregion
-
+        // try to quick reply
+        result.quickReplyMessage(this, cacheMaps)
     }
 
+//    bot.subscribeMessages {
+//        this.always {
+//            // 首先缓存此消息
+//            cacheMaps.recallCache.cache(this.source)
+//            val result = when (this) {
+//                // 好友消息
+//                is FriendMessageEvent -> {
+//                    MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
+//                }
+//                // 群消息
+//                is GroupMessageEvent -> {
+//                    MiraiGroupMsg(this, cacheMaps).onMsg(msgProcessor)
+//                }
+//                // 群临时会话消息
+//                is TempMessageEvent -> {
+//                    MiraiTempMsg(this, cacheMaps).onMsg(msgProcessor)
+//                }
+//                // 其他类型, 没其他类型了吧？
+//                else -> null
+//            }
+//            // try to quick reply
+//            result.quickReplyMessage(this, cacheMaps)
+//        }
+//    }
+    //endregion
+
+
+
+    // region 申请相关事件
+
+    // 被邀请入群事件监听
+    bot.subscribeAlways<BotInvitedJoinGroupRequestEvent> {
+        val result = MiraiBotInvitedJoinGroupRequestEvent(this, cacheMaps).onMsg(msgProcessor)
+        // try to quick reply
+        result.quickReply(this, cacheMaps)
+    }
+
+    // 其他人申请入群事件监听
+    bot.subscribeAlways<MemberJoinRequestEvent> {
+        val result = MiraiMemberJoinRequestEvent(this, cacheMaps).onMsg(msgProcessor)
+        // try to quick reply
+        result.quickReply(this, cacheMaps)
+    }
+
+    // 新好友申请事件监听
+    bot.subscribeAlways<NewFriendRequestEvent> {
+        val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this, cacheMaps)
+        val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
+        // try to quick reply
+        result.quickReply(this, cacheMaps)
+    }
+
+    // endregion
+
+    //region 群成员/好友增减事件
+
+    //region 成功添加了一个新好友
+    bot.subscribeAlways<FriendAddEvent> {
+        MiraiFriendAddEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region 群成员增加事件
+    bot.subscribeAlways<MemberJoinEvent> {
+        MiraiMemberJoinEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region 群成员减少事件
+    bot.subscribeAlways<MemberLeaveEvent> {
+        MiraiMemberLeaveEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+    //endregion
+
+    //region 权限变动事件
+    // 成员权限变动
+    bot.subscribeAlways<MemberPermissionChangeEvent> {
+        MiraiMemberPermissionChangeEvent(this).onMsg(msgProcessor)
+    }
+    // bot权限变动
+    bot.subscribeAlways<BotGroupPermissionChangeEvent> {
+        MiraiBotGroupPermissionChangeEvent(this).onMsg(msgProcessor)
+    }
+
+    //endregion
+
+    //region 消息撤回事件
+    bot.subscribeAlways<MessageRecallEvent> {
+        when (this) {
+            //region 群消息撤回
+            is MessageRecallEvent.GroupRecall -> {
+                MiraiGroupRecall(this, cacheMaps).onMsg(msgProcessor)
+            }
+            //endregion
+            //region 好友消息撤回
+            is MessageRecallEvent.FriendRecall -> {
+                MiraiPrivateRecall(this).onMsg(msgProcessor)
+            }
+            //endregion
+        }
+    }
+    //endregion
+
+    //region 禁言相关
+
+    //region 群友被禁言
+    bot.subscribeAlways<MemberMuteEvent> {
+        MiraiMemberMuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region 群友被解除禁言
+    bot.subscribeAlways<MemberUnmuteEvent> {
+        MiraiMemberUnmuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region bot被禁言
+    bot.subscribeAlways<BotMuteEvent> {
+        MiraiBotMuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+    //region bot被取消禁言
+    bot.subscribeAlways<BotUnmuteEvent> {
+        MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+    // TODO 全员禁言 GroupMuteAllEvent
+
+    //region 好友删除事件
+    bot.subscribeAlways<FriendDeleteEvent> {
+        MiraiFriendDeleteEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+    //region 好友更换头像事件
+    bot.subscribeAlways<FriendAvatarChangedEvent> {
+        MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+
+//    bot.subscribeAlways<BotJoinGroupEvent> {  }
+
+    //endregion
 
 }

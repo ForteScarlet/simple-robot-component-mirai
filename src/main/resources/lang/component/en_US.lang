@@ -1,3 +1,4 @@
+# suppress inspection "UnusedProperty" for whole file
 #
 # Copyright (c) 2020. ForteScarlet All rights reserved.
 # Project  component-mirai (Codes other than Mirai)
@@ -14,9 +15,10 @@
 #
 #
 #
-
 exception.CQCodeParseHandlerRegister.failed.existed=register failed：{0} existed
 run.cache.contact=Starting to cache contact information for bot [{0}]...
-
 # deprecated api
-mirai.api.deprecated=APIs not supported by mirai: {0}. The default value "{1}" will be returned. This API will only warn once.
+mirai.api.deprecated=API not supported by mirai: {0}. The default value [{1}] will be returned. This API will only warn once.
+mirai.event.register.failed=Mirai additional monitoring event [{0}] registration failed, you will not be able to use related monitoring. info: {1}
+
+mirai.event.register=Special event registration for mirai: {0}

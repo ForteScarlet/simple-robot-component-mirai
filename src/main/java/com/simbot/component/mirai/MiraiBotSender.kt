@@ -24,6 +24,9 @@ import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
 import com.forte.qqrobot.sender.senderlist.BaseRootSenderList
 import com.simbot.component.mirai.messages.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
@@ -34,11 +37,63 @@ import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 
 
 /**
+ * 具体的执行逻辑
+ */
+/**
+ * 送信器对于可挂起函数的执行策略
+ */
+interface SenderRunner {
+    fun <T> run(runner: suspend CoroutineScope.() -> T): T?
+}
+
+
+/**
+ * 阻塞送信
+ */
+object BlockSenderRunner: SenderRunner {
+    override fun <T> run(runner: suspend CoroutineScope.() -> T): T {
+//        println("block!")
+        return runBlocking(block = runner)
+    }
+}
+
+/**
+ * 协程送信
+ */
+object CoroutineSenderRunner: SenderRunner {
+    override fun <T> run(runner: suspend CoroutineScope.() -> T): T? {
+//        println("coroutine!")
+        GlobalScope.launch { runner(this) }
+        return null
+    }
+}
+
+
+/**
+ * [BlockSenderRunner] [CoroutineSenderRunner]
+ */
+enum class SenderRunnerType(val runnerGetter: () -> SenderRunner) {
+    BLOCK({ BlockSenderRunner }), COROUTINE({ CoroutineSenderRunner })
+
+
+}
+
+
+
+
+
+/**
  * mirai bot sender
  * @param bot 虽然可以为null，但是此null仅为子类重写而用，构建此类不可使用null值。
  * @author ForteScarlet <\[email]ForteScarlet@163.com>
  **/
-open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSenderList() {
+open class MiraiBotSender(
+        bot: Bot?, val contact: Contact? = null,
+        // 缓存Map列表
+        protected val cacheMaps: CacheMaps,
+        protected val senderRunner: SenderRunner
+
+): BaseRootSenderList() {
 
     /** 幕后真实字段 */
     private val _bot: Bot? = bot
@@ -121,22 +176,22 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
 
     /** 讨论组消息，直接使用群消息发送 */
     @Deprecated("just send group msg", ReplaceWith("sendGroupMsg(group, msg)"))
-    override fun sendDiscussMsg(group: String, msg: String): String = sendGroupMsg(group, msg)
+    override fun sendDiscussMsg(group: String, msg: String): String? = sendGroupMsg(group, msg)
 
     /** 发送群消息 */
-    override fun sendGroupMsg(group: String, msg: String): String {
+    override fun sendGroupMsg(group: String, msg: String): String? {
         val g = bot.getGroup(group.toLong())
         // 阻塞发送
-        val result = runBlocking {
-            g.sendMsg(msg)
+        val result = senderRunner.run {
+            g.sendMsg(msg, cacheMaps)
         }
         // 缓存消息id并返回
-        return RecallCache.cache(result)
+        return if (result != null) cacheMaps.recallCache.cache(result) else null
     }
 
 
     /** 发送私信消息 */
-    override fun sendPrivateMsg(QQ: String, msg: String): String {
+    override fun sendPrivateMsg(QQ: String, msg: String): String? {
         // 获取QQ号
         val code = QQ.toLong()
         // 没有这个人则可能抛出异常
@@ -149,18 +204,18 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
             if(contact != null && contact is Group){
                 contact.getOrNull(code) ?: run{
                     // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
-                    ContactCache[code, bot] ?: throw fe
+                    cacheMaps.contactCache[code, bot] ?: throw fe
                 }
             }else{
                 // 不是好友，开始扫描全群缓存，查询不到缓存则会抛出异常
-               ContactCache[code, bot] ?: throw fe
+                cacheMaps.contactCache[code, bot] ?: throw fe
             }
         }
-        val result = runBlocking {
-            to.sendMsg(msg)
+        val result = senderRunner.run {
+            to.sendMsg(msg, cacheMaps)
         }
         // 缓存消息id并返回
-        return RecallCache.cache(result)
+        return if(result != null) cacheMaps.recallCache.cache(result) else null
     }
 
     /** 发布群公告 */
@@ -189,7 +244,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
 
     /** 踢出群员 */
     override fun setGroupMemberKick(group: String, QQ: String, dontBack: Boolean): Boolean {
-        runBlocking {
+        senderRunner.run {
             bot.getGroup(group.toLong())[QQ.toLong()].kick()
         }
         return true
@@ -206,7 +261,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
 //        if(dissolve){
 //            g.quit()
 //        }else{
-            return runBlocking { g.quit() }
+        return senderRunner.run { g.quit() } ?: true
 //        }
     }
 
@@ -226,16 +281,16 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     }
 
     /** 处理好友申请 */
-    override fun setFriendAddRequest(flag: String, friendName: String, agree: Boolean): Boolean {
+    override fun setFriendAddRequest(flag: String, friendName: String?, agree: Boolean): Boolean {
         val botId = bot.id
-        val request = RequestCache.getFriendRequest(botId, flag)
+        val request = cacheMaps.requestCache.getFriendRequest(botId, flag)
         return if(request!=null){
             if(agree){
-                runBlocking { request.accept() }
+                senderRunner.run { request.accept() }
             }else{
-                runBlocking { request.reject(false) }
+                senderRunner.run { request.reject(false) }
             }
-            RequestCache.removeFriendRequest(botId, flag)
+            cacheMaps.requestCache.removeFriendRequest(botId, flag)
             true
         }else{
             false
@@ -245,7 +300,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     /** 处理加群申请 */
     override fun setGroupAddRequest(flag: String, requestType: GroupAddRequestType, agree: Boolean, why: String): Boolean {
         val botId = bot.id
-        val request = RequestCache.getJoinRequest(botId, flag)
+        val request = cacheMaps.requestCache.getJoinRequest(botId, flag)
         return if(request!=null){
 
             when(request) {
@@ -253,24 +308,24 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
                 is MemberJoinRequestEvent -> {
                     if(agree){
                         // 同意
-                        runBlocking { request.accept() }
+                        senderRunner.run { request.accept() }
                     }else{
                         // 不同意
-                        runBlocking { request.reject(false) }
+                        senderRunner.run { request.reject(false) }
                     }
-                    RequestCache.removeJoinRequest(botId, flag)
+                    cacheMaps.requestCache.removeJoinRequest(botId, flag)
                     true
                 }
                 // 是别人的邀请
                 is BotInvitedJoinGroupRequestEvent -> {
                     if(agree){
                         // 同意
-                        runBlocking { request.accept() }
+                        senderRunner.run { request.accept() }
                     }else{
                         // 不同意, 即忽略
-                        runBlocking { request.ignore() }
+                        senderRunner.run { request.ignore() }
                     }
-                    RequestCache.removeJoinRequest(botId, flag)
+                    cacheMaps.requestCache.removeJoinRequest(botId, flag)
                     true
                 }
                 else -> { throw IllegalArgumentException("unknown join request type: $request") }
@@ -288,13 +343,13 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
     /** 撤回消息 */
     override fun setMsgRecall(flag: String): Boolean {
         val botId = bot.id
-        val source = RecallCache.get(flag, botId)
+        val source = cacheMaps.recallCache.get(flag, botId)
         return if(source != null){
             // 有
-            runBlocking {
+            senderRunner.run {
                 bot.recall(source)
             }
-            RecallCache.remove(flag, botId)
+            cacheMaps.recallCache.remove(flag, botId)
             true
         }else{
             false
@@ -315,7 +370,7 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
 
     /** 设置群禁言 */
     override fun setGroupBan(group: String, QQ: String, time: Long): Boolean {
-        runBlocking {
+        senderRunner.run {
             bot.getGroup(group.toLong())[QQ.toLong()].mute(time)
         }
         return true
@@ -334,7 +389,9 @@ open class MiraiBotSender(bot: Bot?, val contact: Contact? = null): BaseRootSend
 open class MultipleMiraiBotSender(contact: Contact? = null,
                              private val thisCodeAble: ThisCodeAble,
                              private val botManager: BotManager,
-                             private val conf: MiraiConfiguration): MiraiBotSender(null, contact){
+                             cacheMaps: CacheMaps,
+                             senderRunner: SenderRunner,
+                             private val conf: MiraiConfiguration): MiraiBotSender(null, contact, cacheMaps, senderRunner){
     /** 通过thisCode动态获取 */
     override val bot: Bot
         get() {
@@ -342,7 +399,7 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
             val info: BotInfo? = botManager.getBot(id)
             return if(info != null){
                 // 存在此信息，获取bot信息
-                MiraiBots.get(info, conf.botConfiguration).bot
+                MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner).bot
             }else{
                 // 不存在，抛出异常。一般不会出现这种情况，因为默认情况下ListenerManager会拦截未验证信息
                 throw NoSuchElementException("can not found bot $id")
@@ -355,7 +412,11 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
 /**
  * 默认送信器，bot通过BotManager的default动态获取
  */
-open class DefaultMiraiBotSender(contact: Contact? = null, botManager: BotManager, conf: MiraiConfiguration): MultipleMiraiBotSender(contact, DefaultThisCode(botManager), botManager, conf)
+open class DefaultMiraiBotSender(contact: Contact? = null,
+                                 cacheMaps: CacheMaps,
+                                 senderRunner: SenderRunner,
+                                 botManager: BotManager, conf: MiraiConfiguration):
+        MultipleMiraiBotSender(contact, DefaultThisCode(botManager), botManager, cacheMaps, senderRunner, conf)
 
 
 

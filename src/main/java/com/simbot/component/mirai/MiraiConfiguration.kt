@@ -18,27 +18,77 @@
 package com.simbot.component.mirai
 
 import cn.hutool.crypto.SecureUtil
+import com.forte.config.Conf
 import com.forte.qqrobot.BaseConfiguration
 import com.forte.qqrobot.bot.BotInfo
+import com.forte.qqrobot.bot.BotInfoImpl
 import com.forte.qqrobot.exception.ConfigurationException
+import com.simbot.component.mirai.logger.SimbotMiraiLogger
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.ExternalImage
 import net.mamoe.mirai.utils.SystemDeviceInfo
+import java.util.AbstractMap.SimpleEntry
 import kotlin.random.Random
 import kotlin.random.nextInt
 
 /**
  * Mirai配置类
  *
- * TODO 配置各个缓存类的信息
- * TODO 配置是否缓存图片信息
- * TODO 配置是否自动下载图片到本地
- * TODO 配置是否缓存图片链接到本地
- * TODO 配置是否自动下载音频到本地
- * TODO 配置是否缓存音频链接到本地
  *
  */
 class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
+
+    @field:Conf("mirai.senderType", comment = "送信器类型")
+    var senderType: SenderRunnerType = SenderRunnerType.BLOCK
+
+    /**
+     * mirai心跳周期. 过长会导致被服务器断开连接. 单位毫秒
+     * @see BotConfiguration.heartbeatPeriodMillis
+     */
+    @field:Conf("mirai.heartbeatPeriodMillis", comment = "mirai心跳周期. 过长会导致被服务器断开连接.")
+    var heartbeatPeriodMillis: Long = BotConfiguration.Default.heartbeatPeriodMillis
+
+    /**
+     * 每次心跳时等待结果的时间.
+     * 一旦心跳超时, 整个网络服务将会重启 (将消耗约 1s). 除正在进行的任务 (如图片上传) 会被中断外, 事件和插件均不受影响.
+     * @see BotConfiguration.heartbeatTimeoutMillis
+     */
+    @field:Conf("mirai.heartbeatTimeoutMillis", comment = "每次心跳时等待结果的时间.")
+    var heartbeatTimeoutMillis: Long = BotConfiguration.Default.heartbeatTimeoutMillis
+
+    /** 心跳失败后的第一次重连前的等待时间. */
+    @field:Conf("mirai.firstReconnectDelayMillis")
+    var firstReconnectDelayMillis: Long = BotConfiguration.Default.firstReconnectDelayMillis
+
+    /** 重连失败后, 继续尝试的每次等待时间 */
+    @field:Conf("mirai.reconnectPeriodMillis")
+    var reconnectPeriodMillis: Long = BotConfiguration.Default.reconnectPeriodMillis
+
+    /** 最多尝试多少次重连 */
+    @field:Conf("mirai.reconnectionRetryTimes")
+    var reconnectionRetryTimes: Int = BotConfiguration.Default.reconnectionRetryTimes
+
+
+    /** 使用协议类型 */
+    @field:Conf("mirai.protocol")
+    var protocol: BotConfiguration.MiraiProtocol = BotConfiguration.Default.protocol
+
+    /** 关闭mirai bot logger */
+    @field:Conf("mirai.noBotLog")
+    var noBotLog: Boolean = false
+
+    /** 关闭mirai网络日志 */
+    @field:Conf("mirai.noNetworkLog")
+    var noNetworkLog: Boolean = false
+
+    /** mirai bot log切换使用simbot的log */
+    @field:Conf("mirai.useSimbotBotLog")
+    var useSimbotBotLog: Boolean = false
+
+    /** mirai 网络log 切换使用simbot的log */
+    @field:Conf("mirai.useSimbotNetworkLog")
+    var useSimbotNetworkLog: Boolean = false
+
     /**
      * mirai官方配置类获取函数，默认为其默认值
      * 函数参数为bot的账号，得到一个config实例
@@ -47,6 +97,24 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         code ->
         val conf = BotConfiguration()
         conf.deviceInfo = { MiraiSystemDeviceInfo(code) }
+        conf.heartbeatPeriodMillis = this.heartbeatPeriodMillis
+        conf.heartbeatTimeoutMillis = this.heartbeatTimeoutMillis
+        conf.firstReconnectDelayMillis = this.firstReconnectDelayMillis
+        conf.reconnectPeriodMillis = this.reconnectPeriodMillis
+        conf.reconnectionRetryTimes = this.reconnectionRetryTimes
+        conf.protocol = this.protocol
+        if(noBotLog){
+            conf.noBotLog()
+        }
+        if(noNetworkLog){
+            conf.noNetworkLog()
+        }
+        if(useSimbotBotLog){
+            conf.botLoggerSupplier = { SimbotMiraiLogger }
+        }
+        if(useSimbotNetworkLog){
+            conf.networkLoggerSupplier = { SimbotMiraiLogger }
+        }
         conf
     }
 
@@ -57,13 +125,34 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         botConfiguration = { configuration }
     }
 
-
     /** 账号不可为null */
-    override fun registerBot(botCode: String?, path: String?) {
+    override fun registerBot(botCode: String?, path: String) {
         if(botCode == null){
             throw IllegalArgumentException("bot code can not be null.")
         }
-        super.registerBot(botCode, path)
+        doRegisterBot(botCode, path)
+    }
+
+    /**
+     * 使用[FixBotInfoImpl]来代替[BotInfoImpl]
+     */
+    override fun registerBotAsDefault(botCode: String, path: String) {
+        val botInfo = FixBotInfoImpl(botCode, path, null, null)
+        setDefaultBotInfo(botInfo)
+        // 注册一个bot信息
+        advanceBotInfo.add(SimpleEntry<String, BotInfo>(botCode, botInfo))
+    }
+
+    /**
+     * 使用[FixBotInfoImpl]来代替[BotInfoImpl]
+     */
+    private fun doRegisterBot(botCode: String, path: String){
+        val botInfo = FixBotInfoImpl(botCode, path, null, null)
+        if (getDefaultBotInfo() == null) {
+            setDefaultBotInfo(botInfo)
+        }
+        // 注册一个bot信息
+        advanceBotInfo.add(SimpleEntry<String, BotInfo>(botCode, botInfo))
     }
 
     /** 变更切割方式 */
@@ -72,7 +161,7 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
             return
         }
         // 替换特殊字符：转义:\\, 逗号:\,
-        var registerBotsStr = registerBots.replace("\\\\", "转义").replace("\\,", "逗号")
+        val registerBotsStr = registerBots.replace("\\\\", "转义").replace("\\,", "逗号")
 
         // 根据逗号切割
         for (botInfo in registerBotsStr.split(",").toTypedArray()) {
@@ -83,10 +172,11 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
 
             val first = botInfoStr.indexOf(":")
             val code = botInfoStr.substring(0, first).trim { it <= ' ' }
-            var path = botInfoStr.substring(first + 1).trim { it <= ' ' }
-            if (path.endsWith("/")) {
-                path = path.substring(0, path.length - 1)
-            }
+            val path = botInfoStr.substring(first + 1).trim { it <= ' ' }
+//            if (path.endsWith("/")) {
+//                path = path.substring(0, path.length - 1)
+//            }
+//            println(path)
             registerBot(code, path)
         }
     }
@@ -179,3 +269,8 @@ internal fun getRandomString(length: Int, charRange: CharRange, r: Random): Stri
  */
 internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRange): String =
         String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })
+
+
+
+
+

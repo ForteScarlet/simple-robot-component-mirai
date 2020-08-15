@@ -7,8 +7,8 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
 
-    <!-- 1.0.3-1.16 2020/7/7 -->
-    <version>1.0.3-1.16</version>
+    <!-- 1.3.2-1.16 2020/8/11 -->
+    <version>1.3.2-1.16</version>
 
     <properties>
         <kotlin.version>1.3.70</kotlin.version>
@@ -16,8 +16,13 @@
         <mirai.version>1.0.2</mirai.version>
         <hutool.versin>5.3.8</hutool.versin>
 
-        <simple-robot-core.version>1.16.2</simple-robot-core.version>
+        <simple-robot-core.version>1.16.3</simple-robot-core.version>
         <kotlinx.version>1.3.5</kotlinx.version>
+
+        <!-- kt properties -->
+        <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
+
+
     </properties>
 
     <name>simple-robot-component-mirai</name>
@@ -28,24 +33,26 @@
     <url>https://github.com/ForteScarlet/simple-robot-component-mirai</url>
 
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>-->
+<!--            <artifactId>mod-delay-task</artifactId>-->
+<!--            <version>1.1-1.16</version>-->
+<!--            <scope>test</scope>-->
+<!--            <optional>true</optional>-->
+<!--        </dependency>-->
+
+
         <dependency>
             <groupId>io.github.ForteScarlet</groupId>
             <artifactId>simple-robot-core</artifactId>
             <version>${simple-robot-core.version}</version>
-            <!-- 当前版本处理转义问题 -->
-            <exclusions>
-                <exclusion>
-                    <groupId>io.github.ForteScarlet.simple-robot-module</groupId>
-                    <artifactId>mod-cqcodeutils</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>
-            <artifactId>mod-cqcodeutils</artifactId>
-            <version>${cqcodeUtils.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>-->
+<!--            <artifactId>mod-cqcodeutils</artifactId>-->
+<!--            <version>${cqcodeUtils.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -92,6 +99,14 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test</artifactId>
             <version>${kotlin.version}</version>
+            <scope>test</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>love.forte.simple-robot</groupId>
+            <artifactId>module-ding</artifactId>
+            <version>0.1-1.16</version>
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
@@ -187,6 +202,7 @@
                     <!-- kotlinOptions.freeCompilerArgs = ['-Xjvm-default=enable'] -->
                     <args>
                         <arg>-Xjvm-default=enable</arg>
+                        <arg>-Xinline-classes</arg>
                     </args>
                     <jvmTarget>1.8</jvmTarget>
                 </configuration>

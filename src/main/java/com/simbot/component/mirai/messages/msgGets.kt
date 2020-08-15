@@ -17,11 +17,12 @@
 
 package com.simbot.component.mirai.messages
 
+import com.forte.qqrobot.beans.messages.NickOrRemark
+import com.forte.qqrobot.beans.messages.QQCodeAble
 import com.forte.qqrobot.beans.messages.msgget.*
 import com.forte.qqrobot.beans.messages.types.*
+import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.MiraiCodeFormatUtils
-import com.simbot.component.mirai.RecallCache
-import com.simbot.component.mirai.RequestCache
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.*
@@ -92,7 +93,7 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(open val event: E): MsgGet {
  *
  * 且实现[MsgGet]接口
  */
-abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME): MiraiBaseMsgGet<ME>(event) {
+abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME, private val cacheMaps: CacheMaps): MiraiBaseMsgGet<ME>(event) {
 //    protected open val messageEvent = event
 
     /**
@@ -104,10 +105,10 @@ abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME): Mi
     val message: MessageChain get() = event.message
 
     /** 消息id */
-    private val msgId: String by lazy { RecallCache.cache(message.source) }
+    private val msgId: String = cacheMaps.recallCache.cache(message.source)
 
     /** 消息正文，目前会将mirai码替换为CQ码 */
-    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(message)
+    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(message, cacheMaps)
 
     // bot id
     override var botId: String = contact.bot.id.toString()
@@ -127,9 +128,11 @@ abstract class MiraiMessageGet<out ME: MessageEvent>(override val event: ME): Mi
 abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(event), EventGet {
     /** 事件消息正文 */
     override var eventMsg: String? = null
-    protected val eventId by lazy { "$event#$onTime" }
-
+    protected val eventId = "$event#$onTime"
+    override fun getId(): String = eventId
     override var botId: String = event.bot.id.toString()
+
+
 
     /**
      * 重新设置消息
@@ -163,7 +166,7 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
  * Mirai的好友消息事件
  * @param event 监听到的事件
  */
-open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(event), PrivateMsg {
+open class MiraiFriendMsg(event: MessageEvent, cacheMaps: CacheMaps): MiraiMessageGet<MessageEvent>(event, cacheMaps), PrivateMsg {
 
     override val onTime: Long get() = event.time.toLong()
 
@@ -172,7 +175,7 @@ open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(ev
 
 
 
-    override fun getQQCodeNumber(): Long = event.sender.id
+    override fun getCodeNumber(): Long = event.sender.id
 
     /** 获取私聊消息类型，固定为好友 */
     override fun getType(): PrivateMsgType = PrivateMsgType.FROM_FRIEND
@@ -204,8 +207,9 @@ open class MiraiFriendMsg(event: MessageEvent): MiraiMessageGet<MessageEvent>(ev
 /**
  * 群临时会话消息，同样属于私信
  */
-open class MiraiTempMsg(event: TempMessageEvent): MiraiFriendMsg(event) {
+open class MiraiTempMsg(event: TempMessageEvent, cacheMaps: CacheMaps): MiraiFriendMsg(event, cacheMaps) {
     override fun getType(): PrivateMsgType = PrivateMsgType.FROM_GROUP
+    override fun getCodeNumber(): Long = event.sender.id
 }
 //endregion
 
@@ -215,12 +219,12 @@ open class MiraiTempMsg(event: TempMessageEvent): MiraiFriendMsg(event) {
  * Mirai的群消息事件
  * @param event 监听到的事件
  */
-open class MiraiGroupMsg(event: GroupMessageEvent): MiraiMessageGet<GroupMessageEvent>(event), GroupMsg {
+open class MiraiGroupMsg(event: GroupMessageEvent, cacheMaps: CacheMaps): MiraiMessageGet<GroupMessageEvent>(event, cacheMaps), GroupMsg {
 
 //    override val messageEvent: GroupMessageEvent = event
 
-    private val senderId by lazy { event.sender.id.toString() }
-    private val groupId by lazy { event.group.id.toString() }
+    private val senderId = event.sender.id.toString()
+    private val groupId = event.group.id.toString()
     private var memberPowerType = event.sender.permission.toPowerType()
 
     override val onTime: Long = event.time.toLong()
@@ -229,7 +233,7 @@ open class MiraiGroupMsg(event: GroupMessageEvent): MiraiMessageGet<GroupMessage
     override fun getQQ(): String = senderId
     /** 获取群消息的群号  */
     override fun getGroup(): String = groupId
-    override fun getQQCodeNumber(): Long = event.sender.id
+    override fun getCodeNumber(): Long = event.sender.id
     override fun getGroupCodeNumber(): Long = event.group.id
     /**
      * 获取此人在群里的权限
@@ -276,22 +280,22 @@ open class MiraiGroupMsg(event: GroupMessageEvent): MiraiMessageGet<GroupMessage
 /**
  * bot被邀请入群事件
  */
-open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupRequestEvent): MiraiEventGet<BotInvitedJoinGroupRequestEvent>(eventEvent), GroupAddRequest {
-    private val invitorId by lazy { eventEvent.invitorId.toString() }
-    private val groupId by lazy { eventEvent.groupId.toString() }
+open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<BotInvitedJoinGroupRequestEvent>(eventEvent), GroupAddRequest {
+    private val invitorId = eventEvent.invitorId.toString()
+    private val groupId = eventEvent.groupId.toString()
 
     /** 获取QQ号  */
     override fun getQQ(): String = invitorId
 
     /** 获取群号  */
     override fun getGroup(): String = groupId
-    override fun getQQCodeNumber(): Long = event.invitorId
+    override fun getCodeNumber(): Long = event.invitorId
     override fun getGroupCodeNumber(): Long = event.groupId
     /** 获取ID, 与flag一致  */
     override fun getId(): String = flag
 
     /** 获取标识  */
-    override fun getFlag(): String = RequestCache.cache(event)
+    override fun getFlag(): String = cacheMaps.requestCache.cache(event)
 
     /** 加群类型，此处为被邀请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.INVITE
@@ -302,9 +306,9 @@ open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupR
 /**
  * 加群申请
  */
-open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent): MiraiEventGet<MemberJoinRequestEvent>(eventEvent), GroupAddRequest {
-    private val fromId by lazy { event.fromId.toString() }
-    private val groupId by lazy { event.groupId.toString() }
+open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<MemberJoinRequestEvent>(eventEvent), GroupAddRequest {
+    private val fromId = event.fromId.toString()
+    private val groupId = event.groupId.toString()
 
     /** 获取QQ号  */
     override fun getQQ(): String = fromId
@@ -317,7 +321,7 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent): Mira
     override fun getId(): String = flag
 
     /** 获取标识  */
-    override fun getFlag(): String = RequestCache.cache(event)
+    override fun getFlag(): String = cacheMaps.requestCache.cache(event)
 
     /** 加群类型，此处为申请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.ADD
@@ -329,13 +333,13 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent): Mira
 /**
  * 好友添加申请
  */
-open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent): MiraiEventGet<NewFriendRequestEvent>(eventEvent), FriendAddRequest {
-    private val fromId by lazy { event.fromId.toString() }
-    private val requestFlag = RequestCache.cache(eventEvent)
+open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<NewFriendRequestEvent>(eventEvent), FriendAddRequest {
+    private val fromId = event.fromId.toString()
+    private val requestFlag = cacheMaps.requestCache.cache(eventEvent)
 
     /** 请求人QQ  */
     override fun getQQ(): String = fromId
-    override fun getQQCodeNumber(): Long = event.fromId
+    override fun getCodeNumber(): Long = event.fromId
     /** 获取ID, 与flag相同 */
     override fun getId(): String = flag
 
@@ -351,13 +355,11 @@ open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent): MiraiE
  * 好友增加事件
  */
 open class MiraiFriendAddEvent(event: FriendAddEvent): MiraiEventGet<FriendAddEvent>(event), FriendAdd {
-    private val fromId by lazy { event.friend.id.toString() }
+    private val fromId = event.friend.id.toString()
 
     /** 添加人的QQ  */
     override fun getQQ(): String = fromId
-    override fun getQQCodeNumber(): Long = event.friend.id
-    /** 获取ID, 此ID无实际意义  */
-    override fun getId(): String = eventId
+    override fun getCodeNumber(): Long = event.friend.id
 
 }
 //endregion
@@ -369,22 +371,19 @@ open class MiraiFriendAddEvent(event: FriendAddEvent): MiraiEventGet<FriendAddEv
 open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoinEvent>(event), GroupMemberIncrease {
 
     /** 入群者的ID */
-    private val newMemberId by lazy { event.member.id.toString() }
+    private val newMemberId = event.member.id.toString()
 
     /** 群号 */
-    private val groupId by lazy { event.group.id.toString() }
+    private val groupId = event.group.id.toString()
 
     /** 入群类型 */
-    private val increaseType by lazy { event.toIncreaseType() }
+    private val increaseType = event.toIncreaseType()
 
     /** 被操作者的QQ号，即入群者  */
     override fun getBeOperatedQQ(): String = newMemberId
 
     /** 群号  */
     override fun getGroup(): String = groupId
-
-    /** 获取ID, 此处含义不大  */
-    override fun getId(): String = eventId
 
     /** 操作者的QQ号，似乎无法获取  */
     @Deprecated("just null", ReplaceWith("null"))
@@ -393,7 +392,7 @@ open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoi
     /** 获取类型  */
     override fun getType(): IncreaseType = increaseType
 
-    override fun getQQCodeNumber(): Long = event.member.id
+    override fun getCodeNumber(): Long = event.member.id
     override fun getGroupCodeNumber(): Long = event.group.id
 
 }
@@ -415,16 +414,16 @@ fun MemberJoinEvent.toIncreaseType(): IncreaseType = when(this){
  */
 open class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<MemberLeaveEvent>(event), GroupMemberReduce {
     /** 离群者 */
-    private val leaveId by lazy { event.member.id.toString() }
+    private val leaveId = event.member.id.toString()
 
     /** 操作者ID */
-    private val operatorId by lazy { event.getOperatorId().toString() }
-    private val groupId by lazy { event.group.id.toString() }
-    override fun getQQCodeNumber(): Long = event.member.id
+    private val operatorId = event.getOperatorId().toString()
+    private val groupId = event.group.id.toString()
+    override fun getCodeNumber(): Long = event.member.id
     override fun getGroupCodeNumber(): Long = event.group.id
 
     /** 类型 */
-    private val reduceType by lazy { event.toReduceType() }
+    private val reduceType = event.toReduceType()
 
     /** 被操作者的QQ号，即离群者  */
     override fun getBeOperatedQQ(): String = leaveId
@@ -434,9 +433,6 @@ open class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<MemberL
 
     /** 群号  */
     override fun getGroup(): String = groupId
-
-    /** 获取ID, 无大意义 */
-    override fun getId(): String = eventId
 
     /** 获取类型  */
     override fun getType():ReduceType = reduceType
@@ -472,20 +468,17 @@ internal fun MemberLeaveEvent.toReduceType() = when(this){
  * 群成员管理员变动（不会是bot
  */
 open class MiraiMemberPermissionChangeEvent(event: MemberPermissionChangeEvent): MiraiEventGet<MemberPermissionChangeEvent>(event), GroupAdminChange {
-    private val changeId by lazy { event.member.id.toString() }
-    private val groupId by lazy { event.group.id.toString() }
-    private val operatorId by lazy { event.group.owner.id.toString() }
-    private val groupAdminChangeType by lazy { event.toGroupAdminChangeType() }
+    private val changeId = event.member.id.toString()
+    private val groupId = event.group.id.toString()
+    private val operatorId = event.group.owner.id.toString()
+    private val groupAdminChangeType = event.toGroupAdminChangeType()
 
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = changeId
 
     /** 来自的群  */
     override fun getGroup(): String = groupId
-
-    /** 获取ID, 一般用于消息类型判断  */
-    override fun getId(): String = eventId
-    override fun getQQCodeNumber(): Long = event.member.id
+    override fun getCodeNumber(): Long = event.member.id
     override fun getGroupCodeNumber(): Long = event.group.id
     /** 操作者的QQ号（群主）  */
     override fun getOperatorQQ(): String = operatorId
@@ -506,10 +499,12 @@ internal fun MemberPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminCha
  * bot权限变更事件
  */
 open class MiraiBotGroupPermissionChangeEvent(event: BotGroupPermissionChangeEvent): MiraiEventGet<BotGroupPermissionChangeEvent>(event), GroupAdminChange {
-    private val changeId by lazy { event.bot.id.toString() }
-    private val groupId by lazy { event.group.id.toString() }
-    private val operatorId by lazy { event.group.owner.id.toString() }
-    private val groupAdminChangeType by lazy { event.toGroupAdminChangeType() }
+    private val changeId = event.bot.id.toString()
+    private val groupId = event.group.id.toString()
+    private val operatorId = event.group.owner.id.toString()
+    private val groupAdminChangeType = event.toGroupAdminChangeType()
+
+    override fun getCodeNumber(): Long = event.bot.id
 
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = changeId
@@ -518,8 +513,6 @@ open class MiraiBotGroupPermissionChangeEvent(event: BotGroupPermissionChangeEve
     override fun getGroup(): String = groupId
     override fun getQQCodeNumber(): Long = event.bot.id
     override fun getGroupCodeNumber(): Long = event.group.id
-    /** 获取ID, 一般用于消息类型判断  */
-    override fun getId(): String = eventId
 
     /** 操作者的QQ号（群主）  */
     override fun getOperatorQQ(): String = operatorId
@@ -541,26 +534,26 @@ internal fun BotGroupPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminC
  * 消息撤回事件父类
  */
 abstract class MiraiMessageRecallEvent<out MRE: MessageRecallEvent>(event: MRE): MiraiEventGet<MRE>(event) {
-    private val recallMessageId by lazy { "${event.messageId}.${event.messageInternalId}.${event.messageTime}" }
-    protected val authorId by lazy { event.authorId.toString() }
+    private val recallMessageId = "${event.messageId}.${event.messageInternalId}.${event.messageTime}"
+    protected val authorId = event.authorId.toString()
     /** 获取ID, 一般用于消息类型判断  */
     override fun getId(): String = recallMessageId
     /** 时间 */
-    override val onTime: Long by lazy { event.messageTime.toLong() }
+    override val onTime: Long = event.messageTime.toLong()
 }
 
 //region 群消息撤回
 /**
  * 群消息撤回
  */
-open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
+open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall, private val cacheMaps: CacheMaps): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
 
-    private val recallMessage = RecallCache.get("${event.messageId}.${event.messageInternalId}.${event.messageTime}", event.bot.id)
+    private val recallMessage = cacheMaps.recallCache.get("${event.messageId}.${event.messageInternalId}.${event.messageTime}", event.bot.id)
 
-    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage)
+    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage, cacheMaps)
 
-    private val groupId by lazy { event.group.id.toString() }
-    private val operatorId by lazy { event.getOperatorId().toString() }
+    private val groupId = event.group.id.toString()
+    private val operatorId = event.getOperatorId().toString()
 
     /** 被操作者的QQ号, 即被撤回消息的人的QQ号  */
     override fun getBeOperatedQQ(): String = authorId
@@ -570,7 +563,7 @@ open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall): MiraiMessage
     override fun getGroupCode(): String = groupId
 
     override fun getGroupCodeNumber(): Long = event.group.id
-    override fun getQQCodeNumber(): Long = event.authorId
+    override fun getCodeNumber(): Long = event.authorId
 
     /** 操作者的QQ号，即执行撤回操作的人的QQ号  */
     override fun getOperatorQQ(): String = operatorId
@@ -588,7 +581,7 @@ open class MiraiPrivateRecall(event: MessageRecallEvent.FriendRecall): MiraiMess
      * 获取QQ号信息。
      */
     override fun getQQCode(): String = authorId
-    override fun getQQCodeNumber(): Long = event.authorId
+    override fun getCodeNumber(): Long = event.authorId
 }
 //endregion
 //endregion
@@ -599,7 +592,7 @@ open class MiraiPrivateRecall(event: MessageRecallEvent.FriendRecall): MiraiMess
  */
 sealed class MiraiBanEvent<out GE: GroupEvent>(event: GE): MiraiEventGet<GE>(event), GroupBan {
     abstract val muteEventId: String
-    private val groupId by lazy { event.group.id.toString() }
+    private val groupId = event.group.id.toString()
     /** 群号  */
     override fun getGroup() = groupId
     override fun getGroupCodeNumber(): Long = event.group.id
@@ -633,9 +626,9 @@ internal fun BotUnmuteEvent.getOperatorId() = this.operator.id
  * 群成员被禁言
  */
 open class MiraiMemberMuteEvent(event: MemberMuteEvent): Mute<MemberMuteEvent>(event) {
-    private val memberId by lazy { event.member.id.toString() }
-    private val operatorId by lazy { event.getOperatorId().toString() }
-    private val durationSeconds by lazy { event.durationSeconds.toLong() }
+    private val memberId = event.member.id.toString()
+    private val operatorId = event.getOperatorId().toString()
+    private val durationSeconds = event.durationSeconds.toLong()
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = memberId
     override fun getCodeNumber(): Long = event.member.id
@@ -650,8 +643,8 @@ open class MiraiMemberMuteEvent(event: MemberMuteEvent): Mute<MemberMuteEvent>(e
  * 群成员解除禁言
  */
 open class MiraiMemberUnmuteEvent(event: MemberUnmuteEvent): Unmute<MemberUnmuteEvent>(event) {
-    private val memberId by lazy { event.member.id.toString() }
-    private val operatorId by lazy { event.getOperatorId().toString() }
+    private val memberId = event.member.id.toString()
+    private val operatorId = event.getOperatorId().toString()
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = memberId
     override fun getCodeNumber(): Long = event.member.id
@@ -667,9 +660,9 @@ open class MiraiMemberUnmuteEvent(event: MemberUnmuteEvent): Unmute<MemberUnmute
  * bot被禁言
  */
 open class MiraiBotMuteEvent(event: BotMuteEvent): Mute<BotMuteEvent>(event) {
-    private val memberId by lazy { event.bot.id.toString() }
-    private val operatorId by lazy { event.getOperatorId().toString() }
-    private val durationSeconds by lazy { event.durationSeconds.toLong() }
+    private val memberId = event.bot.id.toString()
+    private val operatorId = event.getOperatorId().toString()
+    private val durationSeconds = event.durationSeconds.toLong()
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = memberId
     override fun getCodeNumber(): Long = event.bot.id
@@ -684,8 +677,8 @@ open class MiraiBotMuteEvent(event: BotMuteEvent): Mute<BotMuteEvent>(event) {
  * bot解除禁言
  */
 open class MiraiBotUnmuteEvent(event:BotUnmuteEvent): Unmute<BotUnmuteEvent>(event) {
-    private val memberId by lazy { event.bot.id.toString() }
-    private val operatorId by lazy { event.getOperatorId().toString() }
+    private val memberId = event.bot.id.toString()
+    private val operatorId = event.getOperatorId().toString()
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = memberId
     override fun getCodeNumber(): Long = event.bot.id
@@ -696,6 +689,88 @@ open class MiraiBotUnmuteEvent(event:BotUnmuteEvent): Unmute<BotUnmuteEvent>(eve
 }
 //endregion
 
+
+//region 好友删除事件
+// ctrl shift Z
+
+/**
+ * 好友删除事件
+ * 目前为Mirai组件提供的额外监听, 命名为FriendDelete
+ */
+open class MiraiFriendDeleteEvent(event: FriendDeleteEvent): MiraiEventGet<FriendDeleteEvent>(event), FriendDelete {
+    private val friend = event.friend
+
+    private val friendId = friend.id.toString()
+
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = friend.nick
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = friend.nick
+
+    /**
+     * 获取QQ号信息。
+     * 假如一个消息封装中存在多个QQ号信息，例如同时存在处理者与被处理者，一般情况下我们认为其返回值为被处理者。
+     * @see .getCode
+     */
+    override fun getQQCode(): String = friendId
+
+    override fun getCodeNumber(): Long = friend.id
+
+    override fun getRemarkOrNickname(): String = friend.nameCardOrNick
+
+    override fun getQQHeadUrl(): String = friend.avatarUrl
+}
+//endregion
+
+//region 好友更换头像事件
+/**
+ *  好友更换头像事件
+ *  内容类似于[FriendDelete]
+ */
+interface FriendAvatarChanged: EventGet, QQCodeAble, NickOrRemark
+
+/**
+ * 好友更换头像事件 实现类
+ * @see FriendAvatarChanged
+ */
+open class MiraiFriendAvatarChangedEvent(event: FriendAvatarChangedEvent): MiraiEventGet<FriendAvatarChangedEvent>(event), FriendAvatarChanged {
+    private val friend = event.friend
+
+    private val friendId = friend.id.toString()
+
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = friend.nick
+
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = friend.nick
+
+    /**
+     * 获取QQ号信息。
+     * 假如一个消息封装中存在多个QQ号信息，例如同时存在处理者与被处理者，一般情况下我们认为其返回值为被处理者。
+     * @see .getCode
+     */
+    override fun getQQCode(): String = friendId
+
+    override fun getCodeNumber(): Long = friend.id
+
+    override fun getRemarkOrNickname(): String = friend.nameCardOrNick
+
+    override fun getQQHeadUrl(): String = friend.avatarUrl
+}
+//endregion
 
 //endregion
 

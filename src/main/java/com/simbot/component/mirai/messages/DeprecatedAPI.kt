@@ -17,13 +17,11 @@
 
 package com.simbot.component.mirai.messages
 
-import com.forte.lang.Language
 import com.forte.qqrobot.beans.messages.types.SexType
 import com.forte.qqrobot.log.QQLogLang
 
 /**
  * 统一存放不支持的API的信息，使用lazy来使他们被获取的时候提示警告信息。
- * TODO
  */
 object DeprecatedAPI {
 
@@ -244,11 +242,4 @@ object DeprecatedAPI {
 
 }
 
-fun main() {
-    Language.init()
 
-    println(DeprecatedAPI.memberJoinOperatorQQ)
-    println(DeprecatedAPI.memberJoinOperatorQQ)
-    println(DeprecatedAPI.memberJoinOperatorQQ)
-
-}

@@ -127,8 +127,8 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region record
         "voice", "record" -> {
-            // 似乎暂不支持，不过可转发
-            "[语音]".toMessage()
+            // 似乎暂不支持，不过好像可以转发
+            PlainText("[语音]")
         }
         //endregion
 
@@ -136,14 +136,14 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         //region rps 猜拳
         "rps" -> {
             // 似乎也不支持猜拳
-            "[猜拳]".toMessage()
+            PlainText("[猜拳]")
         }
         //endregion
 
         //region dice 骰子
         "dice" -> {
             // 似乎也..
-            "[骰子]".toMessage()
+            PlainText("[骰子]")
         }
         //endregion
 
@@ -173,7 +173,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             // 或者："type", "url", "audio", "title", "content*", "image*"
             val type = this["type"]
             // TODO 解析music
-            "[${type}音乐]".toMessage()
+            PlainText("[${type}音乐]")
         }
         //endregion
 
@@ -184,7 +184,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             val type = this["url"]
             val title = this["title"]
             // TODO 解析share
-            "$title: $type".toMessage()
+            PlainText("$title: $type")
         }
         //endregion
 
@@ -192,7 +192,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         "emoji" -> {
             // emoji, 基本用不到
             val id = this["id"] ?: ""
-            "emoji($id)".toMessage()
+            PlainText("emoji($id)")
         }
         //endregion
 
@@ -204,12 +204,12 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             val lon = this["lon"] ?: ""
             val title = this["title"] ?: ""
             val content = this["content"] ?: ""
-            "位置($lat,$lon)[$title]:$content".toMessage()
+            PlainText("位置($lat,$lon)[$title]:$content")
         }
         //endregion
 
         //region sign
-        "sign" ->  "[签到]".toMessage()
+        "sign" -> PlainText("[签到]")
 
         //endregion
 
@@ -230,7 +230,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
                 "group" -> "群聊分享"
                 else -> "其他分享"
             }
-            "$typeName: $id".toMessage()
+            PlainText("$typeName: $id")
         }
         //endregion
 
@@ -324,7 +324,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             return if(handler != null){
                 handler(this, contact)
             }else{
-                this.toString().toMessage()
+                PlainText(this.toString())
             }
         }
         //endregion
@@ -420,7 +420,7 @@ object MiraiCodeFormatUtils {
                 val voiceMq = MQCodeUtils.toMqCode(this.toString())
                 val voiceKq = voiceMq.toKQCode().mutable()
                 voiceKq.type = "record"
-                voiceKq["url"] = this.url
+                this.url?.run { voiceKq["url"] = this }
                 voiceKq["fileName"] = this.fileName
                 voiceKq
             }

@@ -20,6 +20,9 @@ package com.simbot.component.mirai
 import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
+import net.mamoe.mirai.Bot
+import net.mamoe.mirai.event.Event
+import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.FriendMessageEvent
@@ -203,7 +206,7 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
 //        ListeningStatus.LISTENING
 //    }
 
-    bot.subscribeAlways<MessageEvent> {
+    bot.registerListenerAlways<MessageEvent> {
         // 首先缓存此消息
         cacheMaps.recallCache.cache(this.source)
         val result = when (this) {
@@ -226,30 +229,6 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
         result.quickReplyMessage(this, cacheMaps)
     }
 
-//    bot.subscribeMessages {
-//        this.always {
-//            // 首先缓存此消息
-//            cacheMaps.recallCache.cache(this.source)
-//            val result = when (this) {
-//                // 好友消息
-//                is FriendMessageEvent -> {
-//                    MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
-//                }
-//                // 群消息
-//                is GroupMessageEvent -> {
-//                    MiraiGroupMsg(this, cacheMaps).onMsg(msgProcessor)
-//                }
-//                // 群临时会话消息
-//                is TempMessageEvent -> {
-//                    MiraiTempMsg(this, cacheMaps).onMsg(msgProcessor)
-//                }
-//                // 其他类型, 没其他类型了吧？
-//                else -> null
-//            }
-//            // try to quick reply
-//            result.quickReplyMessage(this, cacheMaps)
-//        }
-//    }
     //endregion
 
 
@@ -257,21 +236,21 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     // region 申请相关事件
 
     // 被邀请入群事件监听
-    bot.subscribeAlways<BotInvitedJoinGroupRequestEvent> {
+    bot.registerListenerAlways<BotInvitedJoinGroupRequestEvent> {
         val result = MiraiBotInvitedJoinGroupRequestEvent(this, cacheMaps).onMsg(msgProcessor)
         // try to quick reply
         result.quickReply(this, cacheMaps)
     }
 
     // 其他人申请入群事件监听
-    bot.subscribeAlways<MemberJoinRequestEvent> {
+    bot.registerListenerAlways<MemberJoinRequestEvent> {
         val result = MiraiMemberJoinRequestEvent(this, cacheMaps).onMsg(msgProcessor)
         // try to quick reply
         result.quickReply(this, cacheMaps)
     }
 
     // 新好友申请事件监听
-    bot.subscribeAlways<NewFriendRequestEvent> {
+    bot.registerListenerAlways<NewFriendRequestEvent> {
         val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this, cacheMaps)
         val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
         // try to quick reply
@@ -283,17 +262,17 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     //region 群成员/好友增减事件
 
     //region 成功添加了一个新好友
-    bot.subscribeAlways<FriendAddEvent> {
+    bot.registerListenerAlways<FriendAddEvent> {
         MiraiFriendAddEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region 群成员增加事件
-    bot.subscribeAlways<MemberJoinEvent> {
+    bot.registerListenerAlways<MemberJoinEvent> {
         MiraiMemberJoinEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region 群成员减少事件
-    bot.subscribeAlways<MemberLeaveEvent> {
+    bot.registerListenerAlways<MemberLeaveEvent> {
         MiraiMemberLeaveEvent(this).onMsg(msgProcessor)
     }
     //endregion
@@ -302,18 +281,18 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
 
     //region 权限变动事件
     // 成员权限变动
-    bot.subscribeAlways<MemberPermissionChangeEvent> {
+    bot.registerListenerAlways<MemberPermissionChangeEvent> {
         MiraiMemberPermissionChangeEvent(this).onMsg(msgProcessor)
     }
     // bot权限变动
-    bot.subscribeAlways<BotGroupPermissionChangeEvent> {
+    bot.registerListenerAlways<BotGroupPermissionChangeEvent> {
         MiraiBotGroupPermissionChangeEvent(this).onMsg(msgProcessor)
     }
 
     //endregion
 
     //region 消息撤回事件
-    bot.subscribeAlways<MessageRecallEvent> {
+    bot.registerListenerAlways<MessageRecallEvent> {
         when (this) {
             //region 群消息撤回
             is MessageRecallEvent.GroupRecall -> {
@@ -332,22 +311,22 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     //region 禁言相关
 
     //region 群友被禁言
-    bot.subscribeAlways<MemberMuteEvent> {
+    bot.registerListenerAlways<MemberMuteEvent> {
         MiraiMemberMuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region 群友被解除禁言
-    bot.subscribeAlways<MemberUnmuteEvent> {
+    bot.registerListenerAlways<MemberUnmuteEvent> {
         MiraiMemberUnmuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region bot被禁言
-    bot.subscribeAlways<BotMuteEvent> {
+    bot.registerListenerAlways<BotMuteEvent> {
         MiraiBotMuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region bot被取消禁言
-    bot.subscribeAlways<BotUnmuteEvent> {
+    bot.registerListenerAlways<BotUnmuteEvent> {
         MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
@@ -355,13 +334,13 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     // TODO 全员禁言 GroupMuteAllEvent
 
     //region 好友删除事件
-    bot.subscribeAlways<FriendDeleteEvent> {
+    bot.registerListenerAlways<FriendDeleteEvent> {
         MiraiFriendDeleteEvent(this).onMsg(msgProcessor)
     }
     //endregion
 
     //region 好友更换头像事件
-    bot.subscribeAlways<FriendAvatarChangedEvent> {
+    bot.registerListenerAlways<FriendAvatarChangedEvent> {
         MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
     }
     //endregion
@@ -371,4 +350,16 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
 
     //endregion
 
+}
+
+
+/**
+ * 整合
+ */
+internal inline fun <reified E : BotEvent> Bot.registerListenerAlways(crossinline handler: suspend E.(E) -> Unit): Listener<E> {
+    return this.subscribeAlways<E> {
+        if(this.bot == this@registerListenerAlways){
+            handler(this)
+        }
+    }
 }

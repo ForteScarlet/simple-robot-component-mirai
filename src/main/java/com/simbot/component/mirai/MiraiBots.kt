@@ -172,7 +172,6 @@ class MiraiBotInfo(private val id: String,
         bot = runBlocking { Bot(id.toLong(), pwd, botConfiguration).alsoLogin() }
         // 将自己记录在MiraiBots中
         MiraiBots.set(id, this, cacheMaps)
-
         // bot sender
         botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))
 

@@ -21,7 +21,6 @@ import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.event.Event
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.subscribeAlways

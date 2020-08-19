@@ -1,5 +1,5 @@
 # 1.4.0-1.16
-- mirai更新到`1.2.0`
+- mirai更新到`1.2.1`
 - kotlin更新到`1.4.0`
 - kotlinx-coroutines-core更新到`1.3.9`
 - 处理多Bot登录时出现消息重复的问题

@@ -13,7 +13,7 @@
     <properties>
         <kotlin.version>1.4.0</kotlin.version>
 <!--        <cqcodeUtils.version>1.7.0</cqcodeUtils.version>-->
-        <mirai.version>1.2.0</mirai.version>
+        <mirai.version>1.2.1</mirai.version>
         <hutool.versin>5.3.8</hutool.versin>
 
         <simple-robot-core.version>1.16.3</simple-robot-core.version>

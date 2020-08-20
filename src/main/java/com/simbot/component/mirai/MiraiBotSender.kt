@@ -22,6 +22,8 @@ import com.forte.qqrobot.beans.messages.result.*
 import com.forte.qqrobot.beans.messages.types.GroupAddRequestType
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
+import com.forte.qqrobot.log.QQLog
+import com.forte.qqrobot.log.QQLogLang
 import com.forte.qqrobot.sender.senderlist.BaseRootSenderList
 import com.simbot.component.mirai.messages.*
 import kotlinx.coroutines.CoroutineScope
@@ -29,16 +31,11 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.mute
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
 
 
-/**
- * 具体的执行逻辑
- */
 /**
  * 送信器对于可挂起函数的执行策略
  */
@@ -231,16 +228,25 @@ open class MiraiBotSender(
     override fun setGroupWholeBan(group: String, `in`: Boolean): Boolean {
         val groupId = group.toLong()
         val settings = bot.getGroup(groupId).settings
-        val muteAll = settings.isMuteAll
-        if(muteAll != `in`){
-            settings.isMuteAll = `in`
-        }
+        settings.isMuteAll = `in`
         return true
+    }
+
+
+    /** [setGroupAnonymousBan]的一次性警告日志 */
+    private val setGroupAnonymousBanWarning by lazy<Byte> {
+        /** logger */
+        QQLog.warning("mirai.api.deprecated", "setGroupAnonymousBan", "setGroupBan(...)")
+        0
     }
 
     /** 设置匿名聊天ban */
     @Deprecated("Unsupported API: setGroupAnonymousBan")
-    override fun setGroupAnonymousBan(group: String?, flag: String?, time: Long): Boolean = super.setGroupAnonymousBan(group, flag, time)
+    override fun setGroupAnonymousBan(group: String?, flag: String?, time: Long): Boolean {
+        setGroupAnonymousBanWarning
+        return this.setGroupBan(group!!, flag!!, time)
+    }
+
 
     /** 踢出群员 */
     override fun setGroupMemberKick(group: String, QQ: String, dontBack: Boolean): Boolean {
@@ -250,9 +256,19 @@ open class MiraiBotSender(
         return true
     }
 
+    /** [setDiscussLeave]的一次性警告日志 */
+    private val setDiscussLeaveWarning by lazy<Byte> {
+        /** logger */
+        QQLog.warning("mirai.api.deprecated", "setDiscussLeave", "setGroupLeave(...)")
+        0
+    }
+
     /** 退出讨论组，直接使用退出群 */
     @Deprecated("just see group leave", ReplaceWith("setGroupLeave(group, false)"))
-    override fun setDiscussLeave(group: String): Boolean = setGroupLeave(group, false)
+    override fun setDiscussLeave(group: String): Boolean {
+        setDiscussLeaveWarning
+        return setGroupLeave(group, false)
+    }
 
     /** 退群 */
     override fun setGroupLeave(group: String, dissolve: Boolean): Boolean {
@@ -267,16 +283,18 @@ open class MiraiBotSender(
 
 
     /** 设置/取消管理员 */
-    @Deprecated("Unsupported API: setGroupAnonymousBan")
-    override fun setGroupAdmin(group: String, QQ: String, set: Boolean): Boolean = super.setGroupAdmin(group, QQ, set)
+    @Deprecated("Unsupported API: setGroupAdmin")
+    override fun setGroupAdmin(group: String, QQ: String, set: Boolean): Boolean{
+        return super.setGroupAdmin(group, QQ, set)
+    }
 
 
     /** 设置群匿名聊天 */
     override fun setGroupAnonymous(group: String, agree: Boolean): Boolean {
         val settings = bot.getGroup(group.toLong()).settings
-        if(settings.isAllowMemberInvite != agree){
-            settings.isAllowMemberInvite = agree
-        }
+//        if(settings.isAllowMemberInvite != agree){
+        settings.isAllowMemberInvite = agree
+//        }
         return true
     }
 
@@ -351,9 +369,7 @@ open class MiraiBotSender(
             }
             cacheMaps.recallCache.remove(flag, botId)
             true
-        }else{
-            false
-        }
+        }else false
     }
 
     /** 设置群昵称 */
@@ -392,14 +408,32 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
                              cacheMaps: CacheMaps,
                              senderRunner: SenderRunner,
                              private val conf: MiraiConfiguration): MiraiBotSender(null, contact, cacheMaps, senderRunner){
+
+    /**
+     * 上一次获取bot的时候所使用的code
+     */
+    private var lastCode = thisCodeAble.thisCode
+
+    /**
+     * 上一次获取的bot
+     */
+    private var _bot: Bot? = null
+
     /** 通过thisCode动态获取 */
     override val bot: Bot
         get() {
             val id = thisCodeAble.thisCode
+            val last = _bot
+            if(last != null && id == lastCode){
+                return last
+            }
             val info: BotInfo? = botManager.getBot(id)
             return if(info != null){
                 // 存在此信息，获取bot信息
-                MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner).bot
+                val getBot = MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner).bot
+                lastCode = id
+                _bot = getBot
+                getBot
             }else{
                 // 不存在，抛出异常。一般不会出现这种情况，因为默认情况下ListenerManager会拦截未验证信息
                 throw NoSuchElementException("can not found bot $id")

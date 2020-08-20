@@ -1,3 +1,14 @@
+# 1.4.1-1.16
+- 修复设置全体禁言无效的问题。
+- `setGroupAnonymousBan`将会直接重载为`setGroupBan`, 并且提供一个警告.
+- 增加`setGroupLeave`的警告日志
+- 追加一个配置值:
+```properties
+# mirai配置自定义deviceInfo的时候使用的随机种子。默认为1.
+simbot.mirai.deviceInfoSeed=1
+```
+
+
 # 1.4.0-1.16
 - mirai更新到`1.2.1`
 - kotlin更新到`1.4.0`

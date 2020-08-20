@@ -89,6 +89,12 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     @field:Conf("mirai.useSimbotNetworkLog")
     var useSimbotNetworkLog: Boolean = false
 
+    /** mirai配置自定义deviceInfoSeed的时候使用的随机种子。默认为1.  */
+    @field:Conf("mirai.deviceInfoSeed", comment = "mirai配置自定义deviceInfoSeed的时候使用的随机种子。默认为1. ")
+    var deviceInfoSeed: Long = 1L
+
+
+
     /**
      * mirai官方配置类获取函数，默认为其默认值
      * 函数参数为bot的账号，得到一个config实例
@@ -96,7 +102,7 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     var botConfiguration: (String) -> BotConfiguration = {
         code ->
         val conf = BotConfiguration()
-        conf.deviceInfo = { MiraiSystemDeviceInfo(code) }
+        conf.deviceInfo = { MiraiSystemDeviceInfo(code, deviceInfoSeed) }
         conf.heartbeatPeriodMillis = this.heartbeatPeriodMillis
         conf.heartbeatTimeoutMillis = this.heartbeatTimeoutMillis
         conf.firstReconnectDelayMillis = this.firstReconnectDelayMillis
@@ -217,8 +223,18 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
  */
 open class MiraiSystemDeviceInfo
 @JvmOverloads
-constructor(code: String, seed: Long = 1): SystemDeviceInfo() {
-    private val random: Random = Random(code.toLong() * seed)
+constructor(
+        code: Long,
+        seed: Long,
+        randomFactory: (code: Long, seed: Long) -> Random = { c,s -> Random(c * s) }
+): SystemDeviceInfo() {
+    constructor(codeId: String, seedNum: Long): this(codeId.toLong(), seedNum)
+    constructor(codeId: String, seedNum: Long, randomFactory: (code: Long, seed: Long) -> Random):
+            this(codeId.toLong(), seedNum, randomFactory)
+
+
+    private val random: Random = randomFactory(code, seed)
+
 
     override val display: ByteArray = "MIRAI-SIMBOT.200122.001".toByteArray()
     override val product: ByteArray = "mirai-simbot".toByteArray()

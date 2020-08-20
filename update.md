@@ -7,7 +7,8 @@
 # mirai配置自定义deviceInfo的时候使用的随机种子。默认为1.
 simbot.mirai.deviceInfoSeed=1
 ```
-
+- `GroupBan`事件中增加可能出现**全体禁言**事件。
+    其中，全体禁言事件与普通禁言的区别为：全体禁言事件的 **被操作者(`beOperatedQQ`)** 必定为null, **禁言时长(`time`)** 必定为`-1`.
 
 
 

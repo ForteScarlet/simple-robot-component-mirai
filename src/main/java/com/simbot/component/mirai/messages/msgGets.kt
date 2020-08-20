@@ -39,7 +39,7 @@ import net.mamoe.mirai.message.data.source
  */
 abstract class MiraiBaseMsgGet<out E: BotEvent>(open val event: E): MsgGet {
 
-    open val onTime = System.currentTimeMillis()
+    open val onTime: Long = System.currentTimeMillis()
 
     /** event消息 */
     abstract var eventMsg: String?
@@ -594,8 +594,9 @@ sealed class MiraiBanEvent<out GE: GroupEvent>(event: GE): MiraiEventGet<GE>(eve
     abstract val muteEventId: String
     private val groupId = event.group.id.toString()
     /** 群号  */
-    override fun getGroup() = groupId
+    override fun getGroup(): String = groupId
     override fun getGroupCodeNumber(): Long = event.group.id
+    override fun getGroupHeadUrl(): String = event.group.avatarUrl
     override fun getId(): String = muteEventId
 }
 
@@ -632,6 +633,7 @@ open class MiraiMemberMuteEvent(event: MemberMuteEvent): Mute<MemberMuteEvent>(e
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = memberId
     override fun getCodeNumber(): Long = event.member.id
+    override fun getQQHeadUrl(): String = event.member.avatarUrl
     /** 禁言时长-秒  */
     override fun time(): Long = durationSeconds
     /** 操作者的QQ号  */
@@ -648,6 +650,7 @@ open class MiraiMemberUnmuteEvent(event: MemberUnmuteEvent): Unmute<MemberUnmute
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = memberId
     override fun getCodeNumber(): Long = event.member.id
+    override fun getQQHeadUrl(): String = event.member.avatarUrl
     /** 禁言时长-秒  */
     override fun time(): Long = 0
     /** 操作者的QQ号  */
@@ -676,7 +679,7 @@ open class MiraiBotMuteEvent(event: BotMuteEvent): Mute<BotMuteEvent>(event) {
 /**
  * bot解除禁言
  */
-open class MiraiBotUnmuteEvent(event:BotUnmuteEvent): Unmute<BotUnmuteEvent>(event) {
+open class MiraiBotUnmuteEvent(event: BotUnmuteEvent): Unmute<BotUnmuteEvent>(event) {
     private val memberId = event.bot.id.toString()
     private val operatorId = event.getOperatorId().toString()
     /** 被操作者的QQ号  */
@@ -690,8 +693,45 @@ open class MiraiBotUnmuteEvent(event:BotUnmuteEvent): Unmute<BotUnmuteEvent>(eve
 //endregion
 
 
+//region 全体禁言事件
+/**
+ * 全体禁言事件.
+ * 当[getBanType]为[GroupBanType.BAN]的时候，代表开启全体禁言，反之代表关闭
+ * 其中:
+ * - 全体禁言事件的[getBeOperatedQQ]值必定为null.
+ * - 全体禁言事件的[time]值必定为-1.
+ */
+open class MiraiGroupMuteAllEvent(event: GroupMuteAllEvent):  MiraiBanEvent<GroupMuteAllEvent>(event) {
+
+    /** 禁言类型 */
+    private val _banType: GroupBanType = if(event.new) GroupBanType.BAN else GroupBanType.LIFT_BAN
+
+    /** 操作者code，可能是bot自己 */
+    private val operatorCode = event.operatorOrBot.id.toString()
+
+    /** 根据新的状态判断id */
+    override val muteEventId: String = if(_banType.isBan) "GROUP_MUTE_$event" else "GROUP_UN_MUTE_$event"
+
+    /** 获取禁言类型：禁言/解除禁言  */
+    override fun getBanType(): GroupBanType = _banType
+
+    /** 操作者的QQ号  */
+    override fun getOperatorQQ(): String = operatorCode
+
+    override fun getCodeNumber(): Long = event.bot.id
+
+    /** 被操作者的QQ号  */
+    override fun getBeOperatedQQ(): String? = null
+
+    /** 禁言时长-秒  */
+    override fun time(): Long = -1
+
+}
+//endregion
+
+
 //region 好友删除事件
-// ctrl shift Z
+// alt shift Z
 
 /**
  * 好友删除事件

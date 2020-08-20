@@ -330,7 +330,11 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     }
     //endregion
 
-    // TODO 全员禁言 GroupMuteAllEvent
+    //region 全员禁言 GroupMuteAllEvent
+    bot.registerListenerAlways<GroupMuteAllEvent> {
+        MiraiGroupMuteAllEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
 
     //region 好友删除事件
     bot.registerListenerAlways<FriendDeleteEvent> {

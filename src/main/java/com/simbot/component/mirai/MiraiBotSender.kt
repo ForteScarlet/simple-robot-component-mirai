@@ -410,11 +410,6 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
                              private val conf: MiraiConfiguration): MiraiBotSender(null, contact, cacheMaps, senderRunner){
 
     /**
-     * 上一次获取bot的时候所使用的code
-     */
-    private var lastCode = thisCodeAble.thisCode
-
-    /**
      * 上一次获取的bot
      */
     private var _bot: Bot? = null
@@ -424,14 +419,13 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
         get() {
             val id = thisCodeAble.thisCode
             val last = _bot
-            if(last != null && id == lastCode){
+            if(last != null && id == last.id.toString()){
                 return last
             }
             val info: BotInfo? = botManager.getBot(id)
             return if(info != null){
                 // 存在此信息，获取bot信息
                 val getBot = MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner).bot
-                lastCode = id
                 _bot = getBot
                 getBot
             }else{

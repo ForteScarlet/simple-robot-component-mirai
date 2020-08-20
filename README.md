@@ -2,21 +2,21 @@
 
 [![](https://img.shields.io/badge/simple--robot-core-green)](https://github.com/ForteScarlet/simple-robot-core) [![](https://img.shields.io/maven-central/v/love.forte.simple-robot-component/component-mirai)](https://search.maven.org/artifact/love.forte.simple-robot-component/component-mirai)
 
-基于 **`simple-robot-core`** 核心框架，对接 **`Mirai`** 的qqandroid库
+基于 [**`simple-robot-core`**](https://github.com/ForteScarlet/simple-robot-core) 核心框架，对接 [**`Mirai`**](https://github.com/mamoe/mirai) 的qqandroid库
 
 
 ## 特性
 
-- 内置`v1.4.1-1.13`版本的`CQCodeUtils`模组来代替核心内部自带的CQCodeUtil工具.
+- ~~内置`v1.4.1-1.13`版本的`CQCodeUtils`模组来代替核心内部自带的CQCodeUtil工具.~~ ·cqCodeUtils·模组已由核心内置.
 
-- 接收到的绝大部分`CQ码`都是从`mirai码`转化而来。
+- 特殊消息依旧采取`CQ码`格式，且接收到的绝大部分`CQ码`都是从`mirai码`转化而来。
 而从`mirai码`转化而来的`CQ码`与原版CQ码有一定的区别，例如`at`类型的CQ码, 正常情况下为`[CQ:at,qq=12345678]`，而转化而来的则是`[CQ:at,at=12345678]`
 此问题可能会逐步改善，但是还请注意情况，增加一层判断。
 
 - 为了兼容Mirai的特性与simbot的特性，此组件内置了部分缓存类以缓存一些信息，例如请求的request和image等
 
 ## Mirai版本
-目前使用的mirai版本为：**`1.1-EA`**
+目前使用的mirai版本为：**`1.2.1`**
 
 
 
@@ -36,6 +36,8 @@
 
 - 发送xml和json
 - 其他大部分基础性的功能
+
+- 额外的功能, 例如好友头像变更事件等
 
 ## 注意事项
 - 尽可能使用`KQCodeUtils`来代替`CQCodeUtil`。使Mirai兼容simbot已经损失了很多性能了，CQ码方面就换相对高效一点的工具吧。
@@ -64,12 +66,12 @@
 <br>
 
 ## 使用
+[![](https://img.shields.io/maven-central/v/love.forte.simple-robot-component/component-mirai)](https://search.maven.org/artifact/love.forte.simple-robot-component/component-mirai)
 以maven为例：
 ```xml
 <dependency>
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
-    <!-- 参考:0.4-1.13 -->
     <version>${version}</version>
 </dependency>
 ```
@@ -79,14 +81,14 @@
 ```java
 @SimpleRobotApplication(resources = "/conf.properties")
 public class TestMain2 /* implements MiraiApp // 可以选择实现此接口 */ {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         // mirai application
         new MiraiApplication().run(TestMain2.class, args);
     }
 }
 ```
 
-或者试试核心1.13.x的通用启动器：
+或者试试核心`1.13.x`之后的通用启动器：
 ```java
 @SimpleRobotApplication(resources = "/conf.properties")
 public class TestMain2 /* implements Application // 可以选择实现此接口 */ {
@@ -100,9 +102,9 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
 ## 可解析的CQ码
 此处简述已经支持解析为mirai`Message`的CQ码类型列表.
-参数展示格式为：`\[参数1(1)|参数1(2)](参数1含义)\[参数2](参数2含义)`
-每个中括号(`\[]`)中代表一种参数，中括号后面的括号中为对此参数的描述。
-参数名可能存在一些重名参数，例如at类型中，参数qq与参数at含义相同（例如`\[CQ:at,qq=123456789]`和`\[CQ:at,at=123456789]`）
+参数展示格式为：`[参数1(1)|参数1(2)](参数1含义)[参数2](参数2含义)`
+每个中括号(`[]`)中代表一种参数，中括号后面的括号中为对此参数的描述。
+参数名可能存在一些重名参数，例如at类型中，参数qq与参数at含义相同（例如`[CQ:at,qq=123456789]`和`[CQ:at,at=123456789]`）
 则其中，中括号中第一个出现的参数即为推荐参数，例如at中，推荐使用`qq`作为参数名，其次才是`at`
 
 
@@ -133,21 +135,21 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
     参数：无
     
-    注①：暂不支持发送语音，因此语音会变为`\[语音]`字样的文本消息    
+    注①：暂不支持发送语音，因此语音会变为`[语音]`字样的文本消息    
     
 
 - **rps**    
 
     参数：无
         
-    注①：暂不支持发送猜拳，因此语音会变为`\[猜拳]`字样的文本消息    
+    注①：暂不支持发送猜拳，因此语音会变为`[猜拳]`字样的文本消息    
         
     
 - **dice**    
 
      参数：无
             
-     注①：暂不支持发送骰子，因此语音会变为`\[骰子]`字样的文本消息    
+     注①：暂不支持发送骰子，因此语音会变为`[骰子]`字样的文本消息    
 
 
 - **shake**
@@ -264,7 +266,7 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
 
     参数：无
     
-    注①：不支持解析签到，会被直接解析为文本消息：`\[签到]`
+    注①：不支持解析签到，会被直接解析为文本消息：`[签到]`
     
 
 - **show**

@@ -24,6 +24,7 @@ import com.forte.qqrobot.beans.messages.QQCodeAble
 import com.forte.qqrobot.beans.messages.msgget.EventGet
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.events.*
 
 /*
@@ -48,19 +49,21 @@ interface MiraiSpecialBotMsgGet<out T: BotEvent>: MsgGet, QQCodeAble, NicknameAb
 }
 
 /**
- * mirai中那些特有事件
+ * mirai的特有事件
  */
-interface MiraiBotEventGet<out T: BotEvent>: EventGet, QQCodeAble, NicknameAble
+interface MiraiSpecialBotEventGet<out T: BotEvent>: MiraiSpecialBotMsgGet<T>, EventGet, QQCodeAble, NicknameAble
 
 
 /**
- * [BotOnlineEvent]
+ * [Bot] 登录完成, 好友列表, 群组列表初始化完成
+ * @see BotOnlineEvent
  */
 interface BotOnline: MiraiSpecialBotMsgGet<BotOnlineEvent>
 
 
 /**
- * [BotOfflineEvent]
+ * [Bot] 离线.
+ * @see BotOfflineEvent
  */
 interface BotOffline: MiraiSpecialBotMsgGet<BotOfflineEvent>
 
@@ -90,9 +93,14 @@ interface ImageUpload: MiraiSpecialBotMsgGet<ImageUploadEvent>
 
 
 /**
- * [net.mamoe.mirai.event.events.MessageSendEvent]
+ * [net.mamoe.mirai.event.events.MessagePreSendEvent]
  */
-interface MessageSend: MiraiSpecialBotMsgGet<MessageSendEvent>
+interface MessagePreSend: MiraiSpecialBotMsgGet<MessagePreSendEvent>
+
+/**
+ * [net.mamoe.mirai.event.events.MessagePostSendEvent]
+ */
+interface MessagePostSend: MiraiSpecialBotMsgGet<MessagePostSendEvent<Contact>>
 
 
 /*

@@ -29,9 +29,18 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.message.uploadImage
+import net.mamoe.mirai.message.uploadAsImage
+import net.mamoe.mirai.utils.toExternalImage
+import java.io.File
 import java.net.URL
 import java.util.function.BiFunction
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.asSequence
+import kotlin.collections.find
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
+import kotlin.collections.toMap
 
 
 /**
@@ -56,7 +65,7 @@ fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
            // 如果是CQ码，转化为KQCode并进行处理
            KQCode.of(it).toMessage(contact, cacheMaps)
        }else{
-           it.toMessage()
+           PlainText(it)
        }
    }.reduce { acc, msg -> acc + msg }
 }
@@ -79,12 +88,12 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
                         At(contact)
                     }
                     is Friend -> {
-                        "@${contact.nick}".toMessage()
+                        PlainText("@${contact.nick} ")
                     }
                     is Group -> {
                         At(contact[id.toLong()])
                     }
-                    else -> "@$id".toMessage()
+                    else -> PlainText("@$id")
                 }
             }
         }
@@ -100,26 +109,30 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             // image 类型的CQ码，参数一般是file, destruct
             val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
 
+//            val deleteOnClose = this["deleteOnClose"]?.toBoolean() ?: false
+
             val imageCache = cacheMaps.imageCache
 
             // file文件，可能是本地的或者网络的
-            val image: Image = if(file.startsWith("http")){
+            val image: Image = if (file.startsWith("http")) {
                 // 网络图片 阻塞上传
                 runBlocking {
-                    contact.uploadImage(URL(file)).also {  imageCache[file] = it }
+                    val externalImage = URL(file).openStream().toExternalImage()
+                    contact.uploadImage(externalImage).also { imageCache[file] = it }
                 }
-            }else{
+            } else {
                 // 先查询缓存中有没有这个东西
                 // 本地文件
-               imageCache[file] ?: runBlocking {
-//                   contact.uploadImage(File(file)).also { ImageCache[file] = it }
-                   contact.uploadImage(FileUtil.file(file)).also { imageCache[file] = it }
-               }
+                imageCache[file] ?: runBlocking {
+                    val localFile: File = FileUtil.file(file)
+                    val uploadImage = localFile.uploadAsImage(contact)
+                    uploadImage.also { imageCache[file] = it }
+                }
             }
             // 如果是闪照则转化
-            return if(this["destruct"] == "true"){
+            return if (this["destruct"] == "true") {
                 image.flash()
-            }else{
+            } else {
                 image
             }
         }
@@ -240,10 +253,10 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             val xmlCode = this
             // 解析的参数
 //            val action = this["action"] ?: "plugin"
-            val flag: Int = this["flag"]?.toInt() ?: 3
-            val url = this["url"] ?: ""
-            val sourceName = this["sourceName"] ?: ""
-            val sourceIconURL = this["sourceIconURL"] ?: ""
+//            val flag: Int = this["flag"]?.toInt() ?: 3
+//            val url = this["url"] ?: ""
+//            val sourceName = this["sourceName"] ?: ""
+//            val sourceIconURL = this["sourceIconURL"] ?: ""
 
             // 构建xml
             return buildXmlMessage(60) {
@@ -352,7 +365,7 @@ interface CQCodeHandler: (KQCode, Contact) -> Message, BiFunction<KQCode, Contac
 object CQCodeParsingHandler {
 
     /** 注册额外的解析器 */
-    private val otherHandler: MutableMap<String, CQCodeHandler> by lazy { mutableMapOf<String, CQCodeHandler>() }
+    private val otherHandler: MutableMap<String, CQCodeHandler> by lazy { mutableMapOf() }
 
     /**
      * get

@@ -30,17 +30,25 @@ import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
 
 /** 权限信息转化 */
-fun MemberPermission.toPowerType(): PowerType {
-    return when(this){
-        MemberPermission.ADMINISTRATOR -> PowerType.ADMIN
-        MemberPermission.MEMBER -> PowerType.MEMBER
-        MemberPermission.OWNER -> PowerType.OWNER
-        else -> PowerType.MEMBER
-    }
+@Deprecated("use 'MemberPermission.powerType'", replaceWith = ReplaceWith("powerType"))
+fun MemberPermission.toPowerType(): PowerType = this.powerType
+
+
+/** 权限信息转化 */
+val MemberPermission.powerType: PowerType get() = when(this){
+    MemberPermission.ADMINISTRATOR -> PowerType.ADMIN
+    MemberPermission.MEMBER -> PowerType.MEMBER
+    MemberPermission.OWNER -> PowerType.OWNER
+    else -> PowerType.MEMBER
 }
 
 /** 权限信息转化 */
-fun Member.toPowerType(): PowerType = this.permission.toPowerType()
+@Deprecated("use 'Member.powerType'", replaceWith = ReplaceWith("powerType"))
+fun Member.toPowerType(): PowerType = this.powerType
+
+
+/** 权限信息转化 */
+val Member.powerType: PowerType get() = this.permission.powerType
 
 
 /**
@@ -232,7 +240,7 @@ open class MiraiGroupMemberInfo(
     override fun getCard(): String = member.nameCard
 
     /** 权限类型  */
-    override fun getPowerType(): PowerType = member.toPowerType()
+    override fun getPowerType(): PowerType = member.powerType
 
     /** 群成员等级名称  */
     @Deprecated("just null", ReplaceWith("null"))
@@ -344,7 +352,7 @@ open class MiraiGroupMemberList(
         override fun getSex(): SexType = DeprecatedAPI.memberListSex
 
         /** 权限类型  */
-        override fun getPower(): PowerType = member.toPowerType()
+        override fun getPower(): PowerType = member.powerType
 
         /** 头衔到期时间  */
         @Deprecated("just -1L", ReplaceWith("-1L"))

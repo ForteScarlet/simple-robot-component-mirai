@@ -225,7 +225,7 @@ open class MiraiGroupMsg(event: GroupMessageEvent, cacheMaps: CacheMaps): MiraiM
 
     private val senderId = event.sender.id.toString()
     private val groupId = event.group.id.toString()
-    private var memberPowerType = event.sender.permission.toPowerType()
+    private var memberPowerType = event.sender.permission.powerType
 
     override val onTime: Long = event.time.toLong()
 

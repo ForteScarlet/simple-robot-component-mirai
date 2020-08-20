@@ -26,6 +26,10 @@ import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.events.*
 
+/*
+    此文件中定义一些只有mirai中才有的特殊事件接口。
+ */
+
 /**
  * mirai中那些特有事件
  */

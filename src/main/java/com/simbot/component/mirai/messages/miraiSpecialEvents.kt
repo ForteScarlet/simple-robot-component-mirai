@@ -29,7 +29,7 @@ import net.mamoe.mirai.event.events.*
 /**
  * mirai中那些特有事件
  */
-interface MiraiBotMsgGet<out T: BotEvent>: MsgGet, QQCodeAble, NicknameAble {
+interface MiraiSpecialBotMsgGet<out T: BotEvent>: MsgGet, QQCodeAble, NicknameAble {
     /** 可以得到mirai中的原生Bot对象 */
     val bot: Bot
     /** 可以得到mirai中当前事件的原生对象 */
@@ -52,43 +52,43 @@ interface MiraiBotEventGet<out T: BotEvent>: EventGet, QQCodeAble, NicknameAble
 /**
  * [BotOnlineEvent]
  */
-interface BotOnline: MiraiBotMsgGet<BotOnlineEvent>
+interface BotOnline: MiraiSpecialBotMsgGet<BotOnlineEvent>
 
 
 /**
  * [BotOfflineEvent]
  */
-interface BotOffline: MiraiBotMsgGet<BotOfflineEvent>
+interface BotOffline: MiraiSpecialBotMsgGet<BotOfflineEvent>
 
 
 /**
  * [net.mamoe.mirai.event.events.BotReloginEvent]
  */
-interface BotRelogin: MiraiBotMsgGet<BotReloginEvent>
+interface BotRelogin: MiraiSpecialBotMsgGet<BotReloginEvent>
 
 
 /**
  * [net.mamoe.mirai.event.events.BotAvatarChangedEvent]
  */
-interface BotAvatarChanged: MiraiBotMsgGet<BotAvatarChangedEvent>
+interface BotAvatarChanged: MiraiSpecialBotMsgGet<BotAvatarChangedEvent>
 
 
 /**
  * [net.mamoe.mirai.event.events.BeforeImageUploadEvent]
  */
-interface BeforeImageUpload: MiraiBotMsgGet<BeforeImageUploadEvent>
+interface BeforeImageUpload: MiraiSpecialBotMsgGet<BeforeImageUploadEvent>
 
 
 /**
  * [net.mamoe.mirai.event.events.ImageUploadEvent]
  */
-interface ImageUpload: MiraiBotMsgGet<ImageUploadEvent>
+interface ImageUpload: MiraiSpecialBotMsgGet<ImageUploadEvent>
 
 
 /**
  * [net.mamoe.mirai.event.events.MessageSendEvent]
  */
-interface MessageSend: MiraiBotMsgGet<MessageSendEvent>
+interface MessageSend: MiraiSpecialBotMsgGet<MessageSendEvent>
 
 
 /*

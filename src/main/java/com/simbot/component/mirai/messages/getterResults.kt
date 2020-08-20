@@ -85,7 +85,7 @@ open class MiraiGroupInfo(
     private val managersIdAndNick: MutableMap<String, String> by lazy {
         baseGroup.members.asSequence()
                 .filter { it.isOperator() }
-                .sortedBy { -it.permission.level }
+                .sortedByDescending { it.permission.level }
                 .map { it.id.toString() to it.nameCardOrNick }.toMap().toMutableMap()
     }
 

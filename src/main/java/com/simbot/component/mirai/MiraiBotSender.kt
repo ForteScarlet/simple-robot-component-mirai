@@ -236,7 +236,7 @@ open class MiraiBotSender(
 
     /** [setGroupAnonymousBan]的一次性警告日志 */
     private val setGroupAnonymousBanWarning by lazy<Byte> {
-        /** logger */
+        /* logger */
         QQLog.warning("mirai.api.deprecated", "setGroupAnonymousBan", "setGroupBan(...)")
         0
     }
@@ -259,7 +259,7 @@ open class MiraiBotSender(
 
     /** [setDiscussLeave]的一次性警告日志 */
     private val setDiscussLeaveWarning by lazy<Byte> {
-        /** logger */
+        /* logger */
         QQLog.warning("mirai.api.deprecated", "setDiscussLeave", "setGroupLeave(...)")
         0
     }

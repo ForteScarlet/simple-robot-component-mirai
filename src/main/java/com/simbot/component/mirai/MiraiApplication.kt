@@ -91,7 +91,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun getGetter(msgGet: MsgGet?, botManager: BotManager?): MiraiBotSender? = null
 
     /** 配置类实例 */
-    private val config: MiraiConfiguration by lazy { MiraiConfiguration() }
+    private val config: MiraiConfiguration = MiraiConfiguration()
 
     /**
      * 开发者实现的获取Config对象实例的方法

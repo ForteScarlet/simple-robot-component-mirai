@@ -26,6 +26,7 @@ import com.forte.qqrobot.beans.messages.result.inner.GroupNote
 import com.forte.qqrobot.beans.messages.types.PowerType
 import com.forte.qqrobot.beans.messages.types.SexType
 import com.forte.qqrobot.bot.LoginInfo
+import com.forte.qqrobot.log.QQLog
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
 
@@ -510,7 +511,6 @@ open class MiraiGroupList(val groups: ContactList<Group>): GroupList {
 open class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
     override fun getOriginalData(): String = toString()
     override fun toString(): String = friends.toString()
-
     /** 好友数组 */
     val friendList: Array<com.forte.qqrobot.beans.messages.result.inner.Friend> by lazy {
         friends.asSequence().map { MiraiFriend(it) as com.forte.qqrobot.beans.messages.result.inner.Friend }.toList().toTypedArray()
@@ -518,13 +518,33 @@ open class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
     /** 好友分组, 无分组信息 */
     private val friendListMap: MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> by lazy { mutableMapOf("" to friendList) }
 
+    /** [getFirendList]的不支持警告 */
+    private val getFriendListWarning: Byte  by lazy<Byte> {
+        /* logger */
+        QQLog.warning("mirai.api.deprecated", "getFriendList(By group name)", "friend list without group")
+        0
+    }
+
     /** 无分组信息 */
     @Deprecated("just getFriendList()", ReplaceWith("friendList"))
-    override fun getFirendList(group: String?): Array<com.forte.qqrobot.beans.messages.result.inner.Friend> = friendList
+    override fun getFirendList(group: String?): Array<com.forte.qqrobot.beans.messages.result.inner.Friend> {
+        getFriendListWarning
+        return friendList
+    }
+
+    /** [getFriendList]的不支持警告 */
+    private val getFriendListMapWarning: Byte by lazy<Byte> {
+        /* logger */
+        QQLog.warning("mirai.api.deprecated", "getFriendListMap", "friend map that only an empty key \"\"")
+        0
+    }
 
     /** 无分组信息 */
     @Deprecated("just getFriendList()")
-    override fun getFriendList(): MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> = friendListMap
+    override fun getFriendList(): MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> {
+        getFriendListMapWarning
+        return friendListMap
+    }
 
     /** 好友信息 */
     open inner class MiraiFriend(val friend: Friend): com.forte.qqrobot.beans.messages.result.inner.Friend {

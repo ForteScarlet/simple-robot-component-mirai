@@ -29,9 +29,7 @@ import com.forte.qqrobot.listener.invoker.ListenerFilter
 import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
-import com.simbot.component.mirai.messages.MiraiEvents
-import com.simbot.component.mirai.messages.MiraiFriendAvatarChangedEvent
-import com.simbot.component.mirai.messages.MiraiMessageGet
+import com.simbot.component.mirai.messages.*
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
@@ -138,14 +136,35 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      */
     private fun registerMiraiEvent(){
         val msgGetTypeFactory = MsgGetTypeFactory.getInstance()
+        // 头像变更事件
         try {
             QQLog.debug("mirai.event.register", MiraiEvents.friendAvatarChangedEvent)
-            msgGetTypeFactory.register(MiraiEvents.friendAvatarChangedEvent, MiraiFriendAvatarChangedEvent::class.java)
+            msgGetTypeFactory.register(MiraiEvents.friendAvatarChangedEvent, FriendAvatarChanged::class.java)
         }catch (e: Throwable) {
             // 捕获一切异常
-            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendDeleteEvent, e.localizedMessage)
-            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendDeleteEvent, e.localizedMessage)
+            QQLog.warning("mirai.event.register.failed", MiraiEvents.friendAvatarChangedEvent, e.localizedMessage)
+            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.friendAvatarChangedEvent, e.localizedMessage)
         }
+        // bot离线事件
+        try {
+            QQLog.debug("mirai.event.register", MiraiEvents.botOfflineEvent)
+            msgGetTypeFactory.register(MiraiEvents.botOfflineEvent, BotOffline::class.java)
+        }catch (e: Throwable) {
+            // 捕获一切异常
+            QQLog.warning("mirai.event.register.failed", MiraiEvents.botOfflineEvent, e.localizedMessage)
+            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.botOfflineEvent, e.localizedMessage)
+        }
+
+        // bot重新登录事件
+        try {
+            QQLog.debug("mirai.event.register", MiraiEvents.botReloginEvent)
+            msgGetTypeFactory.register(MiraiEvents.botReloginEvent, BotRelogin::class.java)
+        }catch (e: Throwable) {
+            // 捕获一切异常
+            QQLog.warning("mirai.event.register.failed", MiraiEvents.botReloginEvent, e.localizedMessage)
+            QQLog.debug("mirai.event.register.failed", e, MiraiEvents.botReloginEvent, e.localizedMessage)
+        }
+
     }
 
     /**

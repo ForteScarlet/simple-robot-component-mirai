@@ -41,6 +41,17 @@ object MiraiEvents {
      */
     const val friendAvatarChangedEvent: String = "FRIEND_AVATAR_CHANGED_EVENT"
 
+    /**
+     * bot离线事件
+     * @see BotOffline
+     */
+    const val botOfflineEvent: String = "BOT_OFFLINE_EVENT"
+
+    /**
+     * bot重新登录事件
+     * @see BotRelogin
+     */
+    const val botReloginEvent: String = "BOT_RELOGIN_EVENT"
 
 }
 

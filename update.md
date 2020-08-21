@@ -1,3 +1,7 @@
+# now
+- 追加事件：`MiraiEvents.botOfflineEvent`(bot离线事件)、`MiraiEvents.botReloginEvent`(bot重新登录事件)
+
+
 # 1.4.2-1.16
 - 修改日志输出规则，在bot登录后、注册监听前的这段时间中暂停当前已登录bot的mirai的日志输出，以保证所有的bot的登录与验证行为不会受到mirai的日志干扰。
 

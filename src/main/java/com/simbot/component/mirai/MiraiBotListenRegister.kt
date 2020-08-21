@@ -18,6 +18,7 @@
 package com.simbot.component.mirai
 
 import com.forte.qqrobot.MsgProcessor
+import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.messages.*
 import net.mamoe.mirai.Bot
@@ -54,7 +55,7 @@ internal fun Any.isIgnore(): Boolean = this == "ignore"
 //endregion
 
 //region 处理监听消息
-internal fun <M : MiraiBaseMsgGet<*>> M.onMsg(msgProcessor: MsgProcessor): ListenResult<*>? = msgProcessor.onMsgSelected(this)
+internal fun <M : MsgGet> M.onMsg(msgProcessor: MsgProcessor): ListenResult<*>? = msgProcessor.onMsgSelected(this)
 //endregion
 
 
@@ -349,7 +350,19 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     //endregion
 
 
-//    bot.subscribeAlways<BotJoinGroupEvent> {  }
+    //region bot离线事件
+    bot.registerListenerAlways<BotOfflineEvent> {
+        MiraiBotOfflineEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+    //region bot重新登录事件
+    bot.registerListenerAlways<BotReloginEvent> {
+        MiraiBotReloginEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+
 
     //endregion
 

@@ -576,13 +576,16 @@ open class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
 /** 禁言列表 */
 open class MiraiGroupBanList(group: Group): BanList {
 
+    private val toString = group.toString()
+
     /** 禁言列表 */
     private val banList: Array<BanInfo> by lazy {
         group.members.asSequence().filter { it.isMuted }.map { MiraiGroupBanInfo(it) as BanInfo }.toList().toTypedArray()
     }
 
     /** 获取原本的数据 originalData  */
-    override fun getOriginalData(): String? = null
+    override fun getOriginalData(): String = toString
+    override fun toString(): String = toString
 
     /**
      * 获取列表, 极度不建议返回为null

@@ -34,13 +34,7 @@ import net.mamoe.mirai.utils.toExternalImage
 import java.io.File
 import java.net.URL
 import java.util.function.BiFunction
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.asSequence
-import kotlin.collections.find
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
-import kotlin.collections.toMap
 
 
 /**

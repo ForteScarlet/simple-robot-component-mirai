@@ -21,7 +21,6 @@ package com.simbot.component.mirai.messages
 
 import com.forte.qqrobot.beans.messages.NicknameAble
 import com.forte.qqrobot.beans.messages.QQCodeAble
-import com.forte.qqrobot.beans.messages.msgget.EventGet
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact

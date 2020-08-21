@@ -38,8 +38,9 @@ import net.mamoe.mirai.message.TempMessageEvent
  * @param event 监听到的事件
  */
 open class MiraiFriendMsg(event: MessageEvent, cacheMaps: CacheMaps): MiraiMessageGet<MessageEvent>(event, cacheMaps), PrivateMsg {
+    private val eventTime: Long = event.time.toLong()
 
-    override val onTime: Long get() = event.time.toLong()
+    override val onTime: Long get() = eventTime
 
     /** 获取发送人的QQ号  */
     override fun getQQ(): String = contact.id.toString()
@@ -98,7 +99,8 @@ open class MiraiGroupMsg(event: GroupMessageEvent, cacheMaps: CacheMaps): MiraiM
     private val groupId = event.group.id.toString()
     private var memberPowerType = event.sender.permission.powerType
 
-    override val onTime: Long = event.time.toLong()
+    private val eventTime = event.time.toLong()
+    override val onTime: Long get() = eventTime
 
     /** 获取群消息发送人的qq号  */
     override fun getQQ(): String = senderId

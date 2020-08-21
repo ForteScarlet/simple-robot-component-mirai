@@ -39,11 +39,14 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
 
     open val onTime: Long = System.currentTimeMillis()
 
+    /** bot的qq号的字符串 */
+    private val botCodeString: String = event.bot.id.toString()
+
     /** event消息 */
     abstract var eventMsg: String?
 
     // bot id
-    abstract var botId : String
+    open var botId: String = botCodeString
 
     /** 获取原本的数据 originalData  */
     override fun getOriginalData(): String = toString()
@@ -55,11 +58,15 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
      * 此消息获取的时候，代表的是哪个账号获取到的消息。
      * @return 接收到此消息的账号。
      */
-    override fun getThisCode(): String = event.bot.id.toString()
+    override fun getThisCode(): String = botId
 
-    /** bot id */
+    /**
+     * bot id
+     * 可重置的botId. 但是一般不推荐其重置
+     * */
+//    @Deprecated("can not reset bot code")
     override fun setThisCode(code: String) {
-//        botId = code
+        botId = code
     }
 
     /**
@@ -85,7 +92,7 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
 }
 
 /**
- * mirai 的msgGet的父类，可获取contact对象
+ * mirai 消息类型事件父类，可获取contact对象
  *
  * 消息类型的msgGet
  *
@@ -108,8 +115,8 @@ abstract class MiraiMessageGet<out ME: MessageEvent>(event: ME, private val cach
     /** 消息正文，目前会将mirai码替换为CQ码 */
     override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(message, cacheMaps)
 
-    // bot id
-    override var botId: String = contact.bot.id.toString()
+//    // bot id
+//    override var botId: String = event.bot.id.toString()
 
 
     /** 获取ID, 一般可用于撤回  */
@@ -128,7 +135,7 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
     override var eventMsg: String? = null
     protected val eventId = "$event#$onTime"
     override fun getId(): String = eventId
-    override var botId: String = event.bot.id.toString()
+//    override var botId: String = event.bot.id.toString()
 
 
 

@@ -33,10 +33,11 @@ import net.mamoe.mirai.event.events.MessageRecallEvent
 abstract class MiraiMessageRecallEvent<out MRE: MessageRecallEvent>(event: MRE): MiraiEventGet<MRE>(event) {
     private val recallMessageId = "${event.messageId}.${event.messageInternalId}.${event.messageTime}"
     protected val authorId = event.authorId.toString()
+    private val eventMessageTime: Long = event.messageTime.toLong()
     /** 获取ID, 一般用于消息类型判断  */
     override fun getId(): String = recallMessageId
     /** 时间 */
-    override val onTime: Long = event.messageTime.toLong()
+    override val onTime: Long = eventMessageTime
 }
 
 //region 群消息撤回

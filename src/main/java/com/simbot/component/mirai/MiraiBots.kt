@@ -30,6 +30,7 @@ import net.mamoe.mirai.alsoLogin
 import net.mamoe.mirai.closeAndJoin
 import net.mamoe.mirai.join
 import net.mamoe.mirai.utils.BotConfiguration
+import net.mamoe.mirai.utils.MiraiLoggerWithSwitch
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -60,7 +61,7 @@ object MiraiBots {
      * 尝试获取一个bot，如果获取不到则会尝试构建一个。
      * 需要在从BotManager中验证存在后在通过此获取，否则BotManager中可能会缺失
      */
-    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration = { BotConfiguration() }, cacheMaps: CacheMaps, senderRunner: SenderRunner): MiraiBotInfo {
+    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration, cacheMaps: CacheMaps, senderRunner: SenderRunner): MiraiBotInfo {
         val id = info.botCode
         // 构建一个，构建失败会抛出异常
         val miraiBotInfo = bots[id]
@@ -105,6 +106,12 @@ object MiraiBots {
         noListenBots.forEach{
             registerListen(it.value, cacheMaps)
             val bot = it.value.bot
+            val logger = bot.logger
+            if(logger is MiraiLoggerWithSwitch){
+                // 如果是可开关的，开启日志
+                logger.enable()
+            }
+
             QQLog.debug("run.cache.contact", bot.id.toString())
             cacheMaps.contactCache.cache(bot)
         }
@@ -177,6 +184,12 @@ class MiraiBotInfo(private val id: String,
 
         // login info
         loginInfo = MiraiLoginInfo(bot)
+
+        // 登录后，如果日志可以关闭，暂时关闭
+        val logger = bot.logger
+        if(logger is MiraiLoggerWithSwitch){
+            logger.disable()
+        }
     }
 
     /**

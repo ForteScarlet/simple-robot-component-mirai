@@ -24,9 +24,7 @@ import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotInfoImpl
 import com.forte.qqrobot.exception.ConfigurationException
 import com.simbot.component.mirai.logger.SimbotMiraiLogger
-import net.mamoe.mirai.utils.BotConfiguration
-import net.mamoe.mirai.utils.ExternalImage
-import net.mamoe.mirai.utils.SystemDeviceInfo
+import net.mamoe.mirai.utils.*
 import java.util.AbstractMap.SimpleEntry
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -115,11 +113,17 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         if(noNetworkLog){
             conf.noNetworkLog()
         }
+        // MiraiLoggerWithSwitch
+        // 默认情况下都是关闭状态的log
         if(useSimbotBotLog){
-            conf.botLoggerSupplier = { SimbotMiraiLogger }
+            conf.botLoggerSupplier = { SimbotMiraiLogger.withSwitch(true) }
+        }else{
+            conf.botLoggerSupplier = { conf.botLoggerSupplier(it).withSwitch(true) }
         }
         if(useSimbotNetworkLog){
-            conf.networkLoggerSupplier = { SimbotMiraiLogger }
+            conf.networkLoggerSupplier = { SimbotMiraiLogger.withSwitch(true) }
+        }else{
+            conf.networkLoggerSupplier = { conf.networkLoggerSupplier(it).withSwitch(true) }
         }
         conf
     }
@@ -128,7 +132,18 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
      * 通过实例设置configuration
      */
     fun setBotConfiguration(configuration: BotConfiguration){
-        botConfiguration = { configuration }
+        // 设置日志开关
+        botConfiguration = {
+            configuration.networkLoggerSupplier = {
+                val netWorkLogger = configuration.networkLoggerSupplier(it)
+                if (netWorkLogger is MiraiLoggerWithSwitch) netWorkLogger else netWorkLogger.withSwitch(true)
+            }
+            configuration.botLoggerSupplier = {
+                val botLogger = configuration.botLoggerSupplier(it)
+                if (botLogger is MiraiLoggerWithSwitch) botLogger else botLogger.withSwitch(true)
+            }
+            configuration
+        }
     }
 
     /** 账号不可为null */

@@ -14,7 +14,7 @@
  *
  *
  */
-
+@file:JvmName("MiraiBotListenRegister")
 package com.simbot.component.mirai
 
 import com.forte.qqrobot.MsgProcessor

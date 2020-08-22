@@ -20,6 +20,7 @@ package com.simbot.component.mirai
 import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.listener.result.ListenResult
+import com.forte.qqrobot.log.QQLog
 import com.simbot.component.mirai.messages.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.Listener
@@ -29,10 +30,7 @@ import net.mamoe.mirai.message.FriendMessageEvent
 import net.mamoe.mirai.message.GroupMessageEvent
 import net.mamoe.mirai.message.MessageEvent
 import net.mamoe.mirai.message.TempMessageEvent
-import net.mamoe.mirai.message.data.At
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.QuoteReply
-import net.mamoe.mirai.message.data.asMessageChain
+import net.mamoe.mirai.message.data.*
 
 
 //region 响应判断
@@ -206,12 +204,20 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
 //        ListeningStatus.LISTENING
 //    }
 
+//    QQLog.debug("{0}", "mirai MessageEvent register")
     bot.registerListenerAlways<MessageEvent> {
         // 首先缓存此消息
         cacheMaps.recallCache.cache(this.source)
+        this.message.forEach {
+            if(it is Image){
+                // 记录图片缓存
+                cacheMaps.imageCache[it.imageId] = it
+            }
+        }
         val result = when (this) {
             // 好友消息
             is FriendMessageEvent -> {
+//                QQLog.debug("{0}", "mirai Friend msg: $this")
                 MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
             }
             // 群消息

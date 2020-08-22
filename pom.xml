@@ -8,7 +8,7 @@
     <artifactId>component-mirai</artifactId>
 
     <!-- 1.4.2-1.16 2020/8/20 -->
-    <version>1.4.2-1.16</version>
+    <version>1.4.3-TEST-1.16</version>
 
     <properties>
         <kotlin.version>1.4.0</kotlin.version>

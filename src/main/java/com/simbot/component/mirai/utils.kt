@@ -103,26 +103,34 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             // image 类型的CQ码，参数一般是file, destruct
             val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
 
-//            val deleteOnClose = this["deleteOnClose"]?.toBoolean() ?: false
-
             val imageCache = cacheMaps.imageCache
 
-            // file文件，可能是本地的或者网络的
-            val image: Image = if (file.startsWith("http")) {
-                // 网络图片 阻塞上传
-                runBlocking {
-                    val externalImage = URL(file).openStream().toExternalImage()
-                    contact.uploadImage(externalImage).also { imageCache[file] = it }
-                }
-            } else {
-                // 先查询缓存中有没有这个东西
-                // 本地文件
-                imageCache[file] ?: runBlocking {
-                    val localFile: File = FileUtil.file(file)
-                    val uploadImage = localFile.uploadAsImage(contact)
-                    uploadImage.also { imageCache[file] = it }
+            // 先查缓存
+            var image: Image? = imageCache[file]
+
+            if(image == null){
+                image = if (file.startsWith("http")) {
+                    // 网络图片 阻塞上传
+                    runBlocking {
+                        val externalImage = URL(file).openStream().toExternalImage()
+                        contact.uploadImage(externalImage).also { imageCache[file] = it }
+                    }
+                } else {
+                    // 不是http开头的, 则认为是本地图片
+                    runBlocking {
+                        val localFile: File = FileUtil.file(file)
+                        val uploadImage = localFile.uploadAsImage(contact)
+                        uploadImage.also { imageCache[file] = it }
+                    }
                 }
             }
+
+//            // 先查询缓存中有没有这个东西
+//            // 本地文件
+//            imageCache[file] ?:
+
+            // file文件，可能是本地的或者网络的
+//            val image: Image =
             // 如果是闪照则转化
             return if (this["destruct"] == "true") {
                 image.flash()
@@ -435,9 +443,11 @@ object MiraiCodeFormatUtils {
             // image, 追加file、url
             is Image -> {
                 // 缓存image
-                cacheMaps.imageCache[this.imageId] = this
+                val imageId = this.imageId
+                cacheMaps.imageCache[imageId] = this
                 val imageMq = MQCodeUtils.toMqCode(this.toString())
                 val imageKq = imageMq.toKQCode().mutable()
+                imageKq["file"] = imageId
                 imageKq["url"] = runBlocking { queryUrl() }
                 if(this is FlashImage){
                     imageKq["destruct"] = "true"

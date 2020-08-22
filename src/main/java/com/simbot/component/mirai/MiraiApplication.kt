@@ -243,7 +243,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
             runBlocking(Executors.newFixedThreadPool(1).asCoroutineDispatcher()) {
                 MiraiBots.joinAll()
             }
-            QQLog.debug("bots all shundown")
+            QQLog.debug("bots all shutdown")
         }, "Mirai-bot-join").start()
 
         return "mirai bot server"

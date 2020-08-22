@@ -1,5 +1,6 @@
 # now
 - 追加事件：`MiraiEvents.botOfflineEvent`(bot离线事件)、`MiraiEvents.botReloginEvent`(bot重新登录事件)
+- 现在当接收到消息的时候，simbot-mirai组件会在触发**消息监听**前通过id缓存消息中的image。
 
 
 # 1.4.2-1.16

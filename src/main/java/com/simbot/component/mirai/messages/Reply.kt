@@ -138,7 +138,7 @@ protected constructor(map: Map<String, Any> = mapOf()): Map<String, Any> by map 
          * 同意申请
          * @see com.simbot.component.mirai.quickReply
          */
-        @Deprecated("use [AgreeReply]", replaceWith = ReplaceWith("AgreeReply", "com.simbot.component.mirai.messages.AgreeReply"))
+        @Deprecated("use AgreeReply", replaceWith = ReplaceWith("AgreeReply", "com.simbot.component.mirai.messages.AgreeReply"))
         fun agree(): Builder {
             map["reply"] = true
             return this
@@ -149,7 +149,7 @@ protected constructor(map: Map<String, Any> = mapOf()): Map<String, Any> by map 
          * @see RejectReply
          * @see com.simbot.component.mirai.quickReply
          */
-        @Deprecated("use [RejectReply]", replaceWith = ReplaceWith("RejectReply", "com.simbot.component.mirai.messages.RejectReply"))
+        @Deprecated("use RejectReply", replaceWith = ReplaceWith("RejectReply", "com.simbot.component.mirai.messages.RejectReply"))
         fun reject(): Builder {
             map["reply"] = false
             return this
@@ -159,7 +159,7 @@ protected constructor(map: Map<String, Any> = mapOf()): Map<String, Any> by map 
          * 忽略申请
          * @see com.simbot.component.mirai.quickReply
          */
-        @Deprecated("use [IgnoreReply]", replaceWith = ReplaceWith("IgnoreReply", "com.simbot.component.mirai.messages.IgnoreReply"))
+        @Deprecated("use IgnoreReply", replaceWith = ReplaceWith("IgnoreReply", "com.simbot.component.mirai.messages.IgnoreReply"))
         fun ignore(): Builder {
             map["reply"] = "ignore"
             return this

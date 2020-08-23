@@ -7,8 +7,8 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
 
-    <!-- 1.4.3-1.16 2020/8/23 -->
-    <version>1.4.3-1.16</version>
+    <!-- 1.4.4-1.16 2020/8/23 -->
+    <version>1.4.4-1.16</version>
 
     <properties>
         <kotlin.version>1.4.0</kotlin.version>
@@ -136,7 +136,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
-
                 <executions>
                     <!-- 替换会被 maven 特别处理的 default-compile -->
                     <execution>
@@ -163,7 +162,6 @@
                         </goals>
                     </execution>
                 </executions>
-
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>

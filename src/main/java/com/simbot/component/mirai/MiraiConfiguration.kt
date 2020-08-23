@@ -121,12 +121,20 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         if(useSimbotBotLog){
             conf.botLoggerSupplier = { SimbotMiraiLogger.withSwitch(true) }
         }else{
-            conf.botLoggerSupplier = { conf.botLoggerSupplier(it).withSwitch(true) }
+            val oldBotLoggerSup = conf.botLoggerSupplier
+            conf.botLoggerSupplier = {
+                val logger = oldBotLoggerSup(it)
+                if(logger is MiraiLoggerWithSwitch) logger else logger.withSwitch(true)
+            }
         }
         if(useSimbotNetworkLog){
             conf.networkLoggerSupplier = { SimbotMiraiLogger.withSwitch(true) }
         }else{
-            conf.networkLoggerSupplier = { conf.networkLoggerSupplier(it).withSwitch(true) }
+            val oldNetworkLoggerSup = conf.networkLoggerSupplier
+            conf.networkLoggerSupplier = {
+                val logger = oldNetworkLoggerSup(it)
+                if(logger is MiraiLoggerWithSwitch) logger else logger.withSwitch(true)
+            }
         }
         conf
     }
@@ -135,14 +143,16 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
      * 通过实例设置configuration
      */
     fun setBotConfiguration(configuration: BotConfiguration){
+        val confNetworkLoggerSup = configuration.networkLoggerSupplier
+        val confBotLoggerSup = configuration.botLoggerSupplier
         // 设置日志开关
         botConfiguration = {
             configuration.networkLoggerSupplier = {
-                val netWorkLogger = configuration.networkLoggerSupplier(it)
+                val netWorkLogger = confNetworkLoggerSup(it)
                 if (netWorkLogger is MiraiLoggerWithSwitch) netWorkLogger else netWorkLogger.withSwitch(true)
             }
             configuration.botLoggerSupplier = {
-                val botLogger = configuration.botLoggerSupplier(it)
+                val botLogger = confBotLoggerSup(it)
                 if (botLogger is MiraiLoggerWithSwitch) botLogger else botLogger.withSwitch(true)
             }
             configuration

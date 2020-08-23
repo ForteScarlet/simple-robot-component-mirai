@@ -1,3 +1,6 @@
+# 1.4.4-1.16
+- 修复logger覆盖功能会导致登录的时候堆栈溢出的问题。
+
 # 1.4.3-1.16
 - 追加事件：`MiraiEvents.botOfflineEvent`(bot离线事件)、`MiraiEvents.botReloginEvent`(bot重新登录事件)
 - 现在当接收到消息的时候，simbot-mirai组件会在触发**消息监听**前通过id缓存消息中的image。

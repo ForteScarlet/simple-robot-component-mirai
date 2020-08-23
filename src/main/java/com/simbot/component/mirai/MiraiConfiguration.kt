@@ -92,6 +92,9 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     var deviceInfoSeed: Long = 1L
 
 
+    @field:Conf("mirai.autoRelogin", comment = "是否在bot掉线的时候自动重启.")
+    var autoRelogin: Boolean = false
+
 
     /**
      * mirai官方配置类获取函数，默认为其默认值

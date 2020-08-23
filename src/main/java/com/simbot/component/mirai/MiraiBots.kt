@@ -49,6 +49,12 @@ object MiraiBots {
     /** 未注册监听的bot列表 */
     private val noListenBots: MutableMap<String, MiraiBotInfo> = ConcurrentHashMap()
 
+    /**
+     * 遍历[MiraiBotInfo]
+     */
+    fun forEach(action: (String, MiraiBotInfo) -> Unit) {
+        bots.forEach(action)
+    }
 
     /** 增加一个bot，如果此bot已经存在则会抛出异常 */
     fun set(id: String, bot: MiraiBotInfo, cacheMaps: CacheMaps){

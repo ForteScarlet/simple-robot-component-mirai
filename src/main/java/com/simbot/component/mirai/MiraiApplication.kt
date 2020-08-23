@@ -30,9 +30,13 @@ import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
 import com.simbot.component.mirai.messages.*
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.event.events.BotOfflineEvent
+import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.firstIsInstanceOrNull
 import java.util.concurrent.Executors
@@ -237,6 +241,28 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         val cacheMaps = dependCenter.get(CacheMaps::class.java)
         // 启动服务，即注册监听
         MiraiBots.startListen(msgProcessor, cacheMaps)
+
+        if(config.autoRelogin) {
+            // 如果要自动重启，此处注册自动重启事件
+            MiraiBots.forEach {
+                _, info ->
+                val id = info.bot.id
+                // 注册被动下线事件
+                info.bot.subscribeAlways<BotOfflineEvent.Force> {
+                    if(this.bot.id == id){
+
+                        QQLog.debug("mirai.relogin.off", id, this.title, this.message)
+                        GlobalScope.launch {
+                            bot.login()
+                            QQLog.debug("mirai.relogin.on")
+                        }
+                    }
+                }
+            }
+        }
+
+
+
 
 //         在一条新线程中执行挂起，防止程序终止
         Thread({

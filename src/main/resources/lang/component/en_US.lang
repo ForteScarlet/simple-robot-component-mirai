@@ -22,3 +22,6 @@ mirai.api.deprecated=API not supported by mirai: {0}. The default value [{1}] wi
 mirai.event.register.failed=Mirai additional monitoring event [{0}] registration failed, you will not be able to use related monitoring. info: {1}
 
 mirai.event.register=Special event registration for mirai: {0}
+
+mirai.relogin.off=bot({0}) is passively disconnected, ready to try to reconnect. title({1}), message({2})
+mirai.relogin.on=bot({0}) dropped and reconnected.

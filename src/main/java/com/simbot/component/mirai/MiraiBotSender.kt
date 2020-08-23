@@ -32,9 +32,11 @@ import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.mute
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.MemberJoinRequestEvent
+import net.mamoe.mirai.getFriendOrNull
 
 
 /**
@@ -194,21 +196,47 @@ open class MiraiBotSender(
         val code = QQ.toLong()
         // 没有这个人则可能抛出异常
         // 默认认为是给好友发消息
-        val to: Contact = try {
-            bot.getFriend(code)
-        }catch (fe: NoSuchElementException){
-            // 不是好友
-            // 如果当前contact是群消息，则尝试获取群员
-            if(contact != null && contact is Group){
-                contact.getOrNull(code) ?: run{
-                    // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
-                    cacheMaps.contactCache[code, bot] ?: throw fe
+
+        bot.getFriend(1)
+
+        val to: Contact = bot.getFriendOrNull(code) ?: run {
+            if(contact != null){
+                // 回复此member
+                if(contact is Member && contact.id == code){
+                    return@run contact
                 }
-            }else{
-                // 不是好友，开始扫描全群缓存，查询不到缓存则会抛出异常
-                cacheMaps.contactCache[code, bot] ?: throw fe
+                if(contact is Group){
+                    return@run contact.getOrNull(code) ?: run {
+                        // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
+                        cacheMaps.contactCache[code, bot] ?: throw throw NoSuchElementException("friend or member $code")
+                    }
+                }
+                // 一般没有其他可能了。如果有，直接查询所有群
+                cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend or member $code")
+            }else {
+                // 一般没有其他可能了。如果有，直接查询所有群
+                cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend or member $code")
             }
+
+
+//            if(contact != null && contact is Group){
+//                contact.getOrNull(code) ?: run {
+//                    // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
+//                    cacheMaps.contactCache[code, bot] ?: throw throw NoSuchElementException("friend $code")
+//                }
+//            }else{
+//                // 不是好友，开始扫描全群缓存，查询不到缓存则会抛出异常
+//                cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend $code")
+//            }
         }
+
+//        val to: Contact = try {
+//            bot.getFriend(code)
+//        }catch (fe: NoSuchElementException){
+//            // 不是好友
+//            // 如果当前contact是群消息，则尝试获取群员
+//
+//        }
         val result = senderRunner.run {
             to.sendMsg(msg, cacheMaps)
         }

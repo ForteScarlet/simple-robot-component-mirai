@@ -197,8 +197,6 @@ open class MiraiBotSender(
         // 没有这个人则可能抛出异常
         // 默认认为是给好友发消息
 
-        bot.getFriend(1)
-
         val to: Contact = bot.getFriendOrNull(code) ?: run {
             if(contact != null){
                 // 回复此member
@@ -214,7 +212,7 @@ open class MiraiBotSender(
                 // 一般没有其他可能了。如果有，直接查询所有群
                 cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend or member $code")
             }else {
-                // 一般没有其他可能了。如果有，直接查询所有群
+                // 查询所有群
                 cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend or member $code")
             }
 

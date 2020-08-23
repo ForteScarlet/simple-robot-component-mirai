@@ -58,11 +58,11 @@ object SimbotMiraiLogger : MiraiLoggerPlatformBase() {
     }
 
     override fun error0(message: String?, e: Throwable?) {
-        QQLog.error("{0}", e, "  $identityColor $message")
+        QQLog.error("{0}", e, "$identityColor $message")
     }
 
     override fun info0(message: String?, e: Throwable?) {
-        QQLog.info("{0}", e, " $identityColor  $message")
+        QQLog.info("{0}", e, "$identityColor  $message")
     }
 
     override fun verbose0(message: String?, e: Throwable?) {
@@ -70,7 +70,7 @@ object SimbotMiraiLogger : MiraiLoggerPlatformBase() {
     }
 
     override fun warning0(message: String?, e: Throwable?) {
-        QQLog.warning("{0}", e, " $identityColor  $message")
+        QQLog.warning("{0}", e, "$identityColor  $message")
     }
 
 

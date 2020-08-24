@@ -87,6 +87,23 @@ object AndroidBotCookieUtils {
 //        val accessToken = getDataMethod(getAccessTokenMethod(wLoginSigInfo)) as ByteArray
 //        val superKey = getSuperKeyMethod(wLoginSigInfo) as ByteArray
         // psKeyMap
+        /*
+        maybe
+        tenpay.com
+        openmobile.qq.com
+        docs.qq.com
+        connect.qq.com
+        qzone.qq.com
+        vip.qq.com
+        qun.qq.com
+        game.qq.com
+        qqweb.qq.com
+        office.qq.com
+        ti.qq.com
+        mail.qq.com
+        qzone.com
+        mma.qq.com
+         */
         val psKeyMap = getPsKeyMapMethod(wLoginSigInfo) as Map<*, *>
         val psKey = psKeyMap["qun.qq.com"]?.let { getDataMethod(it) } as ByteArray?
 

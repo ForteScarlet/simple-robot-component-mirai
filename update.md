@@ -1,5 +1,6 @@
 # now
 - 移除`getAuthInfo`得到的cookies字符串中最后的分号 `; `
+- `mirai`更新至`1.2.2`
 
 # 1.5.0-1.16
 - 支持API`getAuthInfo`

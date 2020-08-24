@@ -12,7 +12,7 @@
 
     <properties>
         <kotlin.version>1.4.0</kotlin.version>
-        <mirai.version>1.2.1</mirai.version>
+        <mirai.version>1.2.2</mirai.version>
         <hutool.versin>5.3.8</hutool.versin>
 
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>

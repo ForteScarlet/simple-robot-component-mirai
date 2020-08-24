@@ -206,14 +206,14 @@ open class MiraiBotSender(
                 if(contact is Group){
                     return@run contact.getOrNull(code) ?: run {
                         // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
-                        cacheMaps.contactCache[code, bot] ?: throw throw NoSuchElementException("friend or member $code")
+                        cacheMaps.contactCache[code, bot] ?: throw NoSuchElementException("friend or member $code")
                     }
                 }
                 // 一般没有其他可能了。如果有，直接查询所有群
-                cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend or member $code")
+                cacheMaps.contactCache[code, bot] ?: throw NoSuchElementException("friend or member $code")
             }else {
                 // 查询所有群
-                cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend or member $code")
+                cacheMaps.contactCache[code, bot] ?: throw NoSuchElementException("friend or member $code")
             }
 
 

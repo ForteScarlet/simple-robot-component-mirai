@@ -133,9 +133,10 @@ open class MiraiBotSender(
     /** 群进群公告 */
     override fun getGroupTopNote(group: String): GroupTopNote = MiraiGroupTopNote(bot.getGroup(group.toLong()))
 
-    /** 权限信息，不支持 */
-    @Deprecated("Unsupported API: authInfo")
-    override fun getAuthInfo(): AuthInfo = super.getAuthInfo()
+    /**
+     * 获取权限信息
+     */
+    override fun getAuthInfo(): AuthInfo = MiraiAuthInfo(bot)
 
     /**
      * 公告列表，就返回一个TopNote

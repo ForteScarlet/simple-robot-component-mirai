@@ -27,6 +27,8 @@ import com.forte.qqrobot.beans.messages.types.PowerType
 import com.forte.qqrobot.beans.messages.types.SexType
 import com.forte.qqrobot.bot.LoginInfo
 import com.forte.qqrobot.log.QQLog
+import com.simbot.component.mirai.security.Cookies
+import com.simbot.component.mirai.security.cookies
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.*
 
@@ -623,6 +625,33 @@ open class MiraiGroupBanInfo(val member: Member): BanInfo {
     override fun getCodeNumber(): Long = member.id
 }
 
+
+/**
+ * mirai权限信息
+ * @see Cookies
+ */
+open class MiraiAuthInfo(private val cookies: Cookies): AuthInfo {
+    constructor(bot: Bot): this(bot.cookies)
+    /** 获取原本的数据 originalData  */
+    override fun getOriginalData(): String = cookies.toString()
+
+    /**
+     * 获取一个编码
+     * 此处为获取uin
+     */
+    override fun getCode(): String = cookies.uin.toString()
+
+    /**
+     * 获取cookies信息
+     */
+    override fun getCookies(): String = cookies.toString()
+
+    /**
+     * 获取CsrfToken
+     */
+    override fun getCsrfToken(): String = cookies.bkn.toString()
+
+}
 
 
 

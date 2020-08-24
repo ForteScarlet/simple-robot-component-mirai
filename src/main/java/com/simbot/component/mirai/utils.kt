@@ -18,10 +18,7 @@
 package com.simbot.component.mirai
 
 import cn.hutool.core.io.FileUtil
-import com.simplerobot.modules.utils.KQCode
-import com.simplerobot.modules.utils.KQCodeUtils
-import com.simplerobot.modules.utils.MQCodeUtils
-import com.simplerobot.modules.utils.MutableKQCode
+import com.simplerobot.modules.utils.*
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
@@ -29,6 +26,7 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadAsImage
 import net.mamoe.mirai.utils.toExternalImage
 import java.io.File
@@ -59,7 +57,7 @@ fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
            // 如果是CQ码，转化为KQCode并进行处理
            KQCode.of(it).toMessage(contact, cacheMaps)
        }else{
-           PlainText(it)
+           PlainText(CQDecoder.decodeText(it)!!)
        }
    }.reduce { acc, msg -> acc + msg }
 }
@@ -142,23 +140,26 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region record
         "voice", "record" -> {
-            // 似乎暂不支持，不过好像可以转发
-            PlainText("[语音]")
+            EmptyMessageChain
+            // TODO 似乎暂不支持，不过好像可以转发
+//            PlainText("[语音]")
         }
         //endregion
 
 
         //region rps 猜拳
         "rps" -> {
+            EmptyMessageChain
             // 似乎也不支持猜拳
-            PlainText("[猜拳]")
+//            PlainText("[猜拳]")
         }
         //endregion
 
         //region dice 骰子
         "dice" -> {
+            EmptyMessageChain
             // 似乎也..
-            PlainText("[骰子]")
+//            PlainText("[骰子]")
         }
         //endregion
 
@@ -194,12 +195,12 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region share
         "share" -> {
+            EmptyMessageChain
             // 分享
             // 参数："url", "title", "content*", "image*"
-            val type = this["url"]
-            val title = this["title"]
-            // TODO 解析share
-            PlainText("$title: $type")
+//            val type = this["url"]
+//            val title = this["title"]
+//            PlainText("$title: $type")
         }
         //endregion
 
@@ -214,17 +215,18 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region location
         "location" -> {
+            EmptyMessageChain
             // 地点 "lat", "lon", "title", "content"
-            val lat = this["lat"] ?: ""
-            val lon = this["lon"] ?: ""
-            val title = this["title"] ?: ""
-            val content = this["content"] ?: ""
-            PlainText("位置($lat,$lon)[$title]:$content")
+//            val lat = this["lat"] ?: ""
+//            val lon = this["lon"] ?: ""
+//            val title = this["title"] ?: ""
+//            val content = this["content"] ?: ""
+//            PlainText("位置($lat,$lon)[$title]:$content")
         }
         //endregion
 
         //region sign
-        "sign" -> PlainText("[签到]")
+        "sign" -> EmptyMessageChain
 
         //endregion
 
@@ -456,11 +458,12 @@ object MiraiCodeFormatUtils {
             }
 
             is At -> {
-                val atMq = MQCodeUtils.toMqCode(this.toString())
-                val atKq = atMq.toKQCode().mutable()
-                atKq["display"] = this.display
-                atKq["target"] = this.target.toString()
-                atKq
+                KQCodeUtils.toKq("at", "qq" to this.target, "display" to this.display)
+//                val atMq = MQCodeUtils.toMqCode(this.toString())
+//                val atKq = atMq.toKQCode().mutable()
+//                atKq["display"] = this.display
+//                atKq["target"] = this.target.toString()
+//                atKq
             }
 
             // at all

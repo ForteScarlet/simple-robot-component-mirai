@@ -156,7 +156,7 @@ data class Cookies(val uin: String,
 
     /** cookie string */
     override fun toString(): String {
-        return "uin=$uin; skey=$skey; p_skey=$psKey; "
+        return "uin=$uin; skey=$skey; p_skey=$psKey"
     }
 }
 

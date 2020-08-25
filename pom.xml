@@ -7,8 +7,8 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
 
-    <!-- 1.5.0-1.16 2020/8/23 -->
-    <version>1.5.0-1.16</version>
+    <!-- 1.5.1-1.16 2020/8/25 -->
+    <version>1.5.1-1.16</version>
 
     <properties>
         <kotlin.version>1.4.0</kotlin.version>

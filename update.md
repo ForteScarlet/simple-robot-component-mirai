@@ -9,6 +9,10 @@ simbot.mirai.cacheType=FILE
 # 如果cacheType是FILE，则此处代表缓存文件夹路径。如果没有则默认为系统临时文件夹
 simbot.mirai.cacheDirectory=
 ```
+注：经测试，`1.2.2`版本的mirai切换缓存策略似乎不存在指定路径出现缓存文件。暂时不知道是mirai的bug还是我个人原因。
+因此这两项配置项依旧可以使用，但是不保证有效果。
+
+
 - 修改`MiraiConfiguration`的`botConfiguration: (String) -> BotConfiguration`为私有，并提供一个替代方案`setPostBotConfigurationProcessor: (String, BotConfiguration) -> BotConfiguration`.
 java中可以：
 ```java

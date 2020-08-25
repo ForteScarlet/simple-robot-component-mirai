@@ -28,7 +28,9 @@ import com.forte.qqrobot.listener.invoker.AtDetection
 import com.forte.qqrobot.listener.invoker.ListenerFilter
 import com.forte.qqrobot.listener.invoker.ListenerManager
 import com.forte.qqrobot.log.QQLog
+import com.forte.qqrobot.sender.MsgSender
 import com.forte.qqrobot.sender.senderlist.RootSenderList
+import com.forte.qqrobot.utils.CQCodeUtil
 import com.simbot.component.mirai.messages.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -71,7 +73,9 @@ class MiraiContext(
 /**
  * mirai app
  */
-interface MiraiApp: Application<MiraiConfiguration>
+interface MiraiApp: Application<MiraiConfiguration> {
+    override fun before(configuration: MiraiConfiguration)
+}
 
 
 /**

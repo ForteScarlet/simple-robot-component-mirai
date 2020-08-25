@@ -25,6 +25,7 @@ import com.forte.qqrobot.bot.BotInfoImpl
 import com.forte.qqrobot.exception.ConfigurationException
 import com.simbot.component.mirai.logger.SimbotMiraiLogger
 import net.mamoe.mirai.utils.*
+import java.io.File
 import java.util.AbstractMap.SimpleEntry
 import kotlin.random.Random
 import kotlin.random.nextInt
@@ -95,11 +96,35 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     @field:Conf("mirai.autoRelogin", comment = "是否在bot掉线的时候自动重启.")
     var autoRelogin: Boolean = false
 
+    @field:Conf("mirai.cacheType", comment = "mirai的缓存策略。可选为FILE和MEMORY")
+    var cacheType: MiraiCacheType = MiraiCacheType.FILE
+
+
+    @field:Conf("mirai.cacheDirectory", comment = "如果cacheType为FILE，则此处为路径。如果不填或者为null则默认为系统临时文件夹.")
+    var cacheDirectory: String? = null
+
+
+    /**
+     * 在[botConfiguration]配置完成后可以提供一些后置处理进行配置覆盖.
+     */
+    var postBotConfigurationProcessor: (String, BotConfiguration) -> BotConfiguration = {_,botConfiguration -> botConfiguration }
 
     /**
      * mirai官方配置类获取函数，默认为其默认值
      * 函数参数为bot的账号，得到一个config实例
+     * 如果需要对[BotConfiguration]做自定义处理，请使用[postBotConfigurationProcessor]
+     *
+     * java 则使用
+     * ```java
+     * setPostBotConfigurationProcessor(code, conf -> {
+     *      // do some for conf
+     *      return conf;
+     * })
+     * ```
+     *
+     * @see postBotConfigurationProcessor
      * */
+    @set:Deprecated("use setPostBotConfigurationProcessor((code, conf) -> {...})")
     var botConfiguration: (String) -> BotConfiguration = {
         code ->
         val conf = BotConfiguration()
@@ -110,6 +135,29 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
         conf.reconnectPeriodMillis = this.reconnectPeriodMillis
         conf.reconnectionRetryTimes = this.reconnectionRetryTimes
         conf.protocol = this.protocol
+        conf.fileCacheStrategy = when(this.cacheType) {
+            // 内存缓存
+            MiraiCacheType.MEMORY -> FileCacheStrategy.MemoryCache
+            // 文件缓存
+            MiraiCacheType.FILE, -> {
+                val cacheDir = this.cacheDirectory
+                if(cacheDir?.isNotBlank() == true){
+                    val directory = File(cacheDir)
+                    if(!directory.exists()){
+                        // 不存在，创建
+                        directory.mkdirs()
+                    }
+                    if(!directory.isDirectory){
+                        throw IllegalArgumentException("'$cacheDir' is not a directory.")
+                    }
+                    FileCacheStrategy.TempCache(directory)
+                }else{
+                    FileCacheStrategy.MemoryCache
+                }
+            }
+        }
+
+
         if(noBotLog){
             conf.noBotLog()
         }
@@ -136,17 +184,28 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
                 if(logger is MiraiLoggerWithSwitch) logger else logger.withSwitch(true)
             }
         }
-        conf
+
+        // post processor
+        postBotConfigurationProcessor(code, conf)
+    }
+    @Suppress("SetterBackingFieldAssignment")
+    set(value) {
+        postBotConfigurationProcessor = {
+            code, _ ->
+            value(code)
+        }
     }
 
+
     /**
-     * 通过实例设置configuration
+     * 通过实例设置configuration.
+     * 此方法将会完全覆盖原有的所有默认配置。
      */
     fun setBotConfiguration(configuration: BotConfiguration){
         val confNetworkLoggerSup = configuration.networkLoggerSupplier
         val confBotLoggerSup = configuration.botLoggerSupplier
         // 设置日志开关
-        botConfiguration = {
+        postBotConfigurationProcessor = {_,_ ->
             configuration.networkLoggerSupplier = {
                 val netWorkLogger = confNetworkLoggerSup(it)
                 if (netWorkLogger is MiraiLoggerWithSwitch) netWorkLogger else netWorkLogger.withSwitch(true)
@@ -315,6 +374,12 @@ internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRang
         String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })
 
 
-
-
-
+/**
+ * mirai的图片文件缓存策略
+ */
+enum class MiraiCacheType {
+    /** 文件缓存 */
+    FILE,
+    /** 内存缓存 */
+    MEMORY
+}

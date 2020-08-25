@@ -22,7 +22,9 @@ import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotSender
 import com.forte.qqrobot.bot.LoginInfo
 import com.forte.qqrobot.log.QQLog
+import com.forte.qqrobot.sender.HttpClientHelper
 import com.simbot.component.mirai.messages.MiraiLoginInfo
+import com.simbot.component.mirai.utils.BotLevelUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
@@ -189,7 +191,8 @@ class MiraiBotInfo(private val id: String,
         botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))
 
         // login info
-        loginInfo = MiraiLoginInfo(bot)
+        val http = HttpClientHelper.getDefaultHttp()
+        loginInfo = MiraiLoginInfo(bot, BotLevelUtil.level(bot, http))
 
         // 登录后，如果日志可以关闭，暂时关闭
         val logger = bot.logger

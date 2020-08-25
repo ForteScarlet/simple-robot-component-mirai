@@ -3,7 +3,6 @@ package com.simbot.component.mirai.security
 import net.mamoe.mirai.Bot
 import java.lang.reflect.Method
 import java.nio.charset.Charset
-import kotlin.jvm.Throws
 
 /*
     通过一个bot得到cookie信息

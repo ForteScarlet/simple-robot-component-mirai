@@ -15,6 +15,8 @@
  *
  */
 
+@file:Suppress("unused")
+
 package com.simbot.component.mirai.utils
 
 import cn.hutool.core.io.FileUtil
@@ -430,95 +432,90 @@ object MiraiCodeFormatUtils {
         return msg.asSequence().map { it.toCqString(cacheMaps) }.joinToString("")
     }
 
+}
 
-    fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
-        if(this is MessageSource){
-            return ""
+/**
+ * [SingleMessage] to cqcode string
+ */
+fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
+    if(this is MessageSource){
+        return ""
+    }
+    val kqCode: KQCode = when(this){
+        // voice, 转化为record类型的cq码
+        is Voice -> {
+            val voiceMq = MQCodeUtils.toMqCode(this.toString())
+            val voiceKq = voiceMq.toKQCode().mutable()
+            voiceKq.type = "record"
+            this.url?.run { voiceKq["url"] = this }
+            voiceKq["fileName"] = this.fileName
+            voiceKq
         }
-        val kqCode: KQCode = when(this){
-            // voice, 转化为record类型的cq码
-            is Voice -> {
-                val voiceMq = MQCodeUtils.toMqCode(this.toString())
-                val voiceKq = voiceMq.toKQCode().mutable()
-                voiceKq.type = "record"
-                this.url?.run { voiceKq["url"] = this }
-                voiceKq["fileName"] = this.fileName
-                voiceKq
-            }
 
-            // image, 追加file、url
-            is Image -> {
-                // 缓存image
-                val imageId = this.imageId
-                cacheMaps.imageCache[imageId] = this
-                val imageMq = MQCodeUtils.toMqCode(this.toString())
-                val imageKq = imageMq.toKQCode().mutable()
-                imageKq["file"] = imageId
-                imageKq["url"] = runBlocking { queryUrl() }
-                if(this is FlashImage){
-                    imageKq["destruct"] = "true"
-                }
-                imageKq
+        // image, 追加file、url
+        is Image -> {
+            // 缓存image
+            val imageId = this.imageId
+            cacheMaps.imageCache[imageId] = this
+            val imageMq = MQCodeUtils.toMqCode(this.toString())
+            val imageKq = imageMq.toKQCode().mutable()
+            imageKq["file"] = imageId
+            imageKq["url"] = runBlocking { queryUrl() }
+            if(this is FlashImage){
+                imageKq["destruct"] = "true"
             }
+            imageKq
+        }
 
-            is At -> {
-                KQCodeUtils.toKq("at", "qq" to this.target, "display" to this.display)
+        is At -> {
+            KQCodeUtils.toKq("at", "qq" to this.target, "display" to this.display)
 //                val atMq = MQCodeUtils.toMqCode(this.toString())
 //                val atKq = atMq.toKQCode().mutable()
 //                atKq["display"] = this.display
 //                atKq["target"] = this.target.toString()
 //                atKq
+        }
+
+        // at all
+        is AtAll -> com.simplerobot.modules.utils.AtAll
+
+
+        // face -> id
+        is Face -> MQCodeUtils.toMqCode(this.toString()).toKQCode()
+
+        // poke message, get id & type
+        is PokeMessage -> {
+            val pokeMq = MQCodeUtils.toMqCode(this.toString())
+            val pokeKq = pokeMq.toKQCode().mutable()
+            pokeKq["type"] = this.type.toString()
+            pokeKq["id"] = this.id.toString()
+            pokeKq
+        }
+
+        // 引用
+        is QuoteReply -> {
+            val quoteMq = MQCodeUtils.toMqCode(this.toString())
+            val quoteKq = quoteMq.toKQCode().mutable()
+            quoteKq["id"] = this.source.toCacheKey()
+            quoteKq["qq"] = this.source.fromId.toString()
+            quoteKq
+        }
+
+        // 富文本
+        is RichMessage -> when(this) {
+            // app
+            is LightApp -> {
+                val code = MutableKQCode("app")
+                code["content"] = this.content
+                code
             }
-
-            // at all
-            is AtAll -> com.simplerobot.modules.utils.AtAll
-
-
-            // face -> id
-            is Face -> MQCodeUtils.toMqCode(this.toString()).toKQCode()
-
-            // poke message, get id & type
-            is PokeMessage -> {
-                val pokeMq = MQCodeUtils.toMqCode(this.toString())
-                val pokeKq = pokeMq.toKQCode().mutable()
-                pokeKq["type"] = this.type.toString()
-                pokeKq["id"] = this.id.toString()
-                pokeKq
+            // service message
+            is ServiceMessage -> {
+                val code = MutableKQCode("service")
+                code["content"] = this.content
+                code["serviceId"] = this.serviceId.toString()
+                code
             }
-
-            // 引用
-            is QuoteReply -> {
-                val quoteMq = MQCodeUtils.toMqCode(this.toString())
-                val quoteKq = quoteMq.toKQCode().mutable()
-                quoteKq["id"] = this.source.toCacheKey()
-                quoteKq["qq"] = this.source.fromId.toString()
-                quoteKq
-            }
-
-            // 富文本
-            is RichMessage -> when(this) {
-                // app
-                is LightApp -> {
-                    val code = MutableKQCode("app")
-                    code["content"] = this.content
-                    code
-                }
-                // service message
-                is ServiceMessage -> {
-                    val code = MutableKQCode("service")
-                    code["content"] = this.content
-                    code["serviceId"] = this.serviceId.toString()
-                    code
-                }
-                else -> {
-                    val string = this.toString()
-                    return if(string.trim().startsWith("[mirai:")){
-                        MQCodeUtils.toMqCode(string).toKQCode().toString()
-                    }else string
-                }
-            }
-
-            // 其他东西，不做特殊处理
             else -> {
                 val string = this.toString()
                 return if(string.trim().startsWith("[mirai:")){
@@ -526,13 +523,15 @@ object MiraiCodeFormatUtils {
                 }else string
             }
         }
-        return kqCode.toString()
+
+        // 其他东西，不做特殊处理
+        else -> {
+            val string = this.toString()
+            return if(string.trim().startsWith("[mirai:")){
+                MQCodeUtils.toMqCode(string).toKQCode().toString()
+            }else string
+        }
     }
-
-
-
+    return kqCode.toString()
 }
-
-
-
 

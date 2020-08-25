@@ -58,11 +58,12 @@ val Member.powerType: PowerType get() = this.permission.powerType
  * mirai bot信息
  */
 open class MiraiLoginInfo(
-        val bot: Bot
+        val bot: Bot,
+        private val level: Int = -1
 ) : LoginInfo {
     private val selfId: Long = bot.id
     private val selfNick: String = bot.nick
-    private val selfLevel: Int = -1
+    private val selfLevel: Int = level
 
     /*
         接口实现

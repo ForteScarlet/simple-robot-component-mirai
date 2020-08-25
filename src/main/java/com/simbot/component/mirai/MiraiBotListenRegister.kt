@@ -20,8 +20,8 @@ package com.simbot.component.mirai
 import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.listener.result.ListenResult
-import com.forte.qqrobot.log.QQLog
 import com.simbot.component.mirai.messages.*
+import com.simbot.component.mirai.utils.toWholeMessage
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.*

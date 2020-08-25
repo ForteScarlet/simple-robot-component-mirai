@@ -20,7 +20,7 @@ package com.simbot.component.mirai.messages
 import com.forte.qqrobot.beans.messages.msgget.EventGet
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.simbot.component.mirai.CacheMaps
-import com.simbot.component.mirai.MiraiCodeFormatUtils
+import com.simbot.component.mirai.utils.MiraiCodeFormatUtils
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group

@@ -22,7 +22,7 @@ package com.simbot.component.mirai.messages
 import com.forte.qqrobot.beans.messages.msgget.GroupMsgDelete
 import com.forte.qqrobot.beans.messages.msgget.PrivateMsgDelete
 import com.simbot.component.mirai.CacheMaps
-import com.simbot.component.mirai.MiraiCodeFormatUtils
+import com.simbot.component.mirai.utils.MiraiCodeFormatUtils
 import net.mamoe.mirai.event.events.MessageRecallEvent
 
 

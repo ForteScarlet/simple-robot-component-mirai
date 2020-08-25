@@ -23,8 +23,11 @@ import com.forte.qqrobot.beans.messages.types.GroupAddRequestType
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
 import com.forte.qqrobot.log.QQLog
+import com.forte.qqrobot.sender.HttpClientHelper
 import com.forte.qqrobot.sender.senderlist.BaseRootSenderList
 import com.simbot.component.mirai.messages.*
+import com.simbot.component.mirai.utils.BotLevelUtil
+import com.simbot.component.mirai.utils.sendMsg
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -104,7 +107,10 @@ open class MiraiBotSender(
 
 
     /** 获取登录信息 */
-    override fun getLoginQQInfo(): LoginQQInfo = MiraiLoginInfo(bot)
+    override fun getLoginQQInfo(): LoginQQInfo {
+        val http = HttpClientHelper.getDefaultHttp()
+        return MiraiLoginInfo(bot, BotLevelUtil.level(bot, http))
+    }
 
     /** 获取群链接列表 不支持的API */
     @Deprecated("Unsupported API: groupLinkList")

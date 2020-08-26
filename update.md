@@ -1,6 +1,26 @@
-# now
+# 1.5.1-1.16
 - 移除`getAuthInfo`得到的cookies字符串中最后的分号 `; `
 - `mirai`更新至`1.2.2`
+- 现在获取登录信息`LoginInfo`可以得到登录号的等级信息了。
+- 追加配置项:
+```properties
+# mirai的缓存策略。可以是FILE或者MEMORY，分别代表文件缓存或内存缓存. 默认为FILE
+simbot.mirai.cacheType=FILE
+# 如果cacheType是FILE，则此处代表缓存文件夹路径。如果没有则默认为系统临时文件夹
+simbot.mirai.cacheDirectory=
+```
+注：经测试，`1.2.2`版本的mirai切换缓存策略似乎不能在指定路径出现缓存文件。暂时不知道是mirai的bug还是我个人原因。
+因此这两项配置项依旧可以使用，但是不保证有效果。
+
+
+- 修改`MiraiConfiguration`的`botConfiguration: (String) -> BotConfiguration`为私有，并提供一个替代方案`setPostBotConfigurationProcessor: (String, BotConfiguration) -> BotConfiguration`.
+java中可以：
+```java
+setPostBotConfigurationProcessor(code, conf -> {
+     // do some for conf
+     return conf; // or return your own conf instance.
+})
+```
 
 # 1.5.0-1.16
 - 支持API`getAuthInfo`

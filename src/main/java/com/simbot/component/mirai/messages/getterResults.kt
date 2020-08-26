@@ -69,8 +69,8 @@ open class MiraiLoginInfo(
     /*
         接口实现
      */
-    override fun getOriginalData(): String = toString()
-    override fun toString(): String = botString
+    override fun getOriginalData(): String = botString
+    override fun toString(): String = "LoginInfo(code=$selfId, nick=$selfNick, level=$selfLevel)"
     override fun getQQ(): String = selfId.toString()
     override fun getName(): String = selfNick
     override fun getLevel(): Int = selfLevel

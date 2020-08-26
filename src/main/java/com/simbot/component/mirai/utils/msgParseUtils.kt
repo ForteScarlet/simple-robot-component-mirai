@@ -212,9 +212,10 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region emoji
         "emoji" -> {
+            EmptyMessageChain
             // emoji, 基本用不到
-            val id = this["id"] ?: ""
-            PlainText("emoji($id)")
+            // val id = this["id"] ?: ""
+            // PlainText("emoji($id)")
         }
         //endregion
 
@@ -243,17 +244,18 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region contact
         "contact" -> {
-            // TODO 联系人分享 可改成xml
+            EmptyMessageChain
+            // 联系人分享
             // ype一般可能是qq或者group
             // [CQ:contact,id=1234546,type=qq]
-            val id = this["id"] ?: return EmptyMessageChain
+            // val id = this["id"] ?: return EmptyMessageChain
 
-            val typeName = when(this["type"]){
-                "qq" -> "好友分享"
-                "group" -> "群聊分享"
-                else -> "其他分享"
-            }
-            PlainText("$typeName: $id")
+            // val typeName = when(this["type"]){
+            //     "qq" -> "好友分享"
+            //     "group" -> "群聊分享"
+            //     else -> "其他分享"
+            // }
+            // PlainText("$typeName: $id")
         }
         //endregion
 

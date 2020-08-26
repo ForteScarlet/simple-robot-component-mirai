@@ -132,12 +132,12 @@ object MiraiBots {
 
     /** 等待所有bot下线 */
     suspend fun joinAll(){
-        while(bots.isNotEmpty()){
+//        while(bots.isNotEmpty()){
             delay(2000)
             bots.forEach{
                 it.value.join()
             }
-        }
+//        }
     }
 
     fun closeAll(){

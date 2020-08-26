@@ -20,6 +20,7 @@ package com.simbot.component.mirai;
 import com.forte.qqrobot.ConfigProperties;
 import com.forte.qqrobot.anno.depend.Beans;
 import com.forte.qqrobot.anno.depend.Depend;
+import com.simbot.component.mirai.collections.*;
 
 /**
  * just a empty class
@@ -78,6 +79,16 @@ public class MiraiSimbotConfiguration {
         injectable.getImageCacheConfigurationInjectableConfig().inject(conf, configProperties);
         return conf;
     }
+    /**
+     * @see VoiceCacheConfiguration
+     * @see VoiceCache
+     */
+    @Beans
+    public VoiceCacheConfiguration getVoiceCacheConfiguration(CacheMapConfigurationInjectable injectable){
+        VoiceCacheConfiguration conf = new VoiceCacheConfiguration();
+        injectable.getVoiceCacheConfigurationInjectableConfig().inject(conf, configProperties);
+        return conf;
+    }
 
     /**
      * @see ContactCacheConfiguration
@@ -104,6 +115,10 @@ public class MiraiSimbotConfiguration {
         return new ImageCache(conf);
     }
     @Beans
+    public VoiceCache getVoiceCache(VoiceCacheConfiguration conf){
+        return new VoiceCache(conf);
+    }
+    @Beans
     public ContactCache getContactCache(ContactCacheConfiguration conf){
         return new ContactCache(conf);
     }
@@ -113,12 +128,17 @@ public class MiraiSimbotConfiguration {
      * @param recallCache   消息缓存map
      * @param requestCache  请求缓存map
      * @param imageCache    image缓存map
+     * @param voiceCache    voice缓存map
      * @param contactCache  发送消息缓存map
      * @return
      */
     @Beans
-    public CacheMaps getCacheMaps(RecallCache recallCache, RequestCache requestCache, ImageCache imageCache, ContactCache contactCache){
-        return new CacheMaps(recallCache, requestCache, imageCache, contactCache);
+    public CacheMaps getCacheMaps(RecallCache recallCache,
+                                  RequestCache requestCache,
+                                  ImageCache imageCache,
+                                  VoiceCache voiceCache,
+                                  ContactCache contactCache){
+        return new CacheMaps(recallCache, requestCache, imageCache, voiceCache, contactCache);
     }
 
 

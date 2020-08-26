@@ -15,7 +15,7 @@
  *
  */
 
-@file:Suppress("unused")
+//@file:Suppress("unused")
 
 package com.simbot.component.mirai.utils
 
@@ -23,7 +23,7 @@ import cn.hutool.core.io.FileUtil
 import com.simbot.component.mirai.CQCodeParamNullPointerException
 import com.simbot.component.mirai.CQCodeParseHandlerRegisterException
 import com.simbot.component.mirai.CacheMaps
-import com.simbot.component.mirai.toCacheKey
+import com.simbot.component.mirai.collections.toCacheKey
 import com.simplerobot.modules.utils.*
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
@@ -33,9 +33,12 @@ import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.AtAll
+import net.mamoe.mirai.message.uploadAsGroupVoice
 import net.mamoe.mirai.message.uploadAsImage
 import net.mamoe.mirai.utils.toExternalImage
+import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
 import java.net.URL
 import java.util.function.BiFunction
 import kotlin.collections.set
@@ -46,7 +49,7 @@ import kotlin.collections.set
  * 此处可解析部分CQ码并转化为Message
  * 然后发送此消息
  */
-suspend fun <C: Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
+public suspend fun <C: Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
     return this.sendMessage(msg.toWholeMessage(this, cacheMaps))
 }
 
@@ -144,11 +147,32 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         }
         //endregion
 
-        //region record
+        //region record 语音
         "voice", "record" -> {
-            EmptyMessageChain
-            // TODO 似乎暂不支持，不过好像可以转发
-//            PlainText("[语音]")
+            // voice 类型的CQ码，参数一般是file
+            val file = this["file"] ?: this["voice"] ?: throw CQCodeParamNullPointerException("image", "file", "voice")
+            // 先找缓存
+
+            val voiceCache = cacheMaps.voiceCache
+
+            // 截止到1.2.0, 只支持Group.uploadVoice
+            // see https://github.com/mamoe/mirai/releases/tag/1.2.0
+            return voiceCache[file] ?: if (contact is Group) {
+                if (file.startsWith("http")) {
+                    // 网络图片
+                    runBlocking {
+                        URL(file).openStream().uploadAsGroupVoice(contact)
+                    }
+                } else {
+                    // 本地文件
+                    val voiceFile = File(file)
+                    runBlocking {
+                        contact.uploadVoice(BufferedInputStream(FileInputStream(voiceFile)))
+                    }
+                }.also { voiceCache[it.fileName] = it }
+            } else {
+                EmptyMessageChain
+            }
         }
         //endregion
 
@@ -450,7 +474,8 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
             val voiceKq = voiceMq.toKQCode().mutable()
             voiceKq.type = "record"
             this.url?.run { voiceKq["url"] = this }
-            voiceKq["fileName"] = this.fileName
+            voiceKq["file"] = this.fileName
+            voiceKq["size"] = this.fileSize.toString()
             voiceKq
         }
 

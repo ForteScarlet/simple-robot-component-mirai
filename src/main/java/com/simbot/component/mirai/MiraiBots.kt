@@ -25,7 +25,6 @@ import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.HttpClientHelper
 import com.simbot.component.mirai.messages.MiraiLoginInfo
 import com.simbot.component.mirai.utils.BotLevelUtil
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.alsoLogin
@@ -34,6 +33,7 @@ import net.mamoe.mirai.join
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.MiraiLoggerWithSwitch
 import java.util.concurrent.ConcurrentHashMap
+
 
 /**
  * 记录登录的bot列表以及监听注册的状态

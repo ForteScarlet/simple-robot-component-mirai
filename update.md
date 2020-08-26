@@ -1,3 +1,19 @@
+# 1.6.0-1.16
+- 调整内部缓存Map的文件结构
+- 简单调整缓存Map的过期值清理规则。当check值为0的时候，每次检测都会清理，当check小于0的时候，永远不会因为计数检测而被清理。
+- 群成员增加事件现在会被`bot入群`事件所触发。与普通成员进群事件的区别即为入群者的账号是否与bot一致。对应mirai的`BotJoinGroupEvent`事件。
+- 追加支持mirai`v1.2.0`中的语音功能与`record`类型CQ码的解析。（目前仅支持群消息的发送与转发。具体限制请查看https://github.com/mamoe/mirai/releases/tag/1.2.0）
+
+追加以下配置：
+```properties
+# VoiceCacheConfiguration
+# 以下是语音信息缓存相关的配置
+simbot.mirai.cache.voice.check=1000
+simbot.mirai.cache.voice.cacheTime=3600000
+simbot.mirai.cache.voice.initialCapacity=32
+simbot.mirai.cache.voice.max=102400
+```
+
 # 1.5.1-1.16
 - 移除`getAuthInfo`得到的cookies字符串中最后的分号 `; `
 - `mirai`更新至`1.2.2`

@@ -29,21 +29,19 @@ import java.util.concurrent.TimeUnit
  * 几大缓存类的配置类
  */
 class CacheMapConfigurationInjectable {
-    val recallCacheConfigurationInjectableConfig: InjectableConfig<RecallCacheConfiguration>
-            = ConfigurationHelper.toInjectable(RecallCacheConfiguration::class.java)
+    val recallCacheConfigurationInjectableConfig: InjectableConfig<RecallCacheConfiguration> = ConfigurationHelper.toInjectable(RecallCacheConfiguration::class.java)
 
-    val requestCacheConfigurationInjectableConfig: InjectableConfig<RequestCacheConfiguration>
-            = ConfigurationHelper.toInjectable(RequestCacheConfiguration::class.java)
+    val requestCacheConfigurationInjectableConfig: InjectableConfig<RequestCacheConfiguration> = ConfigurationHelper.toInjectable(RequestCacheConfiguration::class.java)
 
-    val imageCacheConfigurationInjectableConfig: InjectableConfig<ImageCacheConfiguration>
-            = ConfigurationHelper.toInjectable(ImageCacheConfiguration::class.java)
+    val imageCacheConfigurationInjectableConfig: InjectableConfig<ImageCacheConfiguration> = ConfigurationHelper.toInjectable(ImageCacheConfiguration::class.java)
 
-    val contactCacheConfigurationInjectableConfig: InjectableConfig<ContactCacheConfiguration>
-            = ConfigurationHelper.toInjectable(ContactCacheConfiguration::class.java)
+    val voiceCacheConfigurationInjectableConfig: InjectableConfig<VoiceCacheConfiguration> = ConfigurationHelper.toInjectable(VoiceCacheConfiguration::class.java)
+
+    val contactCacheConfigurationInjectableConfig: InjectableConfig<ContactCacheConfiguration> = ConfigurationHelper.toInjectable(ContactCacheConfiguration::class.java)
 }
 
 /**
- * [RecallCache]的配置类
+ * [com.simbot.component.mirai.collections.RecallCache]的配置类
  */
 @Conf("simbot.mirai.cache.recall")
 class RecallCacheConfiguration(
@@ -72,7 +70,7 @@ class RecallCacheConfiguration(
 
 
 /**
- * [RequestCache] 使用的配置类
+ * [com.simbot.component.mirai.collections.RequestCache] 使用的配置类
  */
 @Conf("simbot.mirai.cache.request")
 class RequestCacheConfiguration(
@@ -109,7 +107,7 @@ class RequestCacheConfiguration(
 )
 
 /**
- * [ImageCache] 使用的配置类
+ * [com.simbot.component.mirai.collections.ImageCache] 使用的配置类
  */
 @Conf("simbot.mirai.cache.image")
 class ImageCacheConfiguration(
@@ -136,7 +134,35 @@ class ImageCacheConfiguration(
 )
 
 /**
- * [ContactCache] 使用的配置类
+ * [com.simbot.component.mirai.collections.VoiceCache] 使用的配置类
+ */
+@Conf("simbot.mirai.cache.voice")
+class VoiceCacheConfiguration(
+        /**
+         * 清理缓存临界值, 当计数器达到1000则触发一次清理
+         * 如果小于0，则不会检查, 如果等于0，则每次都会检查
+         */
+        @Conf("check", comment = "清理缓存临界值, 当计数器达到指定值则触发一次清理")
+        var check: Int = 1000,
+        /**
+         * 默认缓存30分钟
+         */
+        @Conf("cacheTime", comment = "缓存时间(ms)")
+        var cacheTime: Long = TimeUnit.MINUTES.toMillis(30),
+        /**
+         * 内部缓存的初始容量
+         */
+        @Conf("initialCapacity", comment = "内部缓存的初始容量")
+        var initialCapacity: Int = 32,
+        /**
+         * 缓存的最大容量
+         */
+        @Conf("max", comment = "缓存的最大容量")
+        var max: Long = 102400
+)
+
+/**
+ * [com.simbot.component.mirai.collections.ContactCache] 使用的配置类
  */
 @Conf("simbot.mirai.cache.contact")
 class ContactCacheConfiguration(

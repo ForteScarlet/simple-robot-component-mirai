@@ -20,6 +20,8 @@ package com.simbot.component.mirai
 import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.listener.result.ListenResult
+import com.simbot.component.mirai.collections.botId
+import com.simbot.component.mirai.collections.toKey
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.toWholeMessage
 import net.mamoe.mirai.Bot
@@ -198,13 +200,6 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
 
     //region 消息监听相关事件
 
-//    bot.subscribe<FriendMessageEvent> {
-//        val result = MiraiFriendMsg(this, cacheMaps).onMsg(msgProcessor)
-//        result.quickReplyMessage(this, cacheMaps)
-//        ListeningStatus.LISTENING
-//    }
-
-//    QQLog.debug("{0}", "mirai MessageEvent register")
     bot.registerListenerAlways<MessageEvent> {
         // 首先缓存此消息
         cacheMaps.recallCache.cache(this.source)
@@ -212,6 +207,10 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
             if(it is Image){
                 // 记录图片缓存
                 cacheMaps.imageCache[it.imageId] = it
+            }
+            if(it is Voice){
+                // 记录语音缓存
+                cacheMaps.voiceCache[it.fileName] = it
             }
         }
         val result = when (this) {
@@ -236,8 +235,6 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     }
 
     //endregion
-
-
 
     // region 申请相关事件
 
@@ -273,8 +270,13 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     }
     //endregion
     //region 群成员增加事件
+    // 群成员新增
     bot.registerListenerAlways<MemberJoinEvent> {
         MiraiMemberJoinEvent(this).onMsg(msgProcessor)
+    }
+    // bot入群
+    bot.registerListenerAlways<BotJoinGroupEvent> {
+        MiraiBotJoinEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region 群成员减少事件

@@ -26,10 +26,8 @@ import com.forte.qqrobot.beans.messages.types.GroupAdminChangeType
 import com.forte.qqrobot.beans.messages.types.IncreaseType
 import com.forte.qqrobot.beans.messages.types.ReduceType
 import net.mamoe.mirai.contact.MemberPermission
-import net.mamoe.mirai.event.events.BotGroupPermissionChangeEvent
-import net.mamoe.mirai.event.events.MemberJoinEvent
-import net.mamoe.mirai.event.events.MemberLeaveEvent
-import net.mamoe.mirai.event.events.MemberPermissionChangeEvent
+import net.mamoe.mirai.contact.isOperator
+import net.mamoe.mirai.event.events.*
 
 
 //region 群成员增减事件
@@ -40,6 +38,8 @@ import net.mamoe.mirai.event.events.MemberPermissionChangeEvent
  * 群成员增加事件
  */
 open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoinEvent>(event), GroupMemberIncrease {
+
+    fun isBotSelf(): Boolean = event.member.id == event.bot.id
 
     /** 入群者的ID */
     private val newMemberId = event.member.id.toString()
@@ -69,6 +69,43 @@ open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoi
 }
 
 /**
+ * 当bot进入了某个群之后触发此事件。
+ * 此事件也属于[群成员增加事件][GroupMemberIncrease]
+ * 非bot触发的事件为[MiraiMemberJoinEvent]
+ */
+open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGroupEvent>(event), GroupMemberIncrease {
+    fun isBotSelf(): Boolean = true
+
+    /** 入群者的ID */
+    private val newMemberId = event.bot.id.toString()
+    /** 群号 */
+    private val groupId = event.group.id.toString()
+    /**
+     * 入群类型
+     * 暂时默认为主动同意
+     * todo 存在bug mirai预计`1.3.0`会修复
+     */
+    private val increaseType = IncreaseType.AGREE
+
+    /** 被操作者的QQ号，即入群者  */
+    override fun getBeOperatedQQ(): String = newMemberId
+
+    /** 群号  */
+    override fun getGroup(): String = groupId
+
+    /** 操作者的QQ号，似乎无法获取  */
+    @Deprecated("just null", ReplaceWith("null"))
+    override fun getOperatorQQ(): String? = DeprecatedAPI.memberJoinOperatorQQ
+
+    /** 获取类型  */
+    override fun getType(): IncreaseType = increaseType
+
+    override fun getCodeNumber(): Long = event.bot.id
+    override fun getGroupCodeNumber(): Long = event.group.id
+}
+
+
+/**
  * [MemberJoinEvent]转化为[IncreaseType]
  */
 fun MemberJoinEvent.toIncreaseType(): IncreaseType = when(this){
@@ -76,6 +113,17 @@ fun MemberJoinEvent.toIncreaseType(): IncreaseType = when(this){
     is MemberJoinEvent.Invite -> IncreaseType.INVITE
     else -> IncreaseType.AGREE
 }
+
+
+///**
+// * [MemberJoinEvent]转化为[IncreaseType]
+// TODO
+// */
+//fun BotJoinGroupEvent.toIncreaseType(): IncreaseType = when(this){
+//    is BotJoinGroupEvent.Active -> IncreaseType.AGREE
+//    is BotJoinGroupEvent.Invite -> IncreaseType.INVITE
+//    else -> IncreaseType.AGREE
+//}
 
 //endregion
 

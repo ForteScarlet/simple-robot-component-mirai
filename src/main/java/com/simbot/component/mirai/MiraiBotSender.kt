@@ -437,11 +437,11 @@ open class MiraiBotSender(
  * 可动态切换当前bot的sender。主要通过[com.forte.qqrobot.bot.BotManager]和[MiraiBots]获取并切换
  */
 open class MultipleMiraiBotSender(contact: Contact? = null,
-                             private val thisCodeAble: ThisCodeAble,
-                             private val botManager: BotManager,
-                             cacheMaps: CacheMaps,
-                             senderRunner: SenderRunner,
-                             private val conf: MiraiConfiguration): MiraiBotSender(null, contact, cacheMaps, senderRunner){
+                                  private val thisCodeAble: ThisCodeAble,
+                                  private val botManager: BotManager,
+                                  cacheMaps: CacheMaps,
+                                  senderRunner: SenderRunner,
+                                  private val conf: MiraiConfiguration): MiraiBotSender(null, contact, cacheMaps, senderRunner){
 
     /**
      * 上一次获取的bot

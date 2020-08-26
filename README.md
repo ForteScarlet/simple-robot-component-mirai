@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/badge/simple--robot-core-green)](https://github.com/ForteScarlet/simple-robot-core) [![](https://img.shields.io/maven-central/v/love.forte.simple-robot-component/component-mirai)](https://search.maven.org/artifact/love.forte.simple-robot-component/component-mirai)
 
-基于 [**`simple-robot-core`**](https://github.com/ForteScarlet/simple-robot-core) 核心框架，对接 [**`Mirai`**](https://github.com/mamoe/mirai) 的qqandroid库
+基于 [**`simple-robot-core`**](https://github.com/ForteScarlet/simple-robot-core) 核心框架，对接 [**`Mirai`**](https://github.com/mamoe/mirai) 及其`qqandroid`库
 
 
 ## 特性
@@ -22,7 +22,7 @@
 - 支持快捷回复。通过返回`Reply`类实例来实现快速回复、快速请求处理的能力。且`Reply`可以通过构建器`Builder`或一些整合性的静态方法来进行快速构建
 
 ## Mirai版本
-目前使用的mirai版本为：**`1.2.1`**
+目前使用的mirai版本为：**`1.2.2`**
 
 
 
@@ -139,9 +139,9 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
     
 - **record**
 
-    参数：无
+    参数：\[file](接收到的语音文件的ID或者上传文件的本地绝对路径/网络http链接地址.)
     
-    注①：暂不支持发送语音，因此语音会变为`[语音]`字样的文本消息    
+    注①：已支持群聊中的语音转发与特定格式语音文件的上传与发送。
     
 
 - **rps**    

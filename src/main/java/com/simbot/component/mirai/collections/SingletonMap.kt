@@ -13,20 +13,24 @@
  *
  */
 
+
 package com.simbot.component.mirai.collections
 
 import java.io.Serializable
 
 
 /**
- * 一个单值Map，是一个不可变map
- * key不可为null且不可变
+ * 一个单值Map, 只可以改变value值.
+ * key不可为null
  * value不可为null
  */
+@Suppress("MemberVisibilityCanBePrivate")
 class SingletonMap<K, V>(val key: K, var value: V) : Map<K, V>, Serializable, Cloneable {
     constructor(entry: Map.Entry<K, V>): this(entry.key, entry.value)
 
     private val keySet: Set<K> = setOf(key)
+
+    private val singletonEntry = SingletonMapEntry()
 
     /**
      * 判断是否与key相同
@@ -51,7 +55,7 @@ class SingletonMap<K, V>(val key: K, var value: V) : Map<K, V>, Serializable, Cl
      * 得到一个entries
      */
     override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
-        get() = mutableSetOf(SingletonMapEntry(key, value))
+        get() = mutableSetOf(singletonEntry)
 
     /**
      * keys
@@ -75,16 +79,34 @@ class SingletonMap<K, V>(val key: K, var value: V) : Map<K, V>, Serializable, Cl
     override fun get(key: K): V? = if(isKey(key)) value else null
 
     override fun isEmpty(): Boolean = false
-}
 
-/**
- * 单值Map的map entry
- */
-class SingletonMapEntry<K, V>(override val key: K, override var value: V): MutableMap.MutableEntry<K, V> {
-    override fun setValue(newValue: V): V {
-        val oldValue = value
-        value = newValue
-        return oldValue
+
+    /**
+     * entry
+     */
+    inner class SingletonMapEntry: MutableMap.MutableEntry<K, V> {
+
+        /**
+         * set value for [super map value][SingletonMap.value]
+         */
+        override fun setValue(newValue: V): V {
+            val oldValue = value
+            this@SingletonMap.value = newValue
+            return oldValue
+        }
+
+        /**
+         * Returns the key of this key/value pair.
+         * just return [super map key][SingletonMap.key]
+         */
+        override val key: K = this@SingletonMap.key
+
+        /**
+         * Returns the value of this key/value pair.
+         * just return [super map value][SingletonMap.value]
+         */
+        override val value: V
+            get() = this@SingletonMap.value
     }
 
 }

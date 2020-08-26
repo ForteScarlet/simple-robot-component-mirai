@@ -134,12 +134,11 @@ object MiraiBots {
 
     /** 等待所有bot下线 */
     suspend fun joinAll(){
-//        while(bots.isNotEmpty()){
-            delay(2000)
-            bots.forEach{
+        while(bots.isNotEmpty()){
+            bots.forEach {
                 it.value.join()
             }
-//        }
+        }
     }
 
     fun closeAll(){
@@ -161,8 +160,8 @@ object MiraiBots {
 class MiraiBotInfo(private val id: String,
                    private val pwd: String,
                    private val botConfiguration: BotConfiguration,
-                   private val cacheMaps: CacheMaps,
-                   private val senderRunner: SenderRunner
+                   cacheMaps: CacheMaps,
+                   senderRunner: SenderRunner
 ): BotInfo {
 
     /** 使用info的构造 */

@@ -25,3 +25,6 @@ mirai.event.register=Special event registration for mirai: {0}
 
 mirai.relogin.off=bot({0}) is passively disconnected, ready to try to reconnect. title({1}), message({2})
 mirai.relogin.on=bot({0}) dropped and reconnected.
+
+mirai.bot.thread.shutdown=Try to close the mirai live thread, it will wait up to 1 minute
+mirai.bot.thread.mandatoryTermination=Try to forcibly terminate the mirai live thread. If the mirai thread still cannot be terminated, try to forcibly terminate the process.

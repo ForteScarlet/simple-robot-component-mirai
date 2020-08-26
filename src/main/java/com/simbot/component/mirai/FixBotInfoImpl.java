@@ -38,6 +38,7 @@ public class FixBotInfoImpl implements BotInfo {
     private String path;
     private LoginInfo info;
     private BotSender botSender;
+    private boolean closed = false;
 
     /**
      * 构建一个bot信息对象
@@ -126,5 +127,7 @@ public class FixBotInfoImpl implements BotInfo {
      * nothing
      */
     @Override
-    public void close() { }
+    public void close() {
+        closed = true;
+    }
 }

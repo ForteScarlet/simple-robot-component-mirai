@@ -38,22 +38,22 @@ import net.mamoe.mirai.message.data.*
 /**
  * 判断响应结果是否为同意 `agree` / `accept`
  */
-internal fun Any.isAgree(): Boolean = (this is Boolean && this) || this == "agree" || this == "accept"
+private fun Any.isAgree(): Boolean = (this is Boolean && this) || this == "agree" || this == "accept"
 
 /**
  * 判断响应结果是否为拒绝 `reject` / `refuse`
  */
-internal fun Any.isReject(): Boolean = (this is Boolean && !this) || this == "reject" || this == "refuse"
+private fun Any.isReject(): Boolean = (this is Boolean && !this) || this == "reject" || this == "refuse"
 
 /**
  * 判断响应结果是否为忽略 `ignore`
  */
-internal fun Any.isIgnore(): Boolean = this == "ignore"
+private fun Any.isIgnore(): Boolean = this == "ignore"
 
 //endregion
 
 //region 处理监听消息
-internal fun <M : MsgGet> M.onMsg(msgProcessor: MsgProcessor): ListenResult<*>? = msgProcessor.onMsgSelected(this)
+private fun <M : MsgGet> M.onMsg(msgProcessor: MsgProcessor): ListenResult<*>? = msgProcessor.onMsgSelected(this)
 //endregion
 
 
@@ -63,7 +63,7 @@ internal fun <M : MsgGet> M.onMsg(msgProcessor: MsgProcessor): ListenResult<*>? 
  * Listen result 快捷回复
  * message event相关的
  */
-suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent, cacheMaps: CacheMaps) {
+private suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         val reply = result["reply"]
@@ -101,7 +101,7 @@ suspend fun ListenResult<*>?.quickReplyMessage(event: MessageEvent, cacheMaps: C
 /**
  * Listen result 快捷处理，invited join request相关的
  */
-suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent, cacheMaps: CacheMaps) {
+private suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         // reply: agree/accpet and ignore/reject
@@ -126,7 +126,7 @@ suspend fun ListenResult<*>?.quickReply(event: BotInvitedJoinGroupRequestEvent, 
 /**
  * Listen result 快捷处理，member join request相关的
  */
-suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent, cacheMaps: CacheMaps) {
+private suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         // accept or agree
@@ -160,7 +160,7 @@ suspend fun ListenResult<*>?.quickReply(event: MemberJoinRequestEvent, cacheMaps
 /**
  * Listen result 快捷处理，new friend request相关的
  */
-suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent, cacheMaps: CacheMaps) {
+private suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent, cacheMaps: CacheMaps) {
     val result = this?.result() ?: return
     if (result is Map<*, *>) {
         // accept or agree
@@ -193,7 +193,7 @@ suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent, cacheMaps:
  * 注册监听
  *
  */
-fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
+internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
     val bot = this.bot
 
     //region 消息监听相关事件
@@ -378,7 +378,8 @@ fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
 /**
  * 整合
  */
-internal inline fun <reified E : BotEvent> Bot.registerListenerAlways(crossinline handler: suspend E.(E) -> Unit): Listener<E> {
+private inline fun <reified E : BotEvent> Bot.registerListenerAlways(crossinline handler: suspend E.(E) -> Unit):
+        Listener<E> {
     return this.subscribeAlways<E> {
         if(this.bot == this@registerListenerAlways){
             handler(this)

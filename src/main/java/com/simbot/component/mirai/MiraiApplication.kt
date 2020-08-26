@@ -42,6 +42,7 @@ import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.firstIsInstanceOrNull
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.function.Function
 
 /**
@@ -86,6 +87,8 @@ interface MiraiApp: Application<MiraiConfiguration> {
  * @since JDK1.8
  **/
 class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
+
+    private lateinit var botThread: Thread;
 
     @Deprecated("just see getRootSenderFunction", ReplaceWith("null"))
     override fun getSetter(msgGet: MsgGet?, botManager: BotManager?): MiraiBotSender? = null
@@ -268,14 +271,14 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
 
 
 
-//         在一条新线程中执行挂起，防止程序终止
-        Thread({
+        // 在一条新线程中执行挂起，防止程序终止
+        botThread = Thread({
             runBlocking(Executors.newFixedThreadPool(1).asCoroutineDispatcher()) {
                 MiraiBots.joinAll()
             }
             QQLog.debug("bots all shutdown")
-        }, "Mirai-bot-join").start()
-
+        }, "Mirai-bot-join")
+        botThread.start()
         return "mirai bot server"
     }
 
@@ -312,6 +315,15 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      */
     override fun doClose() {
         MiraiBots.closeAll()
+        // join 10 seconds
+        QQLog.info("mirai.bot.thread.shutdown")
+        botThread.join(TimeUnit.MINUTES.toMillis(1))
+        if(botThread.isAlive){
+            QQLog.warning("mirai.bot.thread.mandatoryTermination")
+            // 强制终止
+            @Suppress("DEPRECATION")
+            botThread.stop()
+        }
     }
 
 }

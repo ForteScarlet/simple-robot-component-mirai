@@ -50,7 +50,7 @@ import kotlin.collections.set
  * 然后发送此消息
  */
 @Suppress("EXPERIMENTAL_API_USAGE")
-public suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
+suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
     return this.sendMessage(msg.toWholeMessage(this, cacheMaps))
 }
 

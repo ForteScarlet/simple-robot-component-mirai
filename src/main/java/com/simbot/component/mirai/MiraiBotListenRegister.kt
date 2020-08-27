@@ -275,13 +275,33 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
         MiraiMemberJoinEvent(this).onMsg(msgProcessor)
     }
     // bot入群
-    bot.registerListenerAlways<BotJoinGroupEvent> {
-        MiraiBotJoinEvent(this).onMsg(msgProcessor)
+//    bot.registerListenerAlways<BotJoinGroupEvent> {
+//        MiraiBotJoinEvent(this).onMsg(msgProcessor)
+//    }
+    // bot主动同意入群
+    bot.registerListenerAlways<BotJoinGroupEvent.Active> {
+        MiraiBotJoinEvent.Active(this).onMsg(msgProcessor)
+    }
+    // bot被动拉入群
+    bot.registerListenerAlways<BotJoinGroupEvent.Invite> {
+        MiraiBotJoinEvent.Invite(this).onMsg(msgProcessor)
     }
     //endregion
+
     //region 群成员减少事件
+    // 群友减少
     bot.registerListenerAlways<MemberLeaveEvent> {
-        MiraiMemberLeaveEvent(this).onMsg(msgProcessor)
+        when(this){
+            is MemberLeaveEvent.Kick -> MiraiMemberLeaveEvent.Kick(this).onMsg(msgProcessor)
+            is MemberLeaveEvent.Quit -> MiraiMemberLeaveEvent.Quit(this).onMsg(msgProcessor)
+        }
+    }
+    // bot退群
+    bot.registerListenerAlways<BotLeaveEvent> {
+        when(this){
+            is BotLeaveEvent.Kick -> MiraiBotLeaveEvent.Kick(this).onMsg(msgProcessor)
+            is BotLeaveEvent.Active -> MiraiBotLeaveEvent.Active(this).onMsg(msgProcessor)
+        }
     }
     //endregion
 

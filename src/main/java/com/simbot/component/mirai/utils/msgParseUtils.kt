@@ -25,7 +25,7 @@ import com.simbot.component.mirai.CQCodeParseHandlerRegisterException
 import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.collections.toCacheKey
 import com.simplerobot.modules.utils.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
@@ -34,11 +34,11 @@ import net.mamoe.mirai.message.MessageReceipt
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadAsGroupVoice
-import net.mamoe.mirai.message.uploadAsImage
 import net.mamoe.mirai.utils.toExternalImage
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.net.URL
 import java.util.function.BiFunction
 import kotlin.collections.set
@@ -49,7 +49,8 @@ import kotlin.collections.set
  * 此处可解析部分CQ码并转化为Message
  * 然后发送此消息
  */
-public suspend fun <C: Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
+@Suppress("EXPERIMENTAL_API_USAGE")
+public suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
     return this.sendMessage(msg.toWholeMessage(this, cacheMaps))
 }
 
@@ -59,49 +60,63 @@ public suspend fun <C: Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): Me
  * 一般解析其中的CQ码
  * 等核心支持CAT码中转后转化为CAT码
  */
+//@ExperimentalCoroutinesApi
 fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 切割，解析CQ码并拼接最终结果
-   return KQCodeUtils.split(this).asSequence().map {
-       if(it.trim().startsWith("[CQ:")){
-           // 如果是CQ码，转化为KQCode并进行处理
-           KQCode.of(it).toMessage(contact, cacheMaps)
-       }else{
-           PlainText(CQDecoder.decodeText(it)!!)
-       }
-   }.reduce { acc, msg -> acc + msg }
+    return KQCodeUtils.split(this).asSequence().map {
+        if (it.trim().startsWith("[CQ:")) {
+            // 如果是CQ码，转化为KQCode并进行处理
+            KQCode.of(it).toMessage(contact, cacheMaps)
+        } else {
+            PlainText(CQDecoder.decodeText(it)!!).async(contact)
+        }
+    }.map {
+        runBlocking { it.await() }.also { _ ->
+            it.invokeOnCompletion {
+                e -> e?.also { ex -> throw ex }
+            }
+        }
+    }.reduce { acc, msg ->
+        when{
+            acc is EmptyMessageChain && msg is EmptyMessageChain -> EmptyMessageChain
+            msg is EmptyMessageChain -> acc
+            acc is EmptyMessageChain -> msg
+            else ->  acc + msg
+        }
+    }
 }
 
 /**
  * KQCode转化为Message对象
  */
-fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
+fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> {
     // 判断类型，有些东西有可能并不存在与CQ码规范中，例如XML
-    return when(this.type) {
+    return when (this.type) {
         //region CQ码解析为Message
         //region at
         "at" -> {
             val id = this["qq"] ?: this["at"] ?: throw CQCodeParamNullPointerException("at", "qq", "at")
-            if(id == "all") {
-                AtAll
+            if (id == "all") {
+                AtAll.async(contact)
             } else {
-                when(contact) {
+                when (contact) {
                     is Member -> {
-                        At(contact)
+                        At(contact).async(contact)
                     }
                     is Friend -> {
-                        PlainText("@${contact.nick} ")
+                        PlainText("@${contact.nick} ").async(contact)
                     }
                     is Group -> {
-                        At(contact[id.toLong()])
+                        At(contact[id.toLong()]).async(contact)
                     }
-                    else -> PlainText("@$id")
+                    else -> PlainText("@$id").async(contact)
                 }
             }
         }
         //endregion
 
         //region face
-        "face" ->  Face((this["id"] ?: this["face"])!!.toInt())
+        "face" -> Face((this["id"] ?: this["face"])!!.toInt()).async(contact)
         //endregion
 
 
@@ -115,20 +130,63 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             // 先查缓存
             var image: Image? = imageCache[file]
 
-            if(image == null){
+            if (image == null) {
+                // 是否缓存此上传的图片
+                val cache: Boolean = this["cache"] != "false"
                 image = if (file.startsWith("http")) {
                     // 网络图片 阻塞上传
                     runBlocking {
                         val externalImage = URL(file).openStream().toExternalImage()
-                        contact.uploadImage(externalImage).also { imageCache[file] = it }
+                        contact.uploadImage(externalImage).also {
+                            if (cache) {
+                                imageCache[file] = it
+                            }
+                        }
                     }
                 } else {
-                    // 不是http开头的, 则认为是本地图片
-                    runBlocking {
-                        val localFile: File = FileUtil.file(file)
-                        val uploadImage = localFile.uploadAsImage(contact)
-                        uploadImage.also { imageCache[file] = it }
+                    var cacheKey = file
+                    val localFile: File = FileUtil.file(file)
+                    val externalImage = if (!localFile.exists()) {
+                        // 尝试看看有没有url参数, 如果没有则抛出异常
+                        val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
+                        cacheKey = url
+                        // 如果有，通过url发送
+                        URL(url).openStream().toExternalImage()
+                    } else {
+                        localFile.toExternalImage()
                     }
+//                    contact.uploadImage(externalImage).also { imageCache[url] = it }
+//                    uploadImage.also { imageCache[file] = it }
+
+                    // async def
+                    return contact.async {
+                        contact.uploadImage(externalImage).also {
+                            if (cache) {
+                                imageCache[cacheKey] = it
+                            }
+                        }.also {
+                            if (this@toMessage["destruct"] == "true") {
+                                it.flash()
+                            } else {
+                                it
+                            }
+                        }
+                    }
+
+//                    // 不是http开头的, 则认为是本地图片
+//                    runBlocking {
+//                        val localFile: File = FileUtil.file(file)
+//                        if(!localFile.exists()){
+//                            // 尝试看看有没有url参数, 如果没有则抛出异常
+//                            val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
+//                            // 如果有，通过url发送
+//                            val externalImage = URL(url).openStream().toExternalImage()
+//                            contact.uploadImage(externalImage).also { imageCache[url] = it }
+//                        }else{
+//                            val uploadImage = localFile.uploadAsImage(contact)
+//                            uploadImage.also { imageCache[file] = it }
+//                        }
+//                    }
                 }
             }
 
@@ -143,9 +201,10 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
                 image.flash()
             } else {
                 image
-            }
+            }.async(contact)
         }
         //endregion
+
 
         //region record 语音
         "voice", "record" -> {
@@ -157,21 +216,34 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
             // 截止到1.2.0, 只支持Group.uploadVoice
             // see https://github.com/mamoe/mirai/releases/tag/1.2.0
-            return voiceCache[file] ?: if (contact is Group) {
+            return voiceCache[file]?.async(contact) ?: if (contact is Group) {
+                val cache: Boolean = this["cache"] != "false"
                 if (file.startsWith("http")) {
                     // 网络图片
-                    runBlocking {
-                        URL(file).openStream().uploadAsGroupVoice(contact)
+                    val stream = URL(file).openStream()
+                    contact.async {
+                        stream.uploadAsGroupVoice(contact).also {
+                            if (cache) {
+                                voiceCache[file] = it
+                                voiceCache[it.fileName] = it
+                            }
+                        }
                     }
                 } else {
                     // 本地文件
                     val voiceFile = File(file)
-                    runBlocking {
-                        contact.uploadVoice(BufferedInputStream(FileInputStream(voiceFile)))
+                    val stream = BufferedInputStream(FileInputStream(voiceFile))
+                    contact.async {
+                        contact.uploadVoice(stream).also {
+                            if (cache) {
+                                voiceCache[file] = it
+                                voiceCache[it.fileName] = it
+                            }
+                        }
                     }
-                }.also { voiceCache[it.fileName] = it }
+                }
             } else {
-                EmptyMessageChain
+                EmptyMessageChain.async(contact)
             }
         }
         //endregion
@@ -179,7 +251,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region rps 猜拳
         "rps" -> {
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
             // 似乎也不支持猜拳
 //            PlainText("[猜拳]")
         }
@@ -187,7 +259,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region dice 骰子
         "dice" -> {
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
             // 似乎也..
 //            PlainText("[骰子]")
         }
@@ -197,18 +269,18 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         "shake" -> {
             // 戳一戳进行扩展，可多解析'type'参数与'id'参数。
             // 如果没有type，直接返回戳一戳
-            val type = this["type"]?.toInt() ?: return PokeMessage.Poke
+            val type = this["type"]?.toInt() ?: return PokeMessage.Poke.async(contact)
             val id = this["id"]?.toInt() ?: -1
 
             // 尝试寻找对应的Poke，找不到则返回戳一戳
-            return PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke
+            return (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke).async(contact)
         }
         //endregion
 
         //region anonymous
         "anonymous" -> {
             // 匿名消息，不进行解析
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
         }
         //endregion
 
@@ -219,13 +291,13 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
             // 或者："type", "url", "audio", "title", "content*", "image*"
             val type = this["type"]
             // TODO 解析music
-            PlainText("[${type}音乐]")
+            PlainText("[${type}音乐]").async(contact)
         }
         //endregion
 
         //region share
         "share" -> {
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
             // 分享
             // 参数："url", "title", "content*", "image*"
 //            val type = this["url"]
@@ -236,7 +308,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region emoji
         "emoji" -> {
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
             // emoji, 基本用不到
             // val id = this["id"] ?: ""
             // PlainText("emoji($id)")
@@ -246,7 +318,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
         //region location
         "location" -> {
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
             // 地点 "lat", "lon", "title", "content"
 //            val lat = this["lat"] ?: ""
 //            val lon = this["lon"] ?: ""
@@ -257,18 +329,18 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         //endregion
 
         //region sign
-        "sign" -> EmptyMessageChain
+        "sign" -> EmptyMessageChain.async(contact)
 
         //endregion
 
         //region show
-        "show" -> EmptyMessageChain
+        "show" -> EmptyMessageChain.async(contact)
         //endregion
 
 
         //region contact
         "contact" -> {
-            EmptyMessageChain
+            EmptyMessageChain.async(contact)
             // 联系人分享
             // ype一般可能是qq或者group
             // [CQ:contact,id=1234546,type=qq]
@@ -333,16 +405,16 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 
                 }
 
-            }
+            }.async(contact)
         }
         //endregion
 
 
         //region lightApp小程序 & json
         // 一般都是json消息
-        "app","json" -> {
+        "app", "json" -> {
             val content: String = this["content"] ?: "{}"
-            LightApp(content)
+            LightApp(content).async(contact)
         }
         //endregion
 
@@ -351,8 +423,8 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         "rich", "service" -> {
             val content: String = this["content"] ?: "{}"
             // 如果没有serviceId，认为其为lightApp
-            val serviceId: Int = this["serviceId"]?.toInt() ?: return LightApp(content)
-            ServiceMessage(serviceId, content)
+            val serviceId: Int = this["serviceId"]?.toInt() ?: return LightApp(content).async(contact)
+            ServiceMessage(serviceId, content).async(contact)
         }
         //endregion
 
@@ -360,20 +432,19 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
         // 引用回复
         "quote" -> {
             val key = this["id"] ?: this["quote"] ?: throw CQCodeParamNullPointerException("quote", "id")
-            val source = cacheMaps.recallCache.get(key, contact.bot.id) ?: return EmptyMessageChain
-            QuoteReply(source)
+            val source = cacheMaps.recallCache.get(key, contact.bot.id) ?: return EmptyMessageChain.async(contact)
+            QuoteReply(source).async(contact)
         }
         //endregion
-
 
 
         //region else
         else -> {
             val handler = CQCodeParsingHandler[this.type]
-            return if(handler != null){
+            return if (handler != null) {
                 handler(this, contact)
-            }else{
-                PlainText(this.toString())
+            } else {
+                PlainText(this.toString()).async(contact)
             }
         }
         //endregion
@@ -386,12 +457,23 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 }
 
 /**
+ * 一个非挂起返回值得到[Deferred]实例
+ */
+private fun Message.async(coroutineScope: CoroutineScope): Deferred<Message> {
+    return when(this){
+        is EmptyMessageChain -> EmptyMessageChainDeferred
+//        else -> coroutineScope.async(start = CoroutineStart.LAZY) { this@async }
+        else -> SimpleDefaultDeferred(this)
+    }
+}
+
+/**
  * 转化函数
  */
 @FunctionalInterface
-interface CQCodeHandler: (KQCode, Contact) -> Message, BiFunction<KQCode, Contact, Message> {
+interface CQCodeHandler : (KQCode, Contact) -> Deferred<Message>, BiFunction<KQCode, Contact, Deferred<Message>> {
     @JvmDefault
-    override fun apply(code: KQCode, contact: Contact): Message = this.invoke(code, contact)
+    override fun apply(code: KQCode, contact: Contact): Deferred<Message> = this.invoke(code, contact)
 }
 
 
@@ -424,7 +506,7 @@ object CQCodeParsingHandler {
     fun registerHandler(cqType: String, handler: CQCodeHandler) {
         if (otherHandler.containsKey(cqType)) {
             throw CQCodeParseHandlerRegisterException("failed.existed", cqType)
-        }else{
+        } else {
             otherHandler[cqType] = handler
         }
     }
@@ -438,8 +520,6 @@ object CQCodeParsingHandler {
 }
 
 
-
-
 /**
  * mirai码格式化兼容工具
  */
@@ -450,7 +530,7 @@ object MiraiCodeFormatUtils {
      */
     @JvmStatic
     fun mi2cq(msg: MessageChain?, cacheMaps: CacheMaps): String? {
-        if(msg == null){
+        if (msg == null) {
             return null
         }
 
@@ -464,10 +544,10 @@ object MiraiCodeFormatUtils {
  * [SingleMessage] to cqcode string
  */
 fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
-    if(this is MessageSource){
+    if (this is MessageSource) {
         return ""
     }
-    val kqCode: KQCode = when(this){
+    val kqCode: KQCode = when (this) {
         // voice, 转化为record类型的cq码
         is Voice -> {
             val voiceMq = MQCodeUtils.toMqCode(this.toString())
@@ -488,7 +568,7 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
             val imageKq = imageMq.toKQCode().mutable()
             imageKq["file"] = imageId
             imageKq["url"] = runBlocking { queryUrl() }
-            if(this is FlashImage){
+            if (this is FlashImage) {
                 imageKq["destruct"] = "true"
             }
             imageKq
@@ -529,7 +609,7 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
         }
 
         // 富文本
-        is RichMessage -> when(this) {
+        is RichMessage -> when (this) {
             // app
             is LightApp -> {
                 val code = MutableKQCode("app")
@@ -545,18 +625,18 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
             }
             else -> {
                 val string = this.toString()
-                return if(string.trim().startsWith("[mirai:")){
+                return if (string.trim().startsWith("[mirai:")) {
                     MQCodeUtils.toMqCode(string).toKQCode().toString()
-                }else string
+                } else string
             }
         }
 
         // 其他东西，不做特殊处理
         else -> {
             val string = this.toString()
-            return if(string.trim().startsWith("[mirai:")){
+            return if (string.trim().startsWith("[mirai:")) {
                 MQCodeUtils.toMqCode(string).toKQCode().toString()
-            }else string
+            } else string
         }
     }
     return kqCode.toString()

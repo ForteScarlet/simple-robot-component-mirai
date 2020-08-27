@@ -102,7 +102,73 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
 
     override fun getCodeNumber(): Long = event.bot.id
     override fun getGroupCodeNumber(): Long = event.group.id
-}
+
+    /**
+     * 当bot因同意申请等原因**主动**进入了某个群之后触发此事件。
+     * [BotJoinGroupEvent.Active]
+     * 此事件也属于[群成员增加事件][GroupMemberIncrease]
+     * 非bot触发的事件为[MiraiMemberJoinEvent]
+     */
+    class Active(event: BotJoinGroupEvent.Active): MiraiEventGet<BotJoinGroupEvent.Active>(event), GroupMemberIncrease {
+        fun isBotSelf(): Boolean = true
+
+        /** 入群者的ID */
+        private val newMemberId = event.bot.id.toString()
+        /** 群号 */
+        private val groupId = event.group.id.toString()
+
+        /** 获取类型  */
+        override fun getType(): IncreaseType = IncreaseType.AGREE
+
+        /** 群号  */
+        override fun getGroup(): String = groupId
+
+        /** 操作者的QQ号，等同于入群者  */
+        override fun getOperatorQQ(): String? = newMemberId
+
+        /** 被操作者的QQ号，即入群者  */
+        override fun getBeOperatedQQ(): String = newMemberId
+
+
+        override fun getCodeNumber(): Long = event.bot.id
+        override fun getGroupCodeNumber(): Long = event.group.id
+    }
+
+    /**
+     * bot被动的被拉入某群
+     * [BotJoinGroupEvent.Invite]
+     */
+    class Invite(event: BotJoinGroupEvent.Invite): MiraiEventGet<BotJoinGroupEvent.Invite>(event), GroupMemberIncrease {
+        fun isBotSelf(): Boolean = true
+
+        /** 入群者的ID */
+        private val newMemberId = event.bot.id.toString()
+        /** 群号 */
+        private val groupId = event.group.id.toString()
+
+        private val invitorId = event.invitor.id.toString()
+
+        /** 获取类型  */
+        override fun getType(): IncreaseType = IncreaseType.AGREE
+
+        /** 群号  */
+        override fun getGroup(): String = groupId
+
+        /** 操作者的QQ号，即邀请者  */
+        override fun getOperatorQQ(): String? = invitorId
+
+        /** 被操作者的QQ号，即入群者，也就是bot自身  */
+        override fun getBeOperatedQQ(): String = newMemberId
+
+
+        override fun getCodeNumber(): Long = event.bot.id
+        override fun getGroupCodeNumber(): Long = event.group.id
+    }
+
+
+    }
+
+
 
 
 /**
@@ -115,34 +181,24 @@ fun MemberJoinEvent.toIncreaseType(): IncreaseType = when(this){
 }
 
 
-///**
-// * [MemberJoinEvent]转化为[IncreaseType]
-// TODO
-// */
-//fun BotJoinGroupEvent.toIncreaseType(): IncreaseType = when(this){
-//    is BotJoinGroupEvent.Active -> IncreaseType.AGREE
-//    is BotJoinGroupEvent.Invite -> IncreaseType.INVITE
-//    else -> IncreaseType.AGREE
-//}
-
 //endregion
 
 //region 群成员减少事件
 /**
  * 群成员减少事件
  */
-open class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<MemberLeaveEvent>(event), GroupMemberReduce {
+sealed class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<MemberLeaveEvent>(event), GroupMemberReduce {
     /** 离群者 */
     private val leaveId = event.member.id.toString()
-
-    /** 操作者ID */
-    private val operatorId = event.getOperatorId().toString()
     private val groupId = event.group.id.toString()
+
     override fun getCodeNumber(): Long = event.member.id
     override fun getGroupCodeNumber(): Long = event.group.id
 
     /** 类型 */
-    private val reduceType = event.toReduceType()
+    protected abstract val reduceType: ReduceType
+    /** 操作者ID */
+    protected abstract val operatorId: String
 
     /** 被操作者的QQ号，即离群者  */
     override fun getBeOperatedQQ(): String = leaveId
@@ -152,30 +208,86 @@ open class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<MemberL
 
     /** 群号  */
     override fun getGroup(): String = groupId
-
     /** 获取类型  */
     override fun getType(): ReduceType = reduceType
+
+    /**
+     * 群成员减少事件 - 被踢出
+     * @see MemberLeaveEvent.Kick
+     */
+    class Kick(event: MemberLeaveEvent.Kick): MiraiMemberLeaveEvent(event) {
+        /** 类型 */
+        override val reduceType: ReduceType = ReduceType.KICK_OUT
+        /** 操作者ID */
+        override val operatorId: String = event.operator?.id?.toString() ?: event.bot.id.toString()
+    }
+
+    /**
+     * 群成员减少事件 - 主动离去
+     * @see MemberLeaveEvent.Quit
+     */
+    class Quit(event: MemberLeaveEvent.Quit): MiraiMemberLeaveEvent(event) {
+        /** 类型 */
+        override val reduceType: ReduceType = ReduceType.LEAVE
+        /** 操作者ID， 就是离群者自己 */
+        override val operatorId: String = event.member.id.toString()
+    }
 }
 
 /**
- * 获取操作者ID
+ * 群成员减少事件
+ * bot离群
  */
-internal fun MemberLeaveEvent.getOperatorId(): Long = when(this){
-    // 踢出
-    is MemberLeaveEvent.Kick -> this.operator?.id ?: this.bot.id
-    // 自己离开，操作者就是自己
-    is MemberLeaveEvent.Quit -> this.member.id
-    else -> this.member.id
+sealed class MiraiBotLeaveEvent(event: BotLeaveEvent): MiraiEventGet<BotLeaveEvent>(event), GroupMemberReduce {
+    /** 离群者 */
+    private val leaveId = event.bot.id.toString()
+    private val groupId = event.group.id.toString()
+
+    override fun getCodeNumber(): Long = event.bot.id
+    override fun getGroupCodeNumber(): Long = event.group.id
+
+    /** 类型 */
+    protected abstract val reduceType: ReduceType
+    /** 操作者ID */
+    protected abstract val operatorId: String
+
+    /** 被操作者的QQ号，即离群者  */
+    override fun getBeOperatedQQ(): String = leaveId
+
+    /** 操作者的QQ号  */
+    override fun getOperatorQQ(): String = operatorId
+
+    /** 群号  */
+    override fun getGroup(): String = groupId
+    /** 获取类型  */
+    override fun getType(): ReduceType = reduceType
+
+    /**
+     * 群成员减少事件 - 被踢出
+     * @see MemberLeaveEvent.Kick
+     */
+    class Kick(event: BotLeaveEvent.Kick): MiraiBotLeaveEvent(event) {
+        /** 类型 */
+        override val reduceType: ReduceType = ReduceType.KICK_OUT
+        /** 操作者ID */
+        override val operatorId: String = event.operator.id.toString()
+    }
+
+    /**
+     * 群成员减少事件 - 主动离去
+     * @see MemberLeaveEvent.Quit
+     */
+    class Active(event: BotLeaveEvent.Active): MiraiBotLeaveEvent(event) {
+        /** 类型 */
+        override val reduceType: ReduceType = ReduceType.LEAVE
+        /** 操作者ID， 就是离群者自己 */
+        override val operatorId: String = event.bot.id.toString()
+    }
 }
 
-/**
- * 离群类型
- */
-internal fun MemberLeaveEvent.toReduceType() = when(this){
-    is MemberLeaveEvent.Kick -> ReduceType.KICK_OUT
-    is MemberLeaveEvent.Quit -> ReduceType.LEAVE
-    else -> ReduceType.LEAVE
-}
+
+
+
 
 //endregion
 //endregion

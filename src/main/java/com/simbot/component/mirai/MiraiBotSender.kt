@@ -28,10 +28,7 @@ import com.forte.qqrobot.sender.senderlist.BaseRootSenderList
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.BotLevelUtil
 import com.simbot.component.mirai.utils.sendMsg
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Group
@@ -46,7 +43,7 @@ import net.mamoe.mirai.getFriendOrNull
  * 送信器对于可挂起函数的执行策略
  */
 interface SenderRunner {
-    fun <T> run(runner: suspend CoroutineScope.() -> T): T?
+    fun <T> run(coroutineScope: CoroutineScope = GlobalScope, runner: suspend CoroutineScope.() -> T): T?
 }
 
 
@@ -54,29 +51,38 @@ interface SenderRunner {
  * 阻塞送信
  */
 object BlockSenderRunner: SenderRunner {
-    override fun <T> run(runner: suspend CoroutineScope.() -> T): T {
+    override fun <T> run(coroutineScope: CoroutineScope, runner: suspend CoroutineScope.() -> T): T {
 //        println("block!")
         return runBlocking(block = runner)
     }
 }
 
 /**
- * 协程送信
+ * 协程launch送信
  */
-object CoroutineSenderRunner: SenderRunner {
-    override fun <T> run(runner: suspend CoroutineScope.() -> T): T? {
+object CoroutineLaunchSenderRunner: SenderRunner {
+    override fun <T> run(coroutineScope: CoroutineScope, runner: suspend CoroutineScope.() -> T): T? {
 //        println("coroutine!")
-        GlobalScope.launch { runner(this) }
+        coroutineScope.launch { runner(this) }
         return null
+    }
+}
+
+/**
+ * 协程Async送信
+ */
+object CoroutineAsyncSenderRunner: SenderRunner {
+    override fun <T> run(coroutineScope: CoroutineScope, runner: suspend CoroutineScope.() -> T): T = runBlocking {
+        withContext(coroutineScope.coroutineContext) { runner(this) }
     }
 }
 
 
 /**
- * [BlockSenderRunner] [CoroutineSenderRunner]
+ * [BlockSenderRunner] [CoroutineLaunchSenderRunner]
  */
 enum class SenderRunnerType(val runnerGetter: () -> SenderRunner) {
-    BLOCK({ BlockSenderRunner }), COROUTINE({ CoroutineSenderRunner })
+    BLOCK({ BlockSenderRunner }), COROUTINE({ CoroutineLaunchSenderRunner }), ASYNC({ CoroutineAsyncSenderRunner })
 
 
 }

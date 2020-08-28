@@ -46,6 +46,7 @@ private val OffEvent.offlineType: BotOfflineType get() = if(this is OffEvent.Act
 /**
  * [Bot] 离线.
  * @see BotOffline
+ * @see MiraiEvents.botOfflineEvent
  */
 class MiraiBotOfflineEvent(event: OffEvent) : BaseMiraiSpecialBotMsgGet<OffEvent>(event), BotOffline {
 
@@ -66,6 +67,7 @@ class MiraiBotOfflineEvent(event: OffEvent) : BaseMiraiSpecialBotMsgGet<OffEvent
 /**
  * [Bot] 主动或被动重新登录. 在此事件广播前就已经登录完毕.
  * @see BotRelogin
+ * @see MiraiEvents.botReloginEvent
  */
 class MiraiBotReloginEvent(event: BotReloginEvent):BaseMiraiSpecialBotMsgGet<BotReloginEvent>(event), BotRelogin {
     /**

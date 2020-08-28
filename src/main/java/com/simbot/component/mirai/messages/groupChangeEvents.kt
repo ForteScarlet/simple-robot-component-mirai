@@ -42,7 +42,7 @@ import net.mamoe.mirai.event.events.*
 interface MiraiGroupJoinEvent: GroupMemberIncrease {
     fun isBotSelf(): Boolean
     /** 事件本体 */
-    val leaveEvent: BotEvent
+    val joinEvent: BotEvent
     /** 离群类型 */
     val increaseType: IncreaseType
     /** 操作者ID */
@@ -85,7 +85,7 @@ sealed class MiraiMemberJoinEvent(event: MemberJoinEvent):
     /** 操作者 */
     abstract override val operatorId: String?
 
-    override val leaveEvent: BotEvent
+    override val joinEvent: BotEvent
         get() = this.event
 
     /** 被操作者的QQ号，即入群者  */
@@ -144,7 +144,7 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
      */
     override val increaseType = IncreaseType.AGREE
 
-    override val leaveEvent: BotEvent
+    override val joinEvent: BotEvent
         get() = this.event
 
     override val operatorId: String? = null
@@ -181,7 +181,7 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
 
         override val increaseType = IncreaseType.AGREE
 
-        override val leaveEvent: BotEvent
+        override val joinEvent: BotEvent
             get() = this.event
 
         override val operatorId: String = newMemberId
@@ -219,7 +219,7 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
         private val invitorId = event.invitor.id.toString()
 
         override val increaseType = IncreaseType.INVITE
-        override val leaveEvent: BotEvent
+        override val joinEvent: BotEvent
             get() = this.event
         override val operatorId: String = newMemberId
 
@@ -365,15 +365,33 @@ sealed class MiraiBotLeaveEvent(event: BotLeaveEvent):
 //endregion
 
 //region 权限变动
+
+/**
+ * 权限变动的总接口
+ * @see MiraiMemberPermissionChangeEvent
+ * @see MiraiBotGroupPermissionChangeEvent
+ */
+interface MiraiPermissionChangeEvent: GroupAdminChange {
+    /** 当前事件 */
+    val permissionEvent: BotPassiveEvent
+    /** 变更类型 */
+    val groupAdminChangeType: GroupAdminChangeType
+}
+
 //region 群成员管理员变动
 /**
  * 群成员管理员变动（不会是bot
  */
-open class MiraiMemberPermissionChangeEvent(event: MemberPermissionChangeEvent): MiraiEventGet<MemberPermissionChangeEvent>(event), GroupAdminChange {
+open class MiraiMemberPermissionChangeEvent(event: MemberPermissionChangeEvent):
+        MiraiEventGet<MemberPermissionChangeEvent>(event),
+        MiraiPermissionChangeEvent {
     private val changeId = event.member.id.toString()
     private val groupId = event.group.id.toString()
     private val operatorId = event.group.owner.id.toString()
-    private val groupAdminChangeType = event.toGroupAdminChangeType()
+    override val groupAdminChangeType = event.toGroupAdminChangeType()
+
+    override val permissionEvent: BotPassiveEvent
+        get() = this.event
 
     /** 被操作者的QQ号  */
     override fun getBeOperatedQQ(): String = changeId
@@ -389,22 +407,22 @@ open class MiraiMemberPermissionChangeEvent(event: MemberPermissionChangeEvent):
     override fun getType(): GroupAdminChangeType = groupAdminChangeType
 }
 
-/**
- * 事件转化为变更类型
- */
-internal fun MemberPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminChangeType = if(this.new.level >= MemberPermission.ADMINISTRATOR.level) GroupAdminChangeType.BECOME_ADMIN else GroupAdminChangeType.CANCEL_ADMIN
-
 //endregion
 
 //region bot权限变更事件
 /**
  * bot权限变更事件
  */
-open class MiraiBotGroupPermissionChangeEvent(event: BotGroupPermissionChangeEvent): MiraiEventGet<BotGroupPermissionChangeEvent>(event), GroupAdminChange {
+open class MiraiBotGroupPermissionChangeEvent(event: BotGroupPermissionChangeEvent):
+        MiraiEventGet<BotGroupPermissionChangeEvent>(event),
+        MiraiPermissionChangeEvent {
     private val changeId = event.bot.id.toString()
     private val groupId = event.group.id.toString()
     private val operatorId = event.group.owner.id.toString()
-    private val groupAdminChangeType = event.toGroupAdminChangeType()
+    override val groupAdminChangeType = event.toGroupAdminChangeType()
+
+    override val permissionEvent: BotPassiveEvent
+        get() = this.event
 
     override fun getCodeNumber(): Long = event.bot.id
 
@@ -423,9 +441,17 @@ open class MiraiBotGroupPermissionChangeEvent(event: BotGroupPermissionChangeEve
     override fun getType(): GroupAdminChangeType = groupAdminChangeType
 
 }
+
 /**
  * 事件转化为变更类型
  */
-internal fun BotGroupPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminChangeType = if(this.new.level >= MemberPermission.ADMINISTRATOR.level) GroupAdminChangeType.BECOME_ADMIN else GroupAdminChangeType.CANCEL_ADMIN
+private fun MemberPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminChangeType = if(this.new.level >=
+        MemberPermission.ADMINISTRATOR.level) GroupAdminChangeType.BECOME_ADMIN else GroupAdminChangeType.CANCEL_ADMIN
+
+/**
+ * 事件转化为变更类型
+ */
+private fun BotGroupPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminChangeType = if(this.new.level >=
+        MemberPermission.ADMINISTRATOR.level) GroupAdminChangeType.BECOME_ADMIN else GroupAdminChangeType.CANCEL_ADMIN
 //endregion
 //endregion

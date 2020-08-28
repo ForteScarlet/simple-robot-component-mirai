@@ -367,6 +367,7 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
         MiraiGroupMuteAllEvent(this).onMsg(msgProcessor)
     }
     //endregion
+    //endregion
 
     //region 好友删除事件
     bot.registerListenerAlways<FriendDeleteEvent> {
@@ -379,6 +380,21 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
         MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
     }
     //endregion
+
+
+    //region 好友更换昵称事件
+    bot.registerListenerAlways<FriendNickChangedEvent> {
+        MiraiFriendNicknameChangedEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
+
+    //region 好友输入状态变更事件
+    bot.registerListenerAlways<FriendInputStatusChangedEvent> {
+        MiraiFriendInputStatusChangedEvent(this).onMsg(msgProcessor)
+    }
+    //endregion
+
 
 
     //region bot离线事件
@@ -395,7 +411,6 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
 
 
 
-    //endregion
 
 }
 

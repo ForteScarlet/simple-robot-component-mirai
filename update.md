@@ -1,5 +1,15 @@
-# now
+# 1.8.0-1.16
 - 简单调整内部事件结构
+
+- 新增`好友昵称变更`事件: `@Listen.ByName(MiraiEvents.friendNicknameChangedEvent)`
+对应封装接口: `FriendNicknameChanged`
+
+- 新增`好友输入状态变更`事件: `@Listen.ByName(MiraiEvents.friendInputStatusChangedEvent)`
+对应封装接口: `FriendInputStatusChanged`
+
+
+
+
 
 # 1.7.0-1.16
 - 处理**群成员增加**事件由于mirai`v1.3.0`版本前的bug导致无法正常触发的问题。

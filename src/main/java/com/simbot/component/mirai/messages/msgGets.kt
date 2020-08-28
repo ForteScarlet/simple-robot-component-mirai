@@ -35,7 +35,7 @@ import net.mamoe.mirai.message.data.source
 /**
  * 基础MsgGet父类
  */
-abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
+abstract class MiraiBaseMsgGet<out E : BotEvent>(val event: E) : MsgGet {
 
     open val onTime: Long = System.currentTimeMillis()
 
@@ -76,6 +76,7 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
     override fun setMsg(newMsg: String?) {
         eventMsg = newMsg
     }
+
     /**
      * 一般来讲，监听到的消息大部分都会有个“消息内容”。定义此方法获取消息内容。
      * 如果不存在，则为null。（旧版本推荐为空字符串，现在不了。我变卦了）
@@ -114,8 +115,10 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
  *
  * 且实现[MsgGet]接口
  */
-abstract class MiraiMessageGet<out ME: MessageEvent>(event: ME, private val cacheMaps: CacheMaps): MiraiBaseMsgGet<ME>(event) {
-//    protected open val messageEvent = event
+abstract class MiraiMessageGet<out ME : MessageEvent>(event: ME,
+                                                      cacheMaps: CacheMaps,
+                                                      private val toStringName: String = "SimbotMiraiMsgEvent") :
+        MiraiBaseMsgGet<ME>(event) {
 
     /**
      * 获取contact
@@ -139,14 +142,15 @@ abstract class MiraiMessageGet<out ME: MessageEvent>(event: ME, private val cach
     override fun getId(): String = msgId
 
 
-    override fun toString(): String = "SimbotMiraiMsgEvent(${message.contentToString()})"
+    override fun toString(): String = "$toStringName(${message.contentToString()})"
 }
 
 /**
  *  mirai 的事件EventGet的父类
  *  实现[EventGet]接口
  */
-abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(event), EventGet {
+abstract class MiraiEventGet<out EE : BotEvent>(event: EE, private val toStringName: String = "SimbotMiraiEvent") :
+        MiraiBaseMsgGet<EE>(event), EventGet {
     /** 事件消息正文 */
     override var eventMsg: String? = null
     protected val eventId = "$event#$onTime"
@@ -160,6 +164,7 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
     override fun setMsg(newMsg: String?) {
         eventMsg = newMsg
     }
+
     /**
      * 一般来讲，监听到的消息大部分都会有个“消息内容”。定义此方法获取消息内容。
      * 如果不存在，则为null。（旧版本推荐为空字符串，现在不了。我变卦了）
@@ -170,7 +175,7 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
     /** 获取消息的字体  */
     override fun getFont(): String? = null
 
-    override fun toString(): String = "SimbotMiraiEvent($event)"
+    override fun toString(): String = "$toStringName($event)"
 }
 //endregion
 

@@ -38,21 +38,39 @@ object MiraiEvents {
     /**
      * 好友更换头像事件
      * @since 1.3.0-1.16
+     * @see FriendAvatarChanged
      */
     const val friendAvatarChangedEvent: String = "FRIEND_AVATAR_CHANGED_EVENT"
+
+
+    /**
+     * 好友昵称变动事件
+     * @since 1.8.0-1.16
+     * @see MiraiFriendNicknameChangedEvent
+     */
+    const val friendNicknameChangedEvent: String = "FRIEND_NICKNAME_CHANGED_EVENT"
+
+
+    /**
+     * 好友输入状态变更事件
+     * @since 1.8.0-1.16
+     * @see MiraiFriendInputStatusChangedEvent
+     */
+    const val friendInputStatusChangedEvent: String = "FRIEND_INPUT_STATUS_CHANGED_EVENT"
 
     /**
      * bot离线事件
      * @see BotOffline
+     * @see MiraiBotOfflineEvent
      */
     const val botOfflineEvent: String = "BOT_OFFLINE_EVENT"
 
     /**
      * bot重新登录事件
      * @see BotRelogin
+     * @see MiraiBotReloginEvent
      */
     const val botReloginEvent: String = "BOT_RELOGIN_EVENT"
-
 }
 
 /*

@@ -21,6 +21,8 @@ run.cache.contact=Starting to cache contact information for bot [{0}]...
 mirai.api.deprecated=API not supported by mirai: {0}. The default value [{1}] will be returned. This API will only warn once.
 mirai.event.register.failed=Mirai additional monitoring event [{0}] registration failed, you will not be able to use related monitoring. info: {1}
 
+mirai.event.register.unavailable=Unable to build additional event registrar, additional events will not be available: {0}
+
 mirai.event.register=Special event registration for mirai: {0}
 
 mirai.relogin.off=bot({0}) is passively disconnected, ready to try to reconnect. title({1}), message({2})

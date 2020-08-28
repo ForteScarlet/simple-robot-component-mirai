@@ -42,6 +42,7 @@ import net.mamoe.mirai.message.data.firstIsInstanceOrNull
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
+import kotlin.reflect.KClass
 
 /**
  * mirai的context
@@ -149,34 +150,54 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 注册mirai可提供的额外事件
      */
     private fun registerMiraiEvent(){
+        val specialListeners: Map<String, KClass<out MsgGet>> = mapOf(
+                // 头像变更事件
+                MiraiEvents.friendAvatarChangedEvent to FriendAvatarChanged::class,
+                // 昵称变更事件
+                MiraiEvents.friendNicknameChangedEvent to FriendNicknameChanged::class,
+                // 输入状态变更事件
+                MiraiEvents.friendInputStatusChangedEvent to FriendInputStatusChanged::class,
+                // bot离线事件
+                MiraiEvents.botOfflineEvent to BotOffline::class,
+                // bot重新登录事件
+                MiraiEvents.botReloginEvent to BotRelogin::class,
+                // 群名称变更事件
+                MiraiEvents.groupNameChangedEvent to GroupNameChanged::class,
+                // 群员群昵称变更事件
+                MiraiEvents.memberRemarkChangedEvent to MemberRemarkChanged::class,
+                // 群员群头衔变更事件
+                MiraiEvents.memberSpecialTitleChangedEvent to MemberSpecialTitleChanged::class,
+        )
+
         if(!ListenRegisterUtil.usable){
+            val show = specialListeners.values.joinToString(",\n", transform = {
+                it.simpleName as CharSequence
+            })
+            QQLog.warning("mirai.event.register.unavailable", show)
             return
         }
         registeredSpecialListenerSuccess = true
 
-        // 头像变更事件
-        ListenRegisterUtil.registerListen(MiraiEvents.friendAvatarChangedEvent, FriendAvatarChanged::class)
+        // 注册额外的事件
+        specialListeners.forEach {
+            ListenRegisterUtil.registerListen(it.key, it.value)
+        }
 
-        // 昵称变更事件
-        ListenRegisterUtil.registerListen(MiraiEvents.friendNicknameChangedEvent, FriendNicknameChanged::class)
-
-        // 输入状态变更事件
-        ListenRegisterUtil.registerListen(MiraiEvents.friendInputStatusChangedEvent, FriendInputStatusChanged::class)
-
-        // bot离线事件
-        ListenRegisterUtil.registerListen(MiraiEvents.botOfflineEvent, BotOffline::class)
-
-        // bot重新登录事件
-        ListenRegisterUtil.registerListen(MiraiEvents.botReloginEvent, BotRelogin::class)
-
-        // 群名称变更事件
-        ListenRegisterUtil.registerListen(MiraiEvents.groupNameChangedEvent, GroupNameChanged::class)
-
-        // 群员群昵称变更事件
-        ListenRegisterUtil.registerListen(MiraiEvents.memberRemarkChangedEvent, MemberRemarkChanged::class)
-
-        // 群员群头衔变更事件
-        ListenRegisterUtil.registerListen(MiraiEvents.memberSpecialTitleChangedEvent, MemberSpecialTitleChanged::class)
+//        ListenRegisterUtil.registerListen(MiraiEvents.friendAvatarChangedEvent, FriendAvatarChanged::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.friendNicknameChangedEvent, FriendNicknameChanged::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.friendInputStatusChangedEvent, FriendInputStatusChanged::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.botOfflineEvent, BotOffline::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.botReloginEvent, BotRelogin::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.groupNameChangedEvent, GroupNameChanged::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.memberRemarkChangedEvent, MemberRemarkChanged::class)
+//
+//        ListenRegisterUtil.registerListen(MiraiEvents.memberSpecialTitleChangedEvent, MemberSpecialTitleChanged::class)
 
     }
 

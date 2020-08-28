@@ -368,6 +368,7 @@ sealed class MiraiBotLeaveEvent(event: BotLeaveEvent):
 //endregion
 //endregion
 
+
 //region 权限变动
 
 /**
@@ -459,6 +460,7 @@ private fun BotGroupPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminCh
         MemberPermission.ADMINISTRATOR.level) GroupAdminChangeType.BECOME_ADMIN else GroupAdminChangeType.CANCEL_ADMIN
 //endregion
 //endregion
+
 
 //region 群名称变更
 /**
@@ -608,6 +610,7 @@ open class MiraiMemberRemarkChangedEvent(event: MemberCardChangeEvent):
 //endregion
 
 
+//region 头衔变更事件
 /**
  * 群成员头衔变更事件
  * @see MemberSpecialTitleChangeEvent
@@ -679,3 +682,4 @@ open class MiraiMemberSpecialTitleChangedEvent(event: MemberSpecialTitleChangeEv
     override fun getQQHeadUrl(): String = event.member.avatarUrl
     override fun getGroupHeadUrl(): String = event.group.avatarUrl
 }
+//endregion

@@ -40,7 +40,15 @@ import net.mamoe.mirai.event.events.BotOfflineEvent as OffEvent
 /**
  * [OffEvent]转化为[BotOfflineType]
  */
-private val OffEvent.offlineType: BotOfflineType get() = if(this is OffEvent.Active) BotOfflineType.INITIATIVE else BotOfflineType.PASSIVE
+private val OffEvent.offlineType: BotOfflineType get() {
+    return when(this){
+        is OffEvent.Active -> BotOfflineType.INITIATIVE
+        is OffEvent.Force -> BotOfflineType.PASSIVE
+        is OffEvent.Dropped -> BotOfflineType.DROPPED
+        else -> BotOfflineType.OTHER
+    }
+}
+
 
 
 /**
@@ -50,17 +58,29 @@ private val OffEvent.offlineType: BotOfflineType get() = if(this is OffEvent.Act
  */
 class MiraiBotOfflineEvent(event: OffEvent) : BaseMiraiSpecialBotMsgGet<OffEvent>(event), BotOffline {
 
-    /** 离线类型，分为主动离线与被动离线。 */
+    /** 离线类型. 例如主动离线、被动挤下线、网络掉线等。 */
     override val offlineType: BotOfflineType = event.offlineType
 
     /** 如果为主动离线，此处则**可能**有值。也可能是null。 */
-    override val cause: Throwable? = if(event is OffEvent.Active) event.cause else null
+    override val cause: Throwable? =
+            // 不对实验性类型做判断
+        when(event){
+            is OffEvent.Active -> event.cause
+            is OffEvent.Force -> null
+            is OffEvent.Dropped -> event.cause
+            else -> null
+        }
+
 
     /** 如果为被动离线，则此处不为null。否则为null。 */
-    override val forceMessage: ForceMessage? = if(event is OffEvent.Force) event.let {
-        ForceMessage(it.title, it.message)
-    } else null
-
+    override val forceMessage: ForceMessage? =
+            // 不对实验性类型做判断
+            when(event){
+                is OffEvent.Active -> null
+                is OffEvent.Force -> ForceMessage(event.title, event.message)
+                is OffEvent.Dropped -> null
+                else -> null
+            }
 }
 
 

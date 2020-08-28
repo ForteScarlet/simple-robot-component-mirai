@@ -40,7 +40,7 @@ object MiraiEvents {
      * @since 1.3.0-1.16
      * @see FriendAvatarChanged
      */
-    const val friendAvatarChangedEvent: String = "FRIEND_AVATAR_CHANGED_EVENT"
+    const val friendAvatarChangedEvent: String = "friendAvatarChanged"
 
 
     /**
@@ -48,7 +48,7 @@ object MiraiEvents {
      * @since 1.8.0-1.16
      * @see MiraiFriendNicknameChangedEvent
      */
-    const val friendNicknameChangedEvent: String = "FRIEND_NICKNAME_CHANGED_EVENT"
+    const val friendNicknameChangedEvent: String = "friendNicknameChanged"
 
 
     /**
@@ -56,21 +56,21 @@ object MiraiEvents {
      * @since 1.8.0-1.16
      * @see MiraiFriendInputStatusChangedEvent
      */
-    const val friendInputStatusChangedEvent: String = "FRIEND_INPUT_STATUS_CHANGED_EVENT"
+    const val friendInputStatusChangedEvent: String = "friendInputStatusChanged"
 
     /**
      * bot离线事件
      * @see BotOffline
      * @see MiraiBotOfflineEvent
      */
-    const val botOfflineEvent: String = "BOT_OFFLINE_EVENT"
+    const val botOfflineEvent: String = "botOffline"
 
     /**
      * bot重新登录事件
      * @see BotRelogin
      * @see MiraiBotReloginEvent
      */
-    const val botReloginEvent: String = "BOT_RELOGIN_EVENT"
+    const val botReloginEvent: String = "botRelogin"
 
 
     /**
@@ -79,7 +79,7 @@ object MiraiEvents {
      * @see GroupNameChanged
      * @see MiraiGroupNameChangedEvent
      */
-    const val groupNameChangedEvent: String = "GROUP_NAME_CHANGED_EVENT"
+    const val groupNameChangedEvent: String = "groupNameChanged"
 
     /**
      * 群员备注变更事件
@@ -87,7 +87,7 @@ object MiraiEvents {
      * @see MemberRemarkChanged
      * @see MiraiMemberRemarkChangedEvent
      */
-    const val memberRemarkChangedEvent: String = "MEMBER_CARD_CHANGED_EVENT"
+    const val memberRemarkChangedEvent: String = "memberRemarkChanged"
 
     /**
      * 群成员头衔变更事件
@@ -95,7 +95,7 @@ object MiraiEvents {
      * @see MemberSpecialTitleChanged
      * @see MiraiMemberRemarkChangedEvent
      */
-    const val memberSpecialTitleChangedEvent: String = "MEMBER_SPECIAL_TITLE_CHANGED_EVENT"
+    const val memberSpecialTitleChangedEvent: String = "memberSpecialTitleChanged"
 }
 
 /*

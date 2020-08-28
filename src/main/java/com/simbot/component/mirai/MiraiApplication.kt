@@ -265,10 +265,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
                 _, info ->
                 val id = info.bot.id
                 // 注册被动下线事件
-                info.bot.subscribeAlways<BotOfflineEvent.Force> {
-                    if(this.bot.id == id){
-
-                        QQLog.debug("mirai.relogin.off", id, this.title, this.message)
+                info.bot.subscribeAlways<BotOfflineEvent.Dropped> {
+                    if(this.bot.id == id && !isClosed){
+                        QQLog.debug("mirai.relogin.off", this.cause, id)
                         GlobalScope.launch {
                             bot.login()
                             QQLog.debug("mirai.relogin.on")

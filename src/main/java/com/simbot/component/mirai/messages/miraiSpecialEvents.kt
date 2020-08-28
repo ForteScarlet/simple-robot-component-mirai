@@ -114,7 +114,20 @@ enum class BotOfflineType {
      * 被动下线。
      * @see BotOfflineEvent.Force
      */
-    PASSIVE
+    PASSIVE,
+
+
+    /**
+     * 因网络原因掉线
+     * @see BotOfflineEvent.Dropped
+     */
+    DROPPED,
+
+    /**
+     * 其他可能的未知类型和不稳定/实验性类型
+     * @see BotOfflineEvent 及其子类
+     */
+    OTHER
 }
 
 /**

@@ -1,5 +1,5 @@
 # 1.8.0-1.16
-- 简单调整内部事件结构
+- 简单调整内部事件与文件结构
 
 - 新增`好友昵称变更`事件: `@Listen.ByName(MiraiEvents.friendNicknameChangedEvent)`
 对应封装接口: `FriendNicknameChanged`
@@ -16,12 +16,15 @@
 - 新增`群成员头衔变更`事件: `@Listen.ByName(MiraiEvents.memberSpecialTitleChangedEvent)`
 对应封装接口: `MemberSpecialTitleChanged`
 
-- 修复`AtDetection`.`test`只有在消息最前列at bot的时候才生效的问题
+- 修复`AtDetection`.`test`只有在消息最前列at bot的时候才生效的问题. 此bug同样适用于`@Filter(at=true)`
 
 - 优化网络图片、语音的发送机制，现在从网络上传(多个)图片/语音的时候效率会更高。
 
 - 优化网络图片、语音的发送机制，现在使用`ktor`的`HttpClient`库进行请求，不会出现因响应值为`302`重定向而导致无法发送图片的问题
 
+- 调整`BotOffline`事件，追加事件类型并更细致的进行判断。
+
+- 调整`simbot.mirai.autoRelogin`, 其只会在Bot因为**网络原因(`Dropped`)**掉线的时候重启, 并通过debug输出日志。
 
 # 1.7.0-1.16
 - 处理**群成员增加**事件由于mirai`v1.3.0`版本前的bug导致无法正常触发的问题。

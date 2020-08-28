@@ -30,3 +30,6 @@ mirai.relogin.on=bot({0})掉线重连。
 
 mirai.bot.thread.shutdown=尝试关闭mirai存活线程, 将会最多等待1分钟
 mirai.bot.thread.mandatoryTermination=尝试强制终止mirai存活线程, 如果依然无法结束mirai线程则请尝试强制终止进程。
+
+mirai.http.connection.try=尝试连接到 {0}
+mirai.http.connection.success=连接到 {0} 成功

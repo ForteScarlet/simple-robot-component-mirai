@@ -135,7 +135,6 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
         //region image
         "image" -> contact.async {
-            QQLog.debug("start img...")
             // image 类型的CQ码，参数一般是file, destruct
             val file: String = this@toMessage["file"] ?: this@toMessage["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
 
@@ -529,15 +528,16 @@ private val httpClient: HttpClient by lazy{ HttpClient() }
  * 通常认为是一个http-get请求
  */
 private suspend fun URL.toStream(): InputStream {
-    QQLog.debug("try connection to $this")
+    val urlString = this.toString()
+    QQLog.debug("mirai.http.connection.try", urlString)
     val response = httpClient.get<HttpResponse>(this)
     val status = response.status
     if(status.value < 300){
-        QQLog.debug("connection to $this success.")
+        QQLog.debug("mirai.http.connection.success", urlString)
         // success
         return response.content.toInputStream()
     }else {
-        throw IllegalStateException("connection to '' failed (${status.value}): ${status.description}")
+        throw IllegalStateException("connection to '$urlString' failed ${status.value}: ${status.description}")
     }
 
 //    val urlName = this.toString()

@@ -134,7 +134,7 @@ object MiraiBots {
     }
 
     /** 等待所有bot下线 */
-    suspend fun joinAll(){
+    fun joinAll(){
         while(bots.isNotEmpty()){
             bots.forEach {
                 it.value.join()
@@ -234,16 +234,13 @@ class MiraiBotInfo(private val id: String,
      */
     override fun close() {
         // 关闭bot，并移除其相关信息
-        runBlocking {
-            // close and remove
-            bot.closeAndJoin()
-            MiraiBots.remove(id)
-        }
+        runBlocking { bot.closeAndJoin() }
+        MiraiBots.remove(id)
     }
 
     /** 一直等待到bot下线 */
-    suspend fun join(){
-        bot.join()
+    fun join(){
+        runBlocking { bot.join() }
     }
 
 }

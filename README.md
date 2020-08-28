@@ -85,7 +85,7 @@
 启动器：
 
 ```java
-@SimpleRobotApplication(resources = "/conf.properties")
+@SimpleRobotApplication(resources = "conf.properties")
 public class TestMain2 /* implements MiraiApp // 可以选择实现此接口 */ {
     public static void main(String[] args) {
         // mirai application
@@ -96,7 +96,7 @@ public class TestMain2 /* implements MiraiApp // 可以选择实现此接口 */ 
 
 或者试试核心`1.13.x`之后的通用启动器：
 ```java
-@SimpleRobotApplication(resources = "/conf.properties")
+@SimpleRobotApplication(resources = "conf.properties")
 public class TestMain2 /* implements Application // 可以选择实现此接口 */ {
     public static void main(String[] args) throws Exception {
         // base application

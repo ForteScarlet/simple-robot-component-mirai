@@ -182,23 +182,6 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         specialListeners.forEach {
             ListenRegisterUtil.registerListen(it.key, it.value)
         }
-
-//        ListenRegisterUtil.registerListen(MiraiEvents.friendAvatarChangedEvent, FriendAvatarChanged::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.friendNicknameChangedEvent, FriendNicknameChanged::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.friendInputStatusChangedEvent, FriendInputStatusChanged::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.botOfflineEvent, BotOffline::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.botReloginEvent, BotRelogin::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.groupNameChangedEvent, GroupNameChanged::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.memberRemarkChangedEvent, MemberRemarkChanged::class)
-//
-//        ListenRegisterUtil.registerListen(MiraiEvents.memberSpecialTitleChangedEvent, MemberSpecialTitleChanged::class)
-
     }
 
     /**
@@ -292,14 +275,10 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         }
 
 
-
-
         // 在一条新线程中执行挂起，防止程序终止
         botThread = Thread({
-            runBlocking(Executors.newFixedThreadPool(1).asCoroutineDispatcher()) {
-                MiraiBots.joinAll()
-            }
-            QQLog.debug("bots all shutdown")
+            MiraiBots.joinAll()
+            QQLog.debug("bots all shutdown.")
         }, "Mirai-bot-join")
         botThread.start()
         return "mirai bot server"
@@ -340,6 +319,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         MiraiBots.closeAll()
         // join 10 seconds
         QQLog.info("mirai.bot.thread.shutdown")
+        // 等待1分钟
         botThread.join(TimeUnit.MINUTES.toMillis(1))
         if(botThread.isAlive){
             QQLog.warning("mirai.bot.thread.mandatoryTermination")

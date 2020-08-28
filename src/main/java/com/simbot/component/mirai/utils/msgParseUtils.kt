@@ -23,6 +23,7 @@ import cn.hutool.core.io.FileUtil
 import com.simbot.component.mirai.CQCodeParamNullPointerException
 import com.simbot.component.mirai.CQCodeParseHandlerRegisterException
 import com.simbot.component.mirai.CacheMaps
+import com.simbot.component.mirai.collections.alsoCache
 import com.simbot.component.mirai.collections.toCacheKey
 import com.simplerobot.modules.utils.*
 import kotlinx.coroutines.*
@@ -290,7 +291,6 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
             // 参数："type", "id", "style*"
             // 或者："type", "url", "audio", "title", "content*", "image*"
             val type = this["type"]
-            // TODO 解析music
             PlainText("[${type}音乐]").async(contact)
         }
         //endregion
@@ -483,7 +483,7 @@ interface CQCodeHandler : (KQCode, Contact) -> Deferred<Message>, BiFunction<KQC
 object CQCodeParsingHandler {
 
     /** 注册额外的解析器 */
-    private val otherHandler: MutableMap<String, CQCodeHandler> by lazy { mutableMapOf() }
+    private val otherHandler: MutableMap<String, CQCodeHandler> by lazy { mutableMapOf<String, CQCodeHandler>() }
 
     /**
      * get

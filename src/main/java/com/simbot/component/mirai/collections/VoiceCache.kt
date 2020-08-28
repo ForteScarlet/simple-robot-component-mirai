@@ -86,3 +86,14 @@ open class VoiceCache(
 
 
 }
+
+/**
+ * cache [Voice] like
+ * `if([test]) { [VoiceCache]\[[Voice.fileName]] = [Voice] }`
+ */
+fun Voice.alsoCache(cache: VoiceCache, test: Boolean = true): Voice = also {
+    if(test){
+        cache[it.fileName] = it
+    }
+}
+

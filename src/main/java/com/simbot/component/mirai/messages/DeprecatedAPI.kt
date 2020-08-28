@@ -45,9 +45,9 @@ object DeprecatedAPI {
     //**************** MiraiGroupInfo ****************//
 
     /**
-     * [MiraiMemberJoinEvent.getOperatorQQ]
+     * [MiraiMemberJoinEvent.Invite.operatorId]
      */
-    val memberJoinOperatorQQ: String? by deprecated("GroupMemberIncrease" inv "getOperatorQQ")
+    val memberJoinInviteOperatorQQ: String? by deprecated("GroupMemberIncrease(Active)" inv "getOperatorQQ")
 
 
     /**

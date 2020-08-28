@@ -230,24 +230,8 @@ open class MiraiBotSender(
             }
 
 
-//            if(contact != null && contact is Group){
-//                contact.getOrNull(code) ?: run {
-//                    // 可能不是这个群里的人，开始缓存查询，查询不到缓存则会抛出异常
-//                    cacheMaps.contactCache[code, bot] ?: throw throw NoSuchElementException("friend $code")
-//                }
-//            }else{
-//                // 不是好友，开始扫描全群缓存，查询不到缓存则会抛出异常
-//                cacheMaps.contactCache[code, bot] ?: throw throw throw NoSuchElementException("friend $code")
-//            }
         }
 
-//        val to: Contact = try {
-//            bot.getFriend(code)
-//        }catch (fe: NoSuchElementException){
-//            // 不是好友
-//            // 如果当前contact是群消息，则尝试获取群员
-//
-//        }
         val result = senderRunner.run {
             to.sendMsg(msg, cacheMaps)
         }

@@ -272,7 +272,10 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     //region 群成员增加事件
     // 群成员新增
     bot.registerListenerAlways<MemberJoinEvent> {
-        MiraiMemberJoinEvent(this).onMsg(msgProcessor)
+        when(this){
+            is MemberJoinEvent.Active -> MiraiMemberJoinEvent.Active(this).onMsg(msgProcessor)
+            is MemberJoinEvent.Invite -> MiraiMemberJoinEvent.Invite(this).onMsg(msgProcessor)
+        }
     }
     // bot入群
 //    bot.registerListenerAlways<BotJoinGroupEvent> {

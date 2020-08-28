@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 
 /**
  *
- * 用于获取Bot等级的工具类
+ * 通过得到[Bot]的cookies信息以获取Bot的等级信息。
  *
  * Created by lcy on 2020/8/25.
  * @author lcy
@@ -15,7 +15,12 @@ import java.util.regex.Pattern
 object BotLevelUtil {
     private val levelPattern: Pattern = Pattern.compile("<em class=\"levelimg\">(\\d+)</em>")
     private const val VIP_URL = "https://vip.qq.com/client/level"
+
+    /**
+     * 获取不到的情况下使用的默认值
+     */
     private const val DEFAULT_VALUE = -1
+
     /**
      * 获取当前bot的等级。
      * @return [bot]的level. 如果获取不到/接口变更/cookie失效等，就会得到-1.

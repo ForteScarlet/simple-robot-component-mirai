@@ -17,6 +17,8 @@
  *
  */
 
+@file:Suppress("RedundantVisibilityModifier")
+
 package com.simbot.component.mirai.messages
 
 import com.forte.qqrobot.beans.messages.msgget.GroupAdminChange
@@ -26,45 +28,99 @@ import com.forte.qqrobot.beans.messages.types.GroupAdminChangeType
 import com.forte.qqrobot.beans.messages.types.IncreaseType
 import com.forte.qqrobot.beans.messages.types.ReduceType
 import net.mamoe.mirai.contact.MemberPermission
-import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.event.events.*
 
 
 //region 群成员增减事件
 
 
+/**
+ * 群成员增加事件的统一接口
+ * @see MiraiMemberJoinEvent and [Active][MiraiMemberJoinEvent.Active] [Invite][MiraiMemberJoinEvent.Invite]
+ * @see MiraiBotJoinEvent and [Active][MiraiBotJoinEvent.Active] [Invite][MiraiBotJoinEvent.Invite]
+ */
+interface MiraiGroupJoinEvent: GroupMemberIncrease {
+    fun isBotSelf(): Boolean
+    /** 事件本体 */
+    val leaveEvent: BotEvent
+    /** 离群类型 */
+    val increaseType: IncreaseType
+    /** 操作者ID */
+    val operatorId: String?
+}
+
+/**
+ * 群成员减少事件的统一接口
+ * @see MiraiMemberLeaveEvent and [Kick][MiraiMemberLeaveEvent.Kick] [Quit][MiraiMemberLeaveEvent.Quit]
+ * @see MiraiBotLeaveEvent and [Kick][MiraiBotLeaveEvent.Kick] [Active][MiraiBotLeaveEvent.Active]
+ */
+interface MiraiGroupLeaveEvent: GroupMemberReduce {
+    fun isBotSelf(): Boolean
+    /** 事件本体 */
+    val leaveEvent: BotEvent
+    /** 离群类型 */
+    val reduceType: ReduceType
+    /** 操作者ID */
+    val operatorId: String?
+}
+
 //region 群成员增加事件
+
 /**
  * 群成员增加事件
+ * @see MemberJoinEvent
  */
-open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoinEvent>(event), GroupMemberIncrease {
-
-    fun isBotSelf(): Boolean = event.member.id == event.bot.id
+sealed class MiraiMemberJoinEvent(event: MemberJoinEvent):
+        MiraiEventGet<MemberJoinEvent>(event), MiraiGroupJoinEvent {
+    private val _self = event.member.id == event.bot.id
+    override fun isBotSelf(): Boolean = _self
 
     /** 入群者的ID */
     private val newMemberId = event.member.id.toString()
-
     /** 群号 */
     private val groupId = event.group.id.toString()
 
     /** 入群类型 */
-    private val increaseType = event.toIncreaseType()
+    abstract override val increaseType: IncreaseType
+    /** 操作者 */
+    abstract override val operatorId: String?
+
+    override val leaveEvent: BotEvent
+        get() = this.event
 
     /** 被操作者的QQ号，即入群者  */
     override fun getBeOperatedQQ(): String = newMemberId
-
     /** 群号  */
     override fun getGroup(): String = groupId
-
-    /** 操作者的QQ号，似乎无法获取  */
-    @Deprecated("just null", ReplaceWith("null"))
-    override fun getOperatorQQ(): String? = DeprecatedAPI.memberJoinOperatorQQ
-
+    /** 操作者的QQ号. 可能为null  */
+    override fun getOperatorQQ(): String? = operatorId
     /** 获取类型  */
     override fun getType(): IncreaseType = increaseType
-
     override fun getCodeNumber(): Long = event.member.id
     override fun getGroupCodeNumber(): Long = event.group.id
+
+    /**
+     * 被邀请入群的
+     */
+    class Invite(event: MemberJoinEvent.Invite): MiraiMemberJoinEvent(event) {
+        /** 入群类型 */
+        override val increaseType: IncreaseType = IncreaseType.AGREE
+
+        /** 操作者. 无法获取，返回null */
+        override val operatorId: String? = DeprecatedAPI.memberJoinInviteOperatorQQ
+    }
+
+    /**
+     * 主动申请入群的
+     */
+    class Active(event: MemberJoinEvent.Active): MiraiMemberJoinEvent(event) {
+        /** 入群类型 */
+        override val increaseType: IncreaseType = IncreaseType.AGREE
+
+        /** 操作者 即入群者自己 */
+        override val operatorId: String = event.member.id.toString()
+    }
+
 
 }
 
@@ -73,8 +129,9 @@ open class MiraiMemberJoinEvent(event: MemberJoinEvent): MiraiEventGet<MemberJoi
  * 此事件也属于[群成员增加事件][GroupMemberIncrease]
  * 非bot触发的事件为[MiraiMemberJoinEvent]
  */
-open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGroupEvent>(event), GroupMemberIncrease {
-    fun isBotSelf(): Boolean = true
+open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
+        MiraiEventGet<BotJoinGroupEvent>(event), MiraiGroupJoinEvent {
+    override fun isBotSelf(): Boolean = true
 
     /** 入群者的ID */
     private val newMemberId = event.bot.id.toString()
@@ -83,9 +140,14 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
     /**
      * 入群类型
      * 暂时默认为主动同意
-     * todo 存在bug mirai预计`1.3.0`会修复
+     * 存在bug mirai预计`1.3.0`会修复
      */
-    private val increaseType = IncreaseType.AGREE
+    override val increaseType = IncreaseType.AGREE
+
+    override val leaveEvent: BotEvent
+        get() = this.event
+
+    override val operatorId: String? = null
 
     /** 被操作者的QQ号，即入群者  */
     override fun getBeOperatedQQ(): String = newMemberId
@@ -93,9 +155,8 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
     /** 群号  */
     override fun getGroup(): String = groupId
 
-    /** 操作者的QQ号，似乎无法获取  */
-    @Deprecated("just null", ReplaceWith("null"))
-    override fun getOperatorQQ(): String? = DeprecatedAPI.memberJoinOperatorQQ
+    /** 操作者的QQ号*/
+    override fun getOperatorQQ(): String? = null
 
     /** 获取类型  */
     override fun getType(): IncreaseType = increaseType
@@ -109,16 +170,24 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
      * 此事件也属于[群成员增加事件][GroupMemberIncrease]
      * 非bot触发的事件为[MiraiMemberJoinEvent]
      */
-    class Active(event: BotJoinGroupEvent.Active): MiraiEventGet<BotJoinGroupEvent.Active>(event), GroupMemberIncrease {
-        fun isBotSelf(): Boolean = true
+    class Active(event: BotJoinGroupEvent.Active):
+            MiraiEventGet<BotJoinGroupEvent.Active>(event), MiraiGroupJoinEvent {
+        override fun isBotSelf(): Boolean = true
 
         /** 入群者的ID */
         private val newMemberId = event.bot.id.toString()
         /** 群号 */
         private val groupId = event.group.id.toString()
 
+        override val increaseType = IncreaseType.AGREE
+
+        override val leaveEvent: BotEvent
+            get() = this.event
+
+        override val operatorId: String = newMemberId
+
         /** 获取类型  */
-        override fun getType(): IncreaseType = IncreaseType.AGREE
+        override fun getType(): IncreaseType = increaseType
 
         /** 群号  */
         override fun getGroup(): String = groupId
@@ -127,7 +196,7 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
         override fun getOperatorQQ(): String? = newMemberId
 
         /** 被操作者的QQ号，即入群者  */
-        override fun getBeOperatedQQ(): String = newMemberId
+        override fun getBeOperatedQQ(): String = operatorId
 
 
         override fun getCodeNumber(): Long = event.bot.id
@@ -138,8 +207,9 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
      * bot被动的被拉入某群
      * [BotJoinGroupEvent.Invite]
      */
-    class Invite(event: BotJoinGroupEvent.Invite): MiraiEventGet<BotJoinGroupEvent.Invite>(event), GroupMemberIncrease {
-        fun isBotSelf(): Boolean = true
+    class Invite(event: BotJoinGroupEvent.Invite):
+            MiraiEventGet<BotJoinGroupEvent.Invite>(event), MiraiGroupJoinEvent {
+        override fun isBotSelf(): Boolean = true
 
         /** 入群者的ID */
         private val newMemberId = event.bot.id.toString()
@@ -148,8 +218,13 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
 
         private val invitorId = event.invitor.id.toString()
 
+        override val increaseType = IncreaseType.INVITE
+        override val leaveEvent: BotEvent
+            get() = this.event
+        override val operatorId: String = newMemberId
+
         /** 获取类型  */
-        override fun getType(): IncreaseType = IncreaseType.AGREE
+        override fun getType(): IncreaseType = increaseType
 
         /** 群号  */
         override fun getGroup(): String = groupId
@@ -158,7 +233,7 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
         override fun getOperatorQQ(): String? = invitorId
 
         /** 被操作者的QQ号，即入群者，也就是bot自身  */
-        override fun getBeOperatedQQ(): String = newMemberId
+        override fun getBeOperatedQQ(): String = operatorId
 
 
         override fun getCodeNumber(): Long = event.bot.id
@@ -168,37 +243,32 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent): MiraiEventGet<BotJoinGro
 
     }
 
-
-
-
-/**
- * [MemberJoinEvent]转化为[IncreaseType]
- */
-fun MemberJoinEvent.toIncreaseType(): IncreaseType = when(this){
-    is MemberJoinEvent.Active -> IncreaseType.AGREE
-    is MemberJoinEvent.Invite -> IncreaseType.INVITE
-    else -> IncreaseType.AGREE
-}
-
-
 //endregion
 
 //region 群成员减少事件
+
 /**
  * 群成员减少事件
  */
-sealed class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<MemberLeaveEvent>(event), GroupMemberReduce {
+sealed class MiraiMemberLeaveEvent(event: MemberLeaveEvent):
+        MiraiEventGet<MemberLeaveEvent>(event),
+        MiraiGroupLeaveEvent {
+    private val _self: Boolean = event.member.id == event.bot.id
+    override fun isBotSelf(): Boolean = _self
     /** 离群者 */
     private val leaveId = event.member.id.toString()
     private val groupId = event.group.id.toString()
 
+    override val leaveEvent: GroupEvent
+        get() = this.event
+    
     override fun getCodeNumber(): Long = event.member.id
     override fun getGroupCodeNumber(): Long = event.group.id
 
     /** 类型 */
-    protected abstract val reduceType: ReduceType
+    abstract override val reduceType: ReduceType
     /** 操作者ID */
-    protected abstract val operatorId: String
+    abstract override val operatorId: String
 
     /** 被操作者的QQ号，即离群者  */
     override fun getBeOperatedQQ(): String = leaveId
@@ -238,18 +308,24 @@ sealed class MiraiMemberLeaveEvent(event: MemberLeaveEvent): MiraiEventGet<Membe
  * 群成员减少事件
  * bot离群
  */
-sealed class MiraiBotLeaveEvent(event: BotLeaveEvent): MiraiEventGet<BotLeaveEvent>(event), GroupMemberReduce {
+sealed class MiraiBotLeaveEvent(event: BotLeaveEvent):
+        MiraiEventGet<BotLeaveEvent>(event),
+        MiraiGroupLeaveEvent {
+    override fun isBotSelf(): Boolean = true
     /** 离群者 */
     private val leaveId = event.bot.id.toString()
     private val groupId = event.group.id.toString()
+
+    override val leaveEvent: BotEvent
+        get() = this.event
 
     override fun getCodeNumber(): Long = event.bot.id
     override fun getGroupCodeNumber(): Long = event.group.id
 
     /** 类型 */
-    protected abstract val reduceType: ReduceType
+    abstract override val reduceType: ReduceType
     /** 操作者ID */
-    protected abstract val operatorId: String
+    abstract override val operatorId: String
 
     /** 被操作者的QQ号，即离群者  */
     override fun getBeOperatedQQ(): String = leaveId
@@ -284,10 +360,6 @@ sealed class MiraiBotLeaveEvent(event: BotLeaveEvent): MiraiEventGet<BotLeaveEve
         override val operatorId: String = event.bot.id.toString()
     }
 }
-
-
-
-
 
 //endregion
 //endregion

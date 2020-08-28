@@ -89,6 +89,22 @@ abstract class MiraiBaseMsgGet<out E: BotEvent>(val event: E): MsgGet {
     /** 获取到的时间, 代表某一时间的秒值。一般情况下是秒值。如果类型不对请自行转化  */
     override fun getTime(): Long = onTime
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as MiraiBaseMsgGet<*>
+
+        if (event != other.event) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return event.hashCode()
+    }
+
+
 }
 
 /**
@@ -135,8 +151,6 @@ abstract class MiraiEventGet<out EE: BotEvent>(event: EE): MiraiBaseMsgGet<EE>(e
     override var eventMsg: String? = null
     protected val eventId = "$event#$onTime"
     override fun getId(): String = eventId
-//    override var botId: String = event.bot.id.toString()
-
 
 
     /**

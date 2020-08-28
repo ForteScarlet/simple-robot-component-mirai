@@ -21,9 +21,6 @@ package com.simbot.component.mirai.collections
 
 import com.simbot.component.mirai.ImageCacheConfiguration
 import com.simbot.component.mirai.LRUCacheMap
-import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
-import net.mamoe.mirai.event.events.MemberJoinRequestEvent
-import net.mamoe.mirai.event.events.NewFriendRequestEvent
 import net.mamoe.mirai.message.data.Image
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -59,7 +56,6 @@ open class ImageCache(
     private val cacheCheck: CacheCheck = CacheCheck(check)
 
     /** image缓存map */
-//    @JvmStatic
     private val imageCacheMap by lazy { LRUCacheMap<String, Image>(initialCapacity, max) }
 
 
@@ -75,7 +71,6 @@ open class ImageCache(
     }
 
     /** 记录一个map */
-//    @JvmStatic
     open operator fun set(key: String, image: Image): Image? {
         val putImage = imageCacheMap.putPlusMinutes(key, image, cacheTime)
         if(cacheCheck.clearCheck(counter.addAndGet(1))){
@@ -87,4 +82,12 @@ open class ImageCache(
     }
 }
 
-
+/**
+ * cache image like
+ * `if([test]) { [ImageCache]\[[Image.imageId]] = [Image] }`
+ */
+fun Image.alsoCache(cache: ImageCache, test: Boolean = true): Image = also {
+    if(test){
+        cache[it.imageId] = it
+    }
+}

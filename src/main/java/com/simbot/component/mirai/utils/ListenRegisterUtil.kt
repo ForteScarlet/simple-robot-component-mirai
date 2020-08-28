@@ -19,7 +19,7 @@ object ListenRegisterUtil {
     /**
      * 如果[msgGetTypeFactory]实例化错误则会存在此值
      */
-    private val cause: Throwable?
+    val cause: Throwable?
 
     /**
      * 尝试获取[MsgGetTypeFactory]实例。
@@ -38,7 +38,7 @@ object ListenRegisterUtil {
         get() = _msgGetTypeFactory ?: throw IllegalStateException("MsgGetTypeFactory was not instantiated successfully", cause)
 
 
-    val usable: Boolean get() = cause != null
+    val usable: Boolean get() = cause == null
 
     /**
      * 注册一个额外的[MsgGetTypes]并捕获异常

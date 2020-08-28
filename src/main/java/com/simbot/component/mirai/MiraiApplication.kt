@@ -119,7 +119,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 增加一个参数
      * 此资源配置将会在配置之后执行
      */
-    override fun resourceInit(config: MiraiConfiguration) {  }
+    override fun resourceInit(config: MiraiConfiguration) {
+        registerMiraiEvent()
+    }
 
     /**
      * 开发者实现的资源初始化
@@ -128,7 +130,6 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      */
     override fun resourceInit() {
         registerMiraiAtFilter()
-        registerMiraiEvent()
     }
 
     /**
@@ -138,7 +139,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         ListenerFilter.updateAtDetectionFunction { old ->
             Function { msg ->
                 if(msg is MiraiMessageGet<*>){
-                    AtDetection { msg.message.firstIsInstanceOrNull<At>()?.target == msg.event.bot.id }
+                    AtDetection {
+                        (msg.message.find { msg -> msg is At } as? At)?.target == msg.event.bot.id
+                    }
                 }else{
                     old.apply(msg)
                 }
@@ -174,6 +177,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
                 it.simpleName as CharSequence
             })
             QQLog.warning("mirai.event.register.unavailable", show)
+            QQLog.debug("mirai.event.register.unavailable", ListenRegisterUtil.cause, "")
             return
         }
         registeredSpecialListenerSuccess = true
@@ -201,7 +205,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
             if (it is MiraiMessageGet<*>) {
                 contact = it.contact
             }
-            MultipleMiraiBotSender(contact, it, botManager, cacheMaps, senderRunner, conf)
+            MultipleMiraiBotSender(contact, it, botManager, cacheMaps, senderRunner, registeredSpecialListenerSuccess, conf)
         }
     }
 
@@ -239,7 +243,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun getDefaultSenders(botManager: BotManager): DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender> {
         val cacheMaps = dependCenter.get(CacheMaps::class.java)
         val senderRunner = dependCenter.get(SenderRunner::class.java)
-        val defaultSender = DefaultMiraiBotSender(null, cacheMaps, senderRunner, botManager, conf)
+        val defaultSender = DefaultMiraiBotSender(null, cacheMaps, senderRunner, registeredSpecialListenerSuccess, botManager, conf)
         return DefaultSenders(defaultSender, defaultSender, defaultSender)
     }
 

@@ -15,18 +15,27 @@
  *
  */
 
-//@file:Suppress("unused")
+@file:Suppress("unused")
+@file:JvmName("msgParseUtils")
 
 package com.simbot.component.mirai.utils
 
 import cn.hutool.core.io.FileUtil
+import com.forte.qqrobot.log.QQLog
 import com.simbot.component.mirai.CQCodeParamNullPointerException
 import com.simbot.component.mirai.CQCodeParseHandlerRegisterException
 import com.simbot.component.mirai.CacheMaps
-import com.simbot.component.mirai.collections.alsoCache
+import com.simbot.component.mirai.collections.ImageCache
 import com.simbot.component.mirai.collections.toCacheKey
 import com.simplerobot.modules.utils.*
-import kotlinx.coroutines.*
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Friend
 import net.mamoe.mirai.contact.Group
@@ -36,10 +45,7 @@ import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadAsGroupVoice
 import net.mamoe.mirai.utils.toExternalImage
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
+import java.io.*
 import java.net.URL
 import java.util.function.BiFunction
 import kotlin.collections.set
@@ -64,15 +70,21 @@ suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageR
 //@ExperimentalCoroutinesApi
 fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 切割，解析CQ码并拼接最终结果
-    return KQCodeUtils.split(this).asSequence().map {
+    return KQCodeUtils.split(this).map {
         if (it.trim().startsWith("[CQ:")) {
             // 如果是CQ码，转化为KQCode并进行处理
             KQCode.of(it).toMessage(contact, cacheMaps)
         } else {
-            PlainText(CQDecoder.decodeText(it)!!).async(contact)
+            if(it.isBlank()){
+                EmptyMessageChain
+            } else {
+                PlainText(CQDecoder.decodeText(it)!!)
+            }.async(contact)
         }
-    }.map {
-        runBlocking { it.await() }.also { _ ->
+    }.asSequence().map {
+        runBlocking {
+            it.await()
+        }.also { _ ->
             it.invokeOnCompletion {
                 e -> e?.also { ex -> throw ex }
             }
@@ -122,28 +134,26 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
 
         //region image
-        "image" -> {
+        "image" -> contact.async {
+            QQLog.debug("start img...")
             // image 类型的CQ码，参数一般是file, destruct
-            val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
+            val file: String = this@toMessage["file"] ?: this@toMessage["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
 
-            val imageCache = cacheMaps.imageCache
+            val imageCache: ImageCache = cacheMaps.imageCache
 
             // 先查缓存
-            var image: Image? = imageCache[file]
+            val image: Image? = imageCache[file]
 
             if (image == null) {
                 // 是否缓存此上传的图片
-                val cache: Boolean = this["cache"] != "false"
-                image = if (file.startsWith("http")) {
-                    // 网络图片 阻塞上传
-                    runBlocking {
-                        val externalImage = URL(file).openStream().toExternalImage()
-                        contact.uploadImage(externalImage).also {
+                val cache: Boolean = this@toMessage["cache"] != "false"
+                return@async if (file.startsWith("http")) {
+                    // 网络图片
+                    contact.uploadImage(URL(file).toStream().toExternalImage()).also {
                             if (cache) {
                                 imageCache[file] = it
                             }
                         }
-                    }
                 } else {
                     var cacheKey = file
                     val localFile: File = FileUtil.file(file)
@@ -152,99 +162,140 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
                         val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
                         cacheKey = url
                         // 如果有，通过url发送
-                        URL(url).openStream().toExternalImage()
+                        URL(url).toStream().toExternalImage()
                     } else {
                         localFile.toExternalImage()
                     }
-//                    contact.uploadImage(externalImage).also { imageCache[url] = it }
-//                    uploadImage.also { imageCache[file] = it }
-
-                    // async def
-                    return contact.async {
-                        contact.uploadImage(externalImage).also {
+                    contact.uploadImage(externalImage).also {
                             if (cache) {
                                 imageCache[cacheKey] = it
                             }
-                        }.also {
+                        }.run {
                             if (this@toMessage["destruct"] == "true") {
-                                it.flash()
-                            } else {
-                                it
-                            }
+                                this.flash()
+                            } else this
                         }
-                    }
-
-//                    // 不是http开头的, 则认为是本地图片
-//                    runBlocking {
-//                        val localFile: File = FileUtil.file(file)
-//                        if(!localFile.exists()){
-//                            // 尝试看看有没有url参数, 如果没有则抛出异常
-//                            val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
-//                            // 如果有，通过url发送
-//                            val externalImage = URL(url).openStream().toExternalImage()
-//                            contact.uploadImage(externalImage).also { imageCache[url] = it }
-//                        }else{
-//                            val uploadImage = localFile.uploadAsImage(contact)
-//                            uploadImage.also { imageCache[file] = it }
-//                        }
-//                    }
                 }
             }
 
-//            // 先查询缓存中有没有这个东西
-//            // 本地文件
-//            imageCache[file] ?:
-
-            // file文件，可能是本地的或者网络的
-//            val image: Image =
             // 如果是闪照则转化
-            return if (this["destruct"] == "true") {
+            if (this@toMessage["destruct"] == "true") {
                 image.flash()
             } else {
                 image
-            }.async(contact)
+            }
         }
+
         //endregion
 
+//        //region image
+//        "image" -> {
+//            // image 类型的CQ码，参数一般是file, destruct
+//            val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
+//
+//            val imageCache = cacheMaps.imageCache
+//
+//            // 先查缓存
+//            var image: Image? = imageCache[file]
+//
+//            if (image == null) {
+//                // 是否缓存此上传的图片
+//                val cache: Boolean = this["cache"] != "false"
+//                if (file.startsWith("http")) {
+//                    // 网络图片 阻塞上传
+//                    return contact.async {
+////                        val externalImage = URL(file).openStream().toExternalImage()
+////                        val externalImage =
+//                        contact.uploadImage(URL(file).toStream().toExternalImage()).also {
+//                            if (cache) {
+//                                imageCache[file] = it
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    var cacheKey = file
+//                    val localFile: File = FileUtil.file(file)
+//                    val externalImage = if (!localFile.exists()) {
+//                        // 尝试看看有没有url参数, 如果没有则抛出异常
+//                        val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
+//                        cacheKey = url
+//                        // 如果有，通过url发送
+//                        contact.async { URL(url).toStream().toExternalImage() }
+//                    } else {
+//                        SimpleDefaultDeferred(localFile.toExternalImage())
+//                    }
+////                    contact.uploadImage(externalImage).also { imageCache[url] = it }
+////                    uploadImage.also { imageCache[file] = it }
+//
+//                    // async def
+//                    return contact.async {
+//                        contact.uploadImage(externalImage.await()).also {
+//                            if (cache) {
+//                                imageCache[cacheKey] = it
+//                            }
+//                        }.run {
+//                            if (this@toMessage["destruct"] == "true") {
+//                                this.flash()
+//                            } else this
+//                        }
+//                    }
+//                }
+//            }
+//
+////            // 先查询缓存中有没有这个东西
+////            // 本地文件
+////            imageCache[file] ?:
+//
+//            // file文件，可能是本地的或者网络的
+////            val image: Image =
+//            // 如果是闪照则转化
+//            return if (this["destruct"] == "true") {
+//                image.flash()
+//            } else {
+//                image
+//            }.async(contact)
+//        }
+//        //endregion
 
         //region record 语音
-        "voice", "record" -> {
+        "voice", "record" -> contact.async {
             // voice 类型的CQ码，参数一般是file
-            val file = this["file"] ?: this["voice"] ?: throw CQCodeParamNullPointerException("image", "file", "voice")
+            val file = this@toMessage["file"] ?: this@toMessage["voice"] ?: throw CQCodeParamNullPointerException("image", "file", "voice")
             // 先找缓存
 
             val voiceCache = cacheMaps.voiceCache
 
             // 截止到1.2.0, 只支持Group.uploadVoice
             // see https://github.com/mamoe/mirai/releases/tag/1.2.0
-            return voiceCache[file]?.async(contact) ?: if (contact is Group) {
-                val cache: Boolean = this["cache"] != "false"
+            // return @async
+            voiceCache[file] ?: if (contact is Group) {
+                val cache: Boolean = this@toMessage["cache"] != "false"
                 if (file.startsWith("http")) {
                     // 网络图片
-                    val stream = URL(file).openStream()
-                    contact.async {
+                    val stream = URL(file).toStream()
+//                    contact.async {
                         stream.uploadAsGroupVoice(contact).also {
                             if (cache) {
                                 voiceCache[file] = it
                                 voiceCache[it.fileName] = it
                             }
                         }
-                    }
+//                    }
                 } else {
                     // 本地文件
                     val voiceFile = File(file)
                     val stream = BufferedInputStream(FileInputStream(voiceFile))
-                    contact.async {
+//                    contact.async {
                         contact.uploadVoice(stream).also {
                             if (cache) {
                                 voiceCache[file] = it
                                 voiceCache[it.fileName] = it
                             }
                         }
-                    }
+//                    }
                 }
             } else {
-                EmptyMessageChain.async(contact)
+                EmptyMessageChain
             }
         }
         //endregion
@@ -466,6 +517,57 @@ private fun Message.async(coroutineScope: CoroutineScope): Deferred<Message> {
         else -> SimpleDefaultDeferred(this)
     }
 }
+
+
+/**
+ * ktor http client
+ */
+private val httpClient: HttpClient by lazy{ HttpClient() }
+
+/**
+ * 通过http网络链接得到一个输入流。
+ * 通常认为是一个http-get请求
+ */
+private suspend fun URL.toStream(): InputStream {
+    QQLog.debug("try connection to $this")
+    val response = httpClient.get<HttpResponse>(this)
+    val status = response.status
+    if(status.value < 300){
+        QQLog.debug("connection to $this success.")
+        // success
+        return response.content.toInputStream()
+    }else {
+        throw IllegalStateException("connection to '' failed (${status.value}): ${status.description}")
+    }
+
+//    val urlName = this.toString()
+//    var connection: HttpURLConnection = this.openConnection() as HttpURLConnection
+//    connection.connectTimeout = 10_000
+//    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
+//    while(true) {
+//        val responseCode = connection.responseCode
+//        if(responseCode == 302){
+//            val location = connection.getHeaderField("Location")
+//            connection = URL(location).openConnection() as HttpURLConnection
+//            connection.connectTimeout = 10_000
+//            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
+//            continue
+//        }else if(responseCode >= 300){
+//            val errStream = connection.errorStream
+//            val errText = BufferedReader(InputStreamReader(errStream)).use { it.readText() }
+//            throw IllegalStateException("http connection to $urlName failed($responseCode): $errText")
+//        }else {
+//            return connection.inputStream
+//        }
+//    }
+
+
+}
+
+
+
+
+
 
 /**
  * 转化函数

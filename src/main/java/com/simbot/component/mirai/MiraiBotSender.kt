@@ -431,6 +431,7 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
                                   private val botManager: BotManager,
                                   cacheMaps: CacheMaps,
                                   senderRunner: SenderRunner,
+                                  private val registeredSpecialListener: Boolean,
                                   private val conf: MiraiConfiguration): MiraiBotSender(null, contact, cacheMaps, senderRunner){
 
     /**
@@ -449,7 +450,7 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
             val info: BotInfo? = botManager.getBot(id)
             return if(info != null){
                 // 存在此信息，获取bot信息
-                val getBot = MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner).bot
+                val getBot = MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner, registeredSpecialListener).bot
                 _bot = getBot
                 getBot
             }else{
@@ -467,8 +468,9 @@ open class MultipleMiraiBotSender(contact: Contact? = null,
 open class DefaultMiraiBotSender(contact: Contact? = null,
                                  cacheMaps: CacheMaps,
                                  senderRunner: SenderRunner,
+                                 registeredSpecialListener: Boolean,
                                  botManager: BotManager, conf: MiraiConfiguration):
-        MultipleMiraiBotSender(contact, DefaultThisCode(botManager), botManager, cacheMaps, senderRunner, conf)
+        MultipleMiraiBotSender(contact, DefaultThisCode(botManager), botManager, cacheMaps, senderRunner, registeredSpecialListener, conf)
 
 
 

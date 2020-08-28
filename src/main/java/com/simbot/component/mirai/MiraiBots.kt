@@ -143,8 +143,9 @@ object MiraiBots {
     }
 
     fun closeAll(){
-        bots.forEach { it.value.close() }
+        val botCopy = bots.values.toTypedArray()
         bots.clear()
+        botCopy.forEach { it.close() }
     }
 
 

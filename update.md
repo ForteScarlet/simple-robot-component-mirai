@@ -16,7 +16,11 @@
 - 新增`群成员头衔变更`事件: `@Listen.ByName(MiraiEvents.memberSpecialTitleChangedEvent)`
 对应封装接口: `MemberSpecialTitleChanged`
 
+- 修复`AtDetection`.`test`只有在消息最前列at bot的时候才生效的问题
 
+- 优化网络图片、语音的发送机制，现在从网络上传(多个)图片/语音的时候效率会更高。
+
+- 优化网络图片、语音的发送机制，现在使用`ktor`的`HttpClient`库进行请求，不会出现因响应值为`302`重定向而导致无法发送图片的问题
 
 
 # 1.7.0-1.16

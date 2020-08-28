@@ -21,6 +21,9 @@
 
 package com.simbot.component.mirai.messages
 
+import com.forte.qqrobot.beans.messages.CodesAble
+import com.forte.qqrobot.beans.messages.NickOrRemark
+import com.forte.qqrobot.beans.messages.msgget.EventGet
 import com.forte.qqrobot.beans.messages.msgget.GroupAdminChange
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberIncrease
 import com.forte.qqrobot.beans.messages.msgget.GroupMemberReduce
@@ -28,6 +31,7 @@ import com.forte.qqrobot.beans.messages.types.GroupAdminChangeType
 import com.forte.qqrobot.beans.messages.types.IncreaseType
 import com.forte.qqrobot.beans.messages.types.ReduceType
 import net.mamoe.mirai.contact.MemberPermission
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.*
 
 
@@ -455,3 +459,223 @@ private fun BotGroupPermissionChangeEvent.toGroupAdminChangeType(): GroupAdminCh
         MemberPermission.ADMINISTRATOR.level) GroupAdminChangeType.BECOME_ADMIN else GroupAdminChangeType.CANCEL_ADMIN
 //endregion
 //endregion
+
+//region 群名称变更
+/**
+ * 群名称变更事件
+ * @see GroupNameChangeEvent
+ */
+interface GroupNameChanged: EventGet, CodesAble, NickOrRemark {
+    /**
+     * 变更前
+     */
+    val oldName: String
+    /**
+     * 变更后
+     */
+    val newName: String
+    /**
+     * 操作人Code
+     */
+    val operatorCode: String
+    /**
+     * 操作人CodeNumber
+     */
+    val operatorCodeNumber: Long
+}
+
+/**
+ * 群名称变更事件
+ * @see GroupNameChanged
+ * @see GroupNameChangeEvent
+ */
+open class MiraiGroupNameChangedEvent(event: GroupNameChangeEvent):
+        MiraiEventGet<GroupNameChangeEvent>(event),
+        GroupNameChanged
+{
+
+    private val groupId: String = event.group.id.toString()
+    private val codeId: String = event.operatorOrBot.id.toString()
+    /**
+     * 变更前
+     */
+    override val oldName: String get() = event.origin
+    /**
+     * 变更后
+     */
+    override val newName: String get() = event.new
+
+    /**
+     * 操作人Code
+     */
+    override val operatorCode: String get() = codeId
+
+    /**
+     * 操作人CodeNumber
+     */
+    override val operatorCodeNumber: Long get() = event.operatorOrBot.id
+
+    /**
+     * 获取QQ号信息。
+     */
+    override fun getQQCode(): String = codeId
+
+    /**
+     * 获取消息中存在的群号信息
+     */
+    override fun getGroupCode(): String = groupId
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = event.operatorOrBot.nameCard
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = event.operatorOrBot.nick
+    override fun getRemarkOrNickname(): String = event.operatorOrBot.nameCardOrNick
+
+    override fun getQQCodeNumber(): Long = event.bot.id
+    override fun getGroupCodeNumber(): Long = event.group.id
+
+    override fun getQQHeadUrl(): String = event.operatorOrBot.avatarUrl
+    override fun getGroupHeadUrl(): String = event.group.avatarUrl
+}
+//endregion
+
+
+//region 群成员昵称变更
+/**
+ * 群员的群昵称变更事件
+ * @see MemberCardChangeEvent
+ */
+interface MemberRemarkChanged: EventGet, CodesAble, NickOrRemark {
+    val oldRemark: String
+    val newRemark: String
+}
+
+
+
+/**
+ * 群员的群昵称变更事件
+ * @see MemberRemarkChanged
+ * @see MemberCardChangeEvent
+ */
+open class MiraiMemberRemarkChangedEvent(event: MemberCardChangeEvent):
+        MiraiEventGet<MemberCardChangeEvent>(event),
+        MemberRemarkChanged
+{
+
+    private val groupId: String = event.group.id.toString()
+    private val codeId: String = event.member.id.toString()
+    /**
+     * 变更前
+     */
+    override val oldRemark: String get() = event.origin
+    /**
+     * 变更后
+     */
+    override val newRemark: String get() = event.new
+
+    /**
+     * 获取QQ号信息。
+     */
+    override fun getQQCode(): String = codeId
+
+    /**
+     * 获取消息中存在的群号信息
+     */
+    override fun getGroupCode(): String = groupId
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = event.member.nameCard
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = event.member.nick
+    override fun getRemarkOrNickname(): String = event.member.nameCardOrNick
+
+    override fun getQQCodeNumber(): Long = event.bot.id
+    override fun getGroupCodeNumber(): Long = event.group.id
+
+    override fun getQQHeadUrl(): String = event.member.avatarUrl
+    override fun getGroupHeadUrl(): String = event.group.avatarUrl
+}
+//endregion
+
+
+/**
+ * 群成员头衔变更事件
+ * @see MemberSpecialTitleChangeEvent
+ */
+interface MemberSpecialTitleChanged: EventGet, CodesAble, NickOrRemark {
+    val oldSpecialTitle: String
+    val newSpecialTitle: String
+
+    // -- 操作者 可能是bot, 可能是成员自己 --
+
+    val operatorCode: String
+    val operatorCodeNumber: Long
+}
+
+
+
+
+/**
+ * 群员的群头衔变更事件
+ * @see MemberSpecialTitleChanged
+ * @see MemberSpecialTitleChangeEvent
+ */
+open class MiraiMemberSpecialTitleChangedEvent(event: MemberSpecialTitleChangeEvent):
+        MiraiEventGet<MemberSpecialTitleChangeEvent>(event),
+        MemberSpecialTitleChanged
+{
+
+    private val groupId: String = event.group.id.toString()
+    private val codeId: String = event.member.id.toString()
+    private val operatorId: String = event.operatorOrBot.id.toString()
+    /**
+     * 变更前
+     */
+    override val oldSpecialTitle: String get() = event.origin
+    /**
+     * 变更后
+     */
+    override val newSpecialTitle: String get() = event.new
+
+    override val operatorCode: String = operatorId
+
+    override val operatorCodeNumber: Long
+        get() = event.operatorOrBot.id
+
+    /**
+     * 获取QQ号信息。
+     */
+    override fun getQQCode(): String = codeId
+
+    /**
+     * 获取消息中存在的群号信息
+     */
+    override fun getGroupCode(): String = groupId
+    /**
+     * 获取备注信息，例如群备注，或者好友备注。
+     * @return 备注信息
+     */
+    override fun getRemark(): String = event.member.nameCard
+    /**
+     * 可以获取昵称
+     * @return nickname
+     */
+    override fun getNickname(): String = event.member.nick
+    override fun getRemarkOrNickname(): String = event.member.nameCardOrNick
+
+    override fun getQQCodeNumber(): Long = event.bot.id
+    override fun getGroupCodeNumber(): Long = event.group.id
+
+    override fun getQQHeadUrl(): String = event.member.avatarUrl
+    override fun getGroupHeadUrl(): String = event.group.avatarUrl
+}

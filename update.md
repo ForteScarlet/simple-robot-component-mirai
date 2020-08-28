@@ -7,6 +7,14 @@
 - 新增`好友输入状态变更`事件: `@Listen.ByName(MiraiEvents.friendInputStatusChangedEvent)`
 对应封装接口: `FriendInputStatusChanged`
 
+- 新增`群名称变更`事件: `@Listen.ByName(MiraiEvents.groupNameChangedEvent)`
+对应封装接口: `GroupNameChanged`
+
+- 新增`群员备注变更`事件: `@Listen.ByName(MiraiEvents.memberRemarkChangedEvent)`
+对应封装接口: `MemberRemarkChanged`
+
+- 新增`群成员头衔变更`事件: `@Listen.ByName(MiraiEvents.memberSpecialTitleChangedEvent)`
+对应封装接口: `MemberSpecialTitleChanged`
 
 
 

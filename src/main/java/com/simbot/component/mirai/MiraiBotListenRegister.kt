@@ -195,7 +195,7 @@ private suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent, ca
  * 注册监听
  *
  */
-internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps) {
+internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, specialListen: Boolean = false) {
     val bot = this.bot
 
     //region 消息监听相关事件
@@ -367,7 +367,7 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
         MiraiGroupMuteAllEvent(this).onMsg(msgProcessor)
     }
     //endregion
-    //endregion
+
 
     //region 好友删除事件
     bot.registerListenerAlways<FriendDeleteEvent> {
@@ -375,41 +375,65 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     }
     //endregion
 
-    //region 好友更换头像事件
-    bot.registerListenerAlways<FriendAvatarChangedEvent> {
-        MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
+    // bot特殊事件
+    if(specialListen){
+
+        //region 好友更换头像事件
+        bot.registerListenerAlways<FriendAvatarChangedEvent> {
+            MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+
+        //region 好友更换昵称事件
+        bot.registerListenerAlways<FriendNickChangedEvent> {
+            MiraiFriendNicknameChangedEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+
+        //region 好友输入状态变更事件
+        bot.registerListenerAlways<FriendInputStatusChangedEvent> {
+            MiraiFriendInputStatusChangedEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+
+        //region bot离线事件
+        bot.registerListenerAlways<BotOfflineEvent> {
+            MiraiBotOfflineEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+        //region bot重新登录事件
+        bot.registerListenerAlways<BotReloginEvent> {
+            MiraiBotReloginEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+
+        //region 群名称变更事件
+        bot.registerListenerAlways<GroupNameChangeEvent> {
+            MiraiGroupNameChangedEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+        //region 群友群备注变更事件
+        bot.registerListenerAlways<MemberCardChangeEvent> {
+            MiraiMemberRemarkChangedEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+
+        //region 群友群头衔变更事件
+        bot.registerListenerAlways<MemberSpecialTitleChangeEvent> {
+            MiraiMemberSpecialTitleChangedEvent(this).onMsg(msgProcessor)
+        }
+        //endregion
+
+
+
     }
-    //endregion
-
-
-    //region 好友更换昵称事件
-    bot.registerListenerAlways<FriendNickChangedEvent> {
-        MiraiFriendNicknameChangedEvent(this).onMsg(msgProcessor)
-    }
-    //endregion
-
-
-    //region 好友输入状态变更事件
-    bot.registerListenerAlways<FriendInputStatusChangedEvent> {
-        MiraiFriendInputStatusChangedEvent(this).onMsg(msgProcessor)
-    }
-    //endregion
-
-
-
-    //region bot离线事件
-    bot.registerListenerAlways<BotOfflineEvent> {
-        MiraiBotOfflineEvent(this).onMsg(msgProcessor)
-    }
-    //endregion
-
-    //region bot重新登录事件
-    bot.registerListenerAlways<BotReloginEvent> {
-        MiraiBotReloginEvent(this).onMsg(msgProcessor)
-    }
-    //endregion
-
-
 
 
 }

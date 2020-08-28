@@ -59,25 +59,26 @@ object MiraiBots {
     }
 
     /** 增加一个bot，如果此bot已经存在则会抛出异常 */
-    fun set(id: String, bot: MiraiBotInfo, cacheMaps: CacheMaps){
+    fun set(id: String, bot: MiraiBotInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
         bots[id] = bot
         // 注册或等待
-        registerOrWait(bot, cacheMaps)
+        registerOrWait(bot, cacheMaps, registeredSpecialListener)
     }
 
     /**
      * 尝试获取一个bot，如果获取不到则会尝试构建一个。
      * 需要在从BotManager中验证存在后在通过此获取，否则BotManager中可能会缺失
      */
-    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration, cacheMaps: CacheMaps, senderRunner: SenderRunner): MiraiBotInfo {
+    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration,
+            cacheMaps: CacheMaps, senderRunner: SenderRunner, registeredSpecialListener: Boolean): MiraiBotInfo {
         val id = info.botCode
         // 构建一个，构建失败会抛出异常
         val miraiBotInfo = bots[id]
         return if(miraiBotInfo == null){
             // 不存在，尝试获取
-            val newBotInfo = MiraiBotInfo(info, botConfiguration(id), cacheMaps, senderRunner)
+            val newBotInfo = MiraiBotInfo(info, botConfiguration(id), cacheMaps, senderRunner, registeredSpecialListener)
             // 注册/等待并返回
-            registerOrWait(newBotInfo, cacheMaps)
+            registerOrWait(newBotInfo, cacheMaps, registeredSpecialListener)
             newBotInfo
         }else{
             miraiBotInfo
@@ -85,10 +86,10 @@ object MiraiBots {
     }
 
     /** 注册监听或等待 */
-    private fun registerOrWait(info: MiraiBotInfo, cacheMaps: CacheMaps){
+    private fun registerOrWait(info: MiraiBotInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
         if(started()){
             // 启动了监听，注册
-            registerListen(info, cacheMaps)
+            registerListen(info, cacheMaps, registeredSpecialListener)
         }else{
             noListenBots[info.botCode] = info
         }
@@ -107,12 +108,12 @@ object MiraiBots {
 
 
     /** 启用监听 */
-    fun startListen(msgProcessor: MsgProcessor, cacheMaps: CacheMaps){
+    fun startListen(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
         // 初始化
         this.msgProcessor = msgProcessor
         // 等待区注册监听
         noListenBots.forEach{
-            registerListen(it.value, cacheMaps)
+            registerListen(it.value, cacheMaps, registeredSpecialListener)
             val bot = it.value.bot
             val logger = bot.logger
             if(logger is MiraiLoggerWithSwitch){
@@ -128,8 +129,8 @@ object MiraiBots {
     }
 
     /** 注册监听 */
-    private fun registerListen(info: MiraiBotInfo, cacheMaps: CacheMaps){
-        info.register(msgProcessor, cacheMaps)
+    private fun registerListen(info: MiraiBotInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
+        info.register(msgProcessor, cacheMaps, registeredSpecialListener)
     }
 
     /** 等待所有bot下线 */
@@ -161,12 +162,15 @@ class MiraiBotInfo(private val id: String,
                    private val pwd: String,
                    private val botConfiguration: BotConfiguration,
                    cacheMaps: CacheMaps,
-                   senderRunner: SenderRunner
+                   senderRunner: SenderRunner,
+                   registeredSpecialListener: Boolean
 ): BotInfo {
 
     /** 使用info的构造 */
     constructor(botInfo: BotInfo, botConfiguration: BotConfiguration,
-                cacheMaps: CacheMaps, senderRunner: SenderRunner): this(botInfo.botCode, botInfo.path, botConfiguration, cacheMaps, senderRunner)
+                cacheMaps: CacheMaps, senderRunner: SenderRunner,
+                registeredSpecialListener: Boolean):
+            this(botInfo.botCode, botInfo.path, botConfiguration, cacheMaps, senderRunner, registeredSpecialListener)
 
     /** bot信息 */
     val bot: Bot
@@ -185,7 +189,7 @@ class MiraiBotInfo(private val id: String,
         // 输入账号密码，填入配置，阻塞登录
         bot = runBlocking { Bot(id.toLong(), pwd, botConfiguration).alsoLogin() }
         // 将自己记录在MiraiBots中
-        MiraiBots.set(id, this, cacheMaps)
+        MiraiBots.set(id, this, cacheMaps, registeredSpecialListener)
         // bot sender
         botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))
 

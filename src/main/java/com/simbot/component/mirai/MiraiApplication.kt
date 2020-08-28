@@ -101,6 +101,11 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     private val config: MiraiConfiguration = MiraiConfiguration()
 
     /**
+     * 是否注册额外监听成功
+     */
+    private var registeredSpecialListenerSuccess: Boolean = false
+
+    /**
      * 开发者实现的获取Config对象实例的方法
      * 此方法将会最先被执行，并会将值保存，使用时可使用[.getConf] 方法获取
      */
@@ -144,6 +149,11 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 注册mirai可提供的额外事件
      */
     private fun registerMiraiEvent(){
+        if(!ListenRegisterUtil.usable){
+            return
+        }
+        registeredSpecialListenerSuccess = true
+
         // 头像变更事件
         ListenRegisterUtil.registerListen(MiraiEvents.friendAvatarChangedEvent, FriendAvatarChanged::class)
 
@@ -153,14 +163,20 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         // 输入状态变更事件
         ListenRegisterUtil.registerListen(MiraiEvents.friendInputStatusChangedEvent, FriendInputStatusChanged::class)
 
-
         // bot离线事件
         ListenRegisterUtil.registerListen(MiraiEvents.botOfflineEvent, BotOffline::class)
 
         // bot重新登录事件
         ListenRegisterUtil.registerListen(MiraiEvents.botReloginEvent, BotRelogin::class)
 
+        // 群名称变更事件
+        ListenRegisterUtil.registerListen(MiraiEvents.groupNameChangedEvent, GroupNameChanged::class)
 
+        // 群员群昵称变更事件
+        ListenRegisterUtil.registerListen(MiraiEvents.memberRemarkChangedEvent, MemberRemarkChanged::class)
+
+        // 群员群头衔变更事件
+        ListenRegisterUtil.registerListen(MiraiEvents.memberSpecialTitleChangedEvent, MemberSpecialTitleChanged::class)
 
     }
 
@@ -233,7 +249,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun runServer(dependCenter: DependCenter, manager: ListenerManager, msgProcessor: MsgProcessor, msgParser: MsgParser): String {
         val cacheMaps = dependCenter.get(CacheMaps::class.java)
         // 启动服务，即注册监听
-        MiraiBots.startListen(msgProcessor, cacheMaps)
+        MiraiBots.startListen(msgProcessor, cacheMaps, registeredSpecialListenerSuccess)
 
         if(config.autoRelogin) {
             // 如果要自动重启，此处注册自动重启事件
@@ -281,7 +297,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         // 如果验证失败，会抛出异常的
         try {
             QQLog.debug("验证账号$code...")
-            return MiraiBotInfo(code, info.path, conf.botConfiguration(code), cacheMaps, senderRunner)
+            return MiraiBotInfo(code, info.path, conf.botConfiguration(code), cacheMaps, senderRunner, registeredSpecialListenerSuccess)
         } catch (e: Exception) {
             throw BotVerifyException("failed", e, code, e.localizedMessage)
         }

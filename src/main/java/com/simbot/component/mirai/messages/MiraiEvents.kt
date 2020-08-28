@@ -71,6 +71,31 @@ object MiraiEvents {
      * @see MiraiBotReloginEvent
      */
     const val botReloginEvent: String = "BOT_RELOGIN_EVENT"
+
+
+    /**
+     * 群名称变更事件
+     * @since 1.8.0-1.16
+     * @see GroupNameChanged
+     * @see MiraiGroupNameChangedEvent
+     */
+    const val groupNameChangedEvent: String = "GROUP_NAME_CHANGED_EVENT"
+
+    /**
+     * 群员备注变更事件
+     * @since 1.8.0-1.16
+     * @see MemberRemarkChanged
+     * @see MiraiMemberRemarkChangedEvent
+     */
+    const val memberRemarkChangedEvent: String = "MEMBER_CARD_CHANGED_EVENT"
+
+    /**
+     * 群成员头衔变更事件
+     * @since 1.8.0-1.16
+     * @see MemberSpecialTitleChanged
+     * @see MiraiMemberRemarkChangedEvent
+     */
+    const val memberSpecialTitleChangedEvent: String = "MEMBER_SPECIAL_TITLE_CHANGED_EVENT"
 }
 
 /*

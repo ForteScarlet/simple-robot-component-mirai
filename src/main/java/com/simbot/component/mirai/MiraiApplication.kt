@@ -31,15 +31,13 @@ import com.forte.qqrobot.sender.senderlist.RootSenderList
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.ListenRegisterUtil
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
+import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotOfflineEvent
 import net.mamoe.mirai.event.subscribeAlways
 import net.mamoe.mirai.message.data.At
-import net.mamoe.mirai.message.data.firstIsInstanceOrNull
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import kotlin.reflect.KClass
@@ -85,6 +83,7 @@ interface MiraiApp: Application<MiraiConfiguration> {
  * @author ForteScarlet <\[email]ForteScarlet@163.com>
  * @since JDK1.8
  **/
+@Suppress("jol")
 class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
 
     private lateinit var botThread: Thread;
@@ -108,7 +107,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
 
     /**
      * 开发者实现的获取Config对象实例的方法
-     * 此方法将会最先被执行，并会将值保存，使用时可使用[.getConf] 方法获取
+     * 此方法将会最先被执行，并会将值保存，使用时可使用[getConf] 方法获取
      */
     override fun getConfiguration(): MiraiConfiguration = config
 
@@ -129,6 +128,10 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 将会在用户配置之前执行
      */
     override fun resourceInit() {
+        // add shutdown hook for close.
+        Runtime.getRuntime().addShutdownHook(Thread{
+            this.close()
+        })
         registerMiraiAtFilter()
     }
 
@@ -263,15 +266,13 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
             // 如果要自动重启，此处注册自动重启事件
             MiraiBots.forEach {
                 _, info ->
-                val id = info.bot.id
+                val id: Long = info.bot.id
                 // 注册被动下线事件
-                info.bot.subscribeAlways<BotOfflineEvent.Dropped> {
+                info.bot.subscribeAlways<BotOfflineEvent.Dropped>(priority = Listener.EventPriority.HIGHEST) {
                     if(this.bot.id == id && !isClosed){
                         QQLog.debug("mirai.relogin.off", this.cause, id)
-                        GlobalScope.launch {
-                            bot.login()
-                            QQLog.debug("mirai.relogin.on")
-                        }
+                        bot.login()
+                        QQLog.debug("mirai.relogin.on")
                     }
                 }
             }
@@ -323,12 +324,21 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         // join 10 seconds
         QQLog.info("mirai.bot.thread.shutdown")
         // 等待1分钟
-        botThread.join(TimeUnit.MINUTES.toMillis(1))
+        botThread.join(TimeUnit.SECONDS.toMillis(30))
         if(botThread.isAlive){
             QQLog.warning("mirai.bot.thread.mandatoryTermination")
-            // 强制终止
-            @Suppress("DEPRECATION")
-            botThread.stop()
+            try{
+                // 强制终止
+                @Suppress("DEPRECATION")
+                botThread.stop()
+            }catch(e: Exception){
+                QQLog.error(e)
+            }
+        }
+        try{
+            botThread.interrupt()
+        }catch(e: Exception){
+            QQLog.error(e)
         }
     }
 

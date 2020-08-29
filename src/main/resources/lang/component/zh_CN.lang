@@ -33,3 +33,6 @@ mirai.bot.thread.mandatoryTermination=尝试强制终止mirai存活线程, 如�
 
 mirai.http.connection.try=尝试连接到 {0}
 mirai.http.connection.success=连接到 {0} 成功
+
+mirai.bot.close=执行bot.close() {0}({1})
+mirai.bot.close.finish=执行bot.close()结束. {0}({1})

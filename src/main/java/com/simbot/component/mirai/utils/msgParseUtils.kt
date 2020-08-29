@@ -661,28 +661,18 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
             voiceKq
         }
 
-        // image, 追加file、url
+        // 普通image
         is Image -> {
-            // 缓存image
-            val imageId = this.imageId
-            cacheMaps.imageCache[imageId] = this
-            val imageMq = MQCodeUtils.toMqCode(this.toString())
-            val imageKq = imageMq.toKQCode().mutable()
-            imageKq["file"] = imageId
-            imageKq["url"] = runBlocking { queryUrl() }
-            if (this is FlashImage) {
-                imageKq["destruct"] = "true"
-            }
-            imageKq
+            this.toKq(cacheMaps.imageCache, false)
+        }
+
+        // 闪照
+        is FlashImage -> {
+            this.image.toKq(cacheMaps.imageCache, true)
         }
 
         is At -> {
             KQCodeUtils.toKq("at", "qq" to this.target, "display" to this.display)
-//                val atMq = MQCodeUtils.toMqCode(this.toString())
-//                val atKq = atMq.toKQCode().mutable()
-//                atKq["display"] = this.display
-//                atKq["target"] = this.target.toString()
-//                atKq
         }
 
         // at all
@@ -742,5 +732,23 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
         }
     }
     return kqCode.toString()
+}
+
+/**
+ * 将一个[Image]实例转化为[KQCode]. 如果[imageCache]不为null, 则会缓存.
+ * [flash]代表其是否为闪照.
+ */
+private fun Image.toKq(imageCache: ImageCache?, flash: Boolean): KQCode {
+    // 缓存image
+    val imageId = this.imageId
+    imageCache?.set(imageId, this)
+    val imageMq = MQCodeUtils.toMqCode(this.toString())
+    val imageKq = imageMq.toKQCode().mutable()
+    imageKq["file"] = imageId
+    imageKq["url"] = runBlocking { queryUrl() }
+    if (flash) {
+        imageKq["destruct"] = "true"
+    }
+    return imageKq
 }
 

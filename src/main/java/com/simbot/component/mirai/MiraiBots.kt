@@ -25,6 +25,8 @@ import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.HttpClientHelper
 import com.simbot.component.mirai.messages.MiraiLoginInfo
 import com.simbot.component.mirai.utils.BotLevelUtil
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.alsoLogin
@@ -145,7 +147,13 @@ object MiraiBots {
     fun closeAll(){
         val botCopy = bots.values.toTypedArray()
         bots.clear()
-        botCopy.forEach { it.close() }
+        botCopy.map {
+            val bot = it.bot
+            QQLog.debug("mirai.bot.close", bot.nick, bot.id)
+            bot.close()
+            QQLog.debug("mirai.bot.close.finish", bot.nick, bot.id)
+            bot
+        }
     }
 
 

@@ -208,6 +208,12 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
                 // 记录图片缓存
                 cacheMaps.imageCache[it.imageId] = it
             }
+            if(it is FlashImage){
+                // 记录闪照的图片缓存
+                with(it.image) {
+                    cacheMaps.imageCache[this.imageId] = this
+                }
+            }
             if(it is Voice){
                 // 记录语音缓存
                 cacheMaps.voiceCache[it.fileName] = it

@@ -46,6 +46,12 @@ object MiraiBots {
     /** 记录登录的bot */
     private val bots: MutableMap<String, MiraiBotInfo> = ConcurrentHashMap()
 
+    /** 判断[bots]中是否存在内容 */
+    val empty: Boolean get() = bots.isEmpty()
+
+    private var _closed = false
+    val closed: Boolean get() = _closed
+
     /** 消息处理器 */
     @Volatile
     private lateinit var msgProcessor: MsgProcessor
@@ -137,23 +143,27 @@ object MiraiBots {
 
     /** 等待所有bot下线 */
     fun joinAll(){
-        while(bots.isNotEmpty()){
-            bots.forEach {
-                it.value.join()
-            }
+        bots.map { it.value }.forEach {
+            // println("join --------------- ${it.bot} --------------")
+            it.join()
+            // println("join end ----------- ${it.bot} ----------")
         }
     }
+
 
     fun closeAll(){
         val botCopy = bots.values.toTypedArray()
         bots.clear()
         botCopy.map {
             val bot = it.bot
-            QQLog.debug("mirai.bot.close", bot.nick, bot.id)
-            bot.close()
-            QQLog.debug("mirai.bot.close.finish", bot.nick, bot.id)
-            bot
+            QQLog.debug("mirai.bot.close", bot.nick, bot.id.toString())
+            val async = GlobalScope.async { bot.closeAndJoin() }
+            QQLog.debug("mirai.bot.close.finish", bot.nick, bot.id.toString())
+            async
+        }.forEach {
+            runBlocking { it.await() }
         }
+        _closed = true
     }
 
 
@@ -211,6 +221,13 @@ class MiraiBotInfo(private val id: String,
         if(logger is MiraiLoggerWithSwitch){
             logger.disable()
         }
+
+        Runtime.getRuntime().addShutdownHook(Thread{
+            val id = bot.id
+            runBlocking { bot.closeAndJoin() }
+            MiraiBots.remove(id.toString())
+        })
+
     }
 
     /**

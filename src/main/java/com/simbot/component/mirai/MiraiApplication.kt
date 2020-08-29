@@ -86,7 +86,10 @@ interface MiraiApp: Application<MiraiConfiguration> {
 @Suppress("jol")
 class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
 
-    private lateinit var botThread: Thread;
+    private lateinit var botThread: Thread
+
+    @Volatile
+    private var doClosed: Boolean = false
 
     @Deprecated("just see getRootSenderFunction", ReplaceWith("null"))
     override fun getSetter(msgGet: MsgGet?, botManager: BotManager?): MiraiBotSender? = null
@@ -269,7 +272,8 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
                 val id: Long = info.bot.id
                 // 注册被动下线事件
                 info.bot.subscribeAlways<BotOfflineEvent.Dropped>(priority = Listener.EventPriority.HIGHEST) {
-                    if(this.bot.id == id && !isClosed){
+                    val app = this@MiraiApplication
+                    if(this.bot.id == id && !app.doClosed){
                         QQLog.debug("mirai.relogin.off", this.cause, id)
                         bot.login()
                         QQLog.debug("mirai.relogin.on")
@@ -281,7 +285,12 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
 
         // 在一条新线程中执行挂起，防止程序终止
         botThread = Thread({
-            MiraiBots.joinAll()
+            val app = this
+            while(!MiraiBots.empty && !app.isClosed){
+                // QQLog.debug("join all............................")
+                MiraiBots.joinAll()
+                // QQLog.debug("join all end.")
+            }
             QQLog.debug("bots all shutdown.")
         }, "Mirai-bot-join")
         botThread.start()
@@ -320,11 +329,14 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * 当关闭的时候执行的方法，会退出所有的bot，然后执行父类的close
      */
     override fun doClose() {
+        doClosed = true
         MiraiBots.closeAll()
+        val timeUnit = TimeUnit.SECONDS
+        val waitTime = 30L
         // join 10 seconds
-        QQLog.info("mirai.bot.thread.shutdown")
+        QQLog.info("mirai.bot.thread.shutdown", waitTime, timeUnit.name.toLowerCase())
         // 等待1分钟
-        botThread.join(TimeUnit.SECONDS.toMillis(30))
+        botThread.join(TimeUnit.SECONDS.toMillis(waitTime))
         if(botThread.isAlive){
             QQLog.warning("mirai.bot.thread.mandatoryTermination")
             try{

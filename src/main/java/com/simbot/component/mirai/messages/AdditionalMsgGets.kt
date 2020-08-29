@@ -2,7 +2,7 @@
  *
  * Copyright (c) 2020. ForteScarlet All rights reserved.
  * Project  component-mirai
- * File     CacheMaps.kt
+ * File     AdditionalMsgGets.kt
  *
  * You can contact the author through the following channels:
  *  github https://github.com/ForteScarlet
@@ -15,17 +15,6 @@
  *
  */
 
-package com.simbot.component.mirai
+package com.simbot.component.mirai.messages
 
-import com.simbot.component.mirai.collections.*
 
-/**
- * 记录缓存库的Data类
- */
-open class CacheMaps(
-        val recallCache: RecallCache,
-        val requestCache: RequestCache,
-        val imageCache: ImageCache,
-        val voiceCache: VoiceCache,
-        val contactCache: ContactCache
-)

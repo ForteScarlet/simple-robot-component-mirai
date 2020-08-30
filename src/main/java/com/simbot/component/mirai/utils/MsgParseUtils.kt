@@ -28,6 +28,7 @@ import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.collections.ImageCache
 import com.simbot.component.mirai.collections.toCacheKey
 import com.simplerobot.modules.utils.*
+import com.simplerobot.modules.utils.codes.MapKQCode
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -70,15 +71,15 @@ suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageR
 //@ExperimentalCoroutinesApi
 fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 切割，解析CQ码并拼接最终结果
-    return KQCodeUtils.split(this).map {
-        if (it.trim().startsWith("[CQ:")) {
+    return KQCodeUtils.split(this) {
+        if (this.trim().startsWith("[CQ:")) {
             // 如果是CQ码，转化为KQCode并进行处理
-            KQCode.of(it).toMessage(contact, cacheMaps)
+            KQCode.of(this).toMessage(contact, cacheMaps)
         } else {
-            if(it.isBlank()){
+            if(this.isBlank()){
                 EmptyMessageChain
             } else {
-                PlainText(CQDecoder.decodeText(it)!!)
+                PlainText(CQDecoder.decodeText(this)!!)
             }.async(contact)
         }
     }.asSequence().map {
@@ -652,12 +653,8 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
     val kqCode: KQCode = when (this) {
         // voice, 转化为record类型的cq码
         is Voice -> {
-            val voiceMq = MQCodeUtils.toMqCode(this.toString())
-            val voiceKq = voiceMq.toKQCode().mutable()
-            voiceKq.type = "record"
+            val voiceKq: MutableKQCode = MapKQCode.mutableByPair("record", "file" to this.fileName, "size" to this.fileSize.toString())
             this.url?.run { voiceKq["url"] = this }
-            voiceKq["file"] = this.fileName
-            voiceKq["size"] = this.fileSize.toString()
             voiceKq
         }
 
@@ -672,7 +669,7 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
         }
 
         is At -> {
-            KQCodeUtils.toKq("at", "qq" to this.target, "display" to this.display)
+            KQCodeUtils.toKq("at", true, "qq=${this.target}", "display=$this.display")
         }
 
         // at all
@@ -704,16 +701,18 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
         is RichMessage -> when (this) {
             // app
             is LightApp -> {
-                val code = MutableKQCode("app")
-                code["content"] = this.content
-                code
+                KQCodeUtils.toKq("app", true, "content=content")
+                // val code = KQCode.of("app")
+                // code["content"] = this.content
+                // code
             }
             // service message
             is ServiceMessage -> {
-                val code = MutableKQCode("service")
-                code["content"] = this.content
-                code["serviceId"] = this.serviceId.toString()
-                code
+                KQCodeUtils.toKq("service", true, "content=$content", "serviceId=$serviceId")
+                // val code = MutableKQCode("service")
+                // code["content"] = this.content
+                // code["serviceId"] = this.serviceId.toString()
+                // code
             }
             else -> {
                 val string = this.toString()

@@ -20,7 +20,7 @@
 
         <!-- simbot core -->
         <simple-robot-core.version>1.16.3</simple-robot-core.version>
-        <cqcodeUtils.version>1.7.0</cqcodeUtils.version>
+        <cqcodeUtils.version>1.8.0-BETA.2</cqcodeUtils.version>
 
         <!-- kt properties -->
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
@@ -45,11 +45,11 @@
             <version>${simple-robot-core.version}</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>-->
-<!--            <artifactId>mod-cqcodeutils</artifactId>-->
-<!--            <version>${cqcodeUtils.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.github.ForteScarlet.simple-robot-module</groupId>
+            <artifactId>mod-cqcodeutils</artifactId>
+            <version>${cqcodeUtils.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>cn.hutool</groupId>

@@ -15,6 +15,8 @@
  *
  */
 
+@file:JvmName("CacheCheckController")
+
 package com.simbot.component.mirai.collections
 
 

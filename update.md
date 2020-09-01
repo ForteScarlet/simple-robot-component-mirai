@@ -3,6 +3,8 @@
 - 更新`cqcodeutils`模组到`1.8.0-BETA.2`并进行兼容
 - 移除类`Xml`与`XmlCodeBuilder`
 
+### now
+- message缓存时的ID不再包含`time`
 
 
 

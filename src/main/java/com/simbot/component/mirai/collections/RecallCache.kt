@@ -117,6 +117,10 @@ open class RecallCache(
 
 }
 
-
-fun MessageSource.toCacheKey() = "${this.id}.${this.internalId}.${this.time}"
+/**
+ * 通过[MessageSource]得到一个消息的ID
+ * 1.8.2+之后不再将 `time`作为id的一部分
+ */
+fun MessageSource.toCacheKey() = "${this.id}.${this.internalId}"
+// fun MessageSource.toCacheKey() = "${this.id}.${this.internalId}.${this.time}"
 

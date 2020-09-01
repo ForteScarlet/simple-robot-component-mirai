@@ -87,7 +87,7 @@ abstract class MiraiBaseMsgGet<out E : BotEvent>(val event: E) : MsgGet {
     /** 获取消息的字体  */
     override fun getFont(): String? = null
 
-    /** 获取到的时间, 代表某一时间的秒值。一般情况下是秒值。如果类型不对请自行转化  */
+    /** 获取到的时间, 默认为当前毫秒值  */
     override fun getTime(): Long = onTime
 
     override fun equals(other: Any?): Boolean {

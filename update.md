@@ -5,6 +5,7 @@
 
 ### now
 - message缓存时的ID不再包含`time`
+- `GroupInfo.getAdminList`中现在包含了群主的账号信息.
 
 
 

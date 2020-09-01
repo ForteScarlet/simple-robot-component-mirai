@@ -94,10 +94,10 @@ open class MiraiGroupInfo(
                 .map { it.id.toString() to it.nameCardOrNick }.toMap().toMutableMap()
     }
 
-    /** 管理员列表 */
+    /** 管理者列表 */
     private val administratorList: Array<String> by lazy {
         baseGroup.members.asSequence()
-                .filter { it.isAdministrator() }
+                .filter { it.isOperator() }
                 .map { it.id.toString() }
                 .toList().toTypedArray()
     }
@@ -179,7 +179,7 @@ open class MiraiGroupInfo(
     /** 群号  */
     override fun getCode(): String = baseGroup.id.toString()
 
-    /** 获取群管理列表  */
+    /** 获取群管理与群主的列表  */
     override fun getAdminList(): Array<String> = administratorList
 
     /** 获取群标签  */

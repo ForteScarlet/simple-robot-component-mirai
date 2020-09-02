@@ -35,10 +35,10 @@ interface MiraiSpecialBotMsgGet<out T: BotEvent>: MsgGet, QQCodeAble, NicknameAb
     /** 可以得到mirai中的原生Bot对象 */
     val bot: Bot
     /** 可以得到mirai中当前事件的原生对象 */
-    val miraiEvent: T
+    val event: T
 
     @JvmDefault override fun getNickname(): String = bot.nick
-    @JvmDefault override fun getOriginalData(): String = miraiEvent.toString()
+    @JvmDefault override fun getOriginalData(): String = event.toString()
     @JvmDefault override fun getThisCode(): String = bot.id.toString()
     @JvmDefault override fun getQQCode(): String = thisCode
     @JvmDefault override fun getCodeNumber(): Long = bot.id
@@ -48,11 +48,11 @@ interface MiraiSpecialBotMsgGet<out T: BotEvent>: MsgGet, QQCodeAble, NicknameAb
 /**
  * 针对于[MiraiSpecialBotMsgGet]的抽象类
  */
-abstract class BaseMiraiSpecialBotMsgGet<out T: BotEvent>(override val miraiEvent: T): MiraiSpecialBotMsgGet<T> {
+abstract class BaseMiraiSpecialBotMsgGet<out T: BotEvent>(override val event: T): MiraiSpecialBotMsgGet<T> {
     private val eventTime = System.currentTimeMillis()
 
     override val bot: Bot
-        get() = miraiEvent.bot
+        get() = event.bot
 
     private var eventMsg: String? = null
 
@@ -65,7 +65,7 @@ abstract class BaseMiraiSpecialBotMsgGet<out T: BotEvent>(override val miraiEven
     override fun setThisCode(code: String?) { }
 
     /** 事件id。默认情况下此id不保证唯一性  */
-    override fun getId(): String = "$bot.$miraiEvent"
+    override fun getId(): String = "$bot.$event"
 
 
     /** 获取消息的字体  */

@@ -58,11 +58,11 @@ val Member.powerType: PowerType get() = this.permission.powerType
  * mirai bot信息
  */
 open class MiraiLoginInfo(
-        bot: Bot,
+        private val bot: Bot,
         level: Int = -1
 ) : LoginInfo {
-    private val selfId: Long = bot.id
-    private val selfNick: String = bot.nick
+    private val selfId: Long get() = bot.id
+    private val selfNick: String get() = bot.nick
     private val selfLevel: Int = level
     private val botString: String = bot.toString()
 
@@ -82,12 +82,15 @@ open class MiraiGroupInfo(
         val baseGroup: Group
 ) : GroupInfo, com.forte.qqrobot.beans.messages.result.inner.Group {
 
-    private val groupName: String = baseGroup.name
-    private val entranceAnnouncement: String = baseGroup.settings.entranceAnnouncement
-    private val members: ContactList<Member> = baseGroup.members
+    private val groupName: String get() = baseGroup.name
+    private val entranceAnnouncement: String get() = baseGroup.settings.entranceAnnouncement
+    private val members: ContactList<Member> get() = baseGroup.members
 
-    /** 群主与管理员的map */
-    private val managersIdAndNick: MutableMap<String, String> by lazy {
+    /**
+     * 群主与管理员的map
+     * 此值只会通过懒加载初始化一次, 且**不是**线程安全的
+     * */
+    private val managersIdAndNick: MutableMap<String, String> by lazy(LazyThreadSafetyMode.NONE) {
         baseGroup.members.asSequence()
                 .filter { it.isOperator() }
                 .sortedByDescending { it.permission.level }
@@ -95,7 +98,7 @@ open class MiraiGroupInfo(
     }
 
     /** 管理者列表 */
-    private val administratorList: Array<String> by lazy {
+    private val administratorList: Array<String> by lazy(LazyThreadSafetyMode.NONE) {
         baseGroup.members.asSequence()
                 .filter { it.isOperator() }
                 .map { it.id.toString() }
@@ -319,7 +322,7 @@ open class MiraiGroupMemberList(
 ): GroupMemberList {
 
     /** 群成员列表 */
-    private val groupMemberArray: Array<GroupMember> by lazy {
+    private val groupMemberArray: Array<GroupMember> by lazy(LazyThreadSafetyMode.NONE) {
         group.members.asSequence().map { MiraiGroupMember(it) as GroupMember }.toList().toTypedArray()
     }
 
@@ -474,6 +477,7 @@ open class MiraiGroupTopNote(val group: Group): GroupTopNote{
 
 /**
  * 群公告列表
+ * 只能获取入群公告
  */
 open class MiraiGroupNoteList(val group: Group): GroupNoteList {
 
@@ -499,7 +503,7 @@ open class MiraiGroupList(val groups: ContactList<Group>): GroupList {
     override fun getOriginalData(): String = toString()
     override fun toString(): String = groups.toString()
 
-    private val groupList: Array<com.forte.qqrobot.beans.messages.result.inner.Group> by lazy {
+    private val groupList: Array<com.forte.qqrobot.beans.messages.result.inner.Group> by lazy(LazyThreadSafetyMode.NONE) {
         groups.asSequence().map { MiraiGroupInfo(it) as com.forte.qqrobot.beans.messages.result.inner.Group }.toList().toTypedArray()
     }
 
@@ -516,14 +520,14 @@ open class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
     override fun getOriginalData(): String = toString()
     override fun toString(): String = friends.toString()
     /** 好友数组 */
-    val friendList: Array<com.forte.qqrobot.beans.messages.result.inner.Friend> by lazy {
+    val friendList: Array<com.forte.qqrobot.beans.messages.result.inner.Friend> by lazy(LazyThreadSafetyMode.NONE) {
         friends.asSequence().map { MiraiFriend(it) as com.forte.qqrobot.beans.messages.result.inner.Friend }.toList().toTypedArray()
     }
     /** 好友分组, 无分组信息 */
-    private val friendListMap: MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> by lazy { mutableMapOf("" to friendList) }
+    private val friendListMap: MutableMap<String, Array<com.forte.qqrobot.beans.messages.result.inner.Friend>> by lazy(LazyThreadSafetyMode.NONE) { mutableMapOf("" to friendList) }
 
     /** [getFirendList]的不支持警告 */
-    private val getFriendListWarning: Byte  by lazy<Byte> {
+    private val getFriendListWarning: Byte  by lazy<Byte>(LazyThreadSafetyMode.NONE) {
         /* logger */
         QQLog.warning("mirai.api.deprecated", "getFriendList(By group name)", "friend list without group")
         0
@@ -537,7 +541,7 @@ open class MiraiFriendList(val friends: ContactList<Friend>): FriendList {
     }
 
     /** [getFriendList]的不支持警告 */
-    private val getFriendListMapWarning: Byte by lazy<Byte> {
+    private val getFriendListMapWarning: Byte by lazy<Byte>(LazyThreadSafetyMode.NONE) {
         /* logger */
         QQLog.warning("mirai.api.deprecated", "getFriendListMap", "friend map that only an empty key \"\"")
         0
@@ -583,7 +587,7 @@ open class MiraiGroupBanList(group: Group): BanList {
     private val toString = group.toString()
 
     /** 禁言列表 */
-    private val banList: Array<BanInfo> by lazy {
+    private val banList: Array<BanInfo> by lazy(LazyThreadSafetyMode.NONE) {
         group.members.asSequence().filter { it.isMuted }.map { MiraiGroupBanInfo(it) as BanInfo }.toList().toTypedArray()
     }
 

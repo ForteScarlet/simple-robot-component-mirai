@@ -54,8 +54,7 @@ open class MiraiFriendAddEvent(event: FriendAddEvent): MiraiEventGet<FriendAddEv
  * @see FriendDeleteEvent
  */
 open class MiraiFriendDeleteEvent(event: FriendDeleteEvent): MiraiEventGet<FriendDeleteEvent>(event), FriendDelete {
-    private val friend = event.friend
-
+    private val friend get() = event.friend
     private val friendId = friend.id.toString()
 
     /**
@@ -101,7 +100,7 @@ interface FriendAvatarChanged: EventGet, QQCodeAble, NickOrRemark
  */
 open class MiraiFriendAvatarChangedEvent(event: FriendAvatarChangedEvent):
         MiraiEventGet<FriendAvatarChangedEvent>(event), FriendAvatarChanged {
-    private val friend = event.friend
+    private val friend get() = event.friend
 
     private val friendId = friend.id.toString()
 
@@ -153,10 +152,10 @@ open class MiraiFriendNicknameChangedEvent(event: FriendNickChangedEvent):
     private val friendId = event.friend.id.toString()
 
     /** 变更后的新昵称 */
-    override val newNickname: String = event.to
+    override val newNickname: String get() = event.to
 
     /** 变更前的旧昵称 */
-    override val oldNickname: String = event.from
+    override val oldNickname: String get() = event.from
 
     /**
      * 获取QQ号信息。

@@ -78,9 +78,9 @@ sealed class MiraiMemberJoinEvent(event: MemberJoinEvent):
     override fun isBotSelf(): Boolean = _self
 
     /** 入群者的ID */
-    private val newMemberId = event.member.id.toString()
+    private val newMemberId get() = event.member.id.toString()
     /** 群号 */
-    private val groupId = event.group.id.toString()
+    private val groupId  get()= event.group.id.toString()
 
     /** 入群类型 */
     abstract override val increaseType: IncreaseType

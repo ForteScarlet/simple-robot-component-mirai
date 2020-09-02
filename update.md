@@ -3,10 +3,11 @@
 - 更新`cqcodeutils`模组到`1.8.0-BETA.2`并进行兼容
 - 移除类`Xml`与`XmlCodeBuilder`
 
-### now
+### BETA.3
 - message缓存时的ID不再包含`time`
 - `GroupInfo.getAdminList`中现在包含了群主的账号信息.
 
+### now
 
 
 # 1.8.1-1.16

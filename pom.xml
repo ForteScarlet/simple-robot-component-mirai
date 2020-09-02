@@ -7,8 +7,8 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
 
-    <!-- 1.8.2-1.16-BETA.2 2020/8/30 -->
-    <version>1.8.2-1.16-BETA.2</version>
+    <!-- 1.8.2-1.16-BETA.3 2020/9/2 -->
+    <version>1.8.2-1.16-BETA.3</version>
 
     <properties>
         <hutool.versin>5.3.8</hutool.versin>
@@ -111,6 +111,7 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-serialization-core</artifactId>
             <version>${kotlinx-serialization.version}</version>
+            <optional>true</optional>
         </dependency>
 
         <!-- kt-test -->

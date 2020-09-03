@@ -15,6 +15,7 @@
 - 尝试调整对消息的CQ码转化的方式
 - 当发送的消息最终为`EmptyMessageChain`的时候，将不会实际发送消息，而是返回一个`null`
 - 微调发送私聊、群聊内部逻辑
+- 不再传递`mirai`与`kotlin`的`serialization`依赖
 
 
 ### BETA.6?

@@ -84,6 +84,7 @@
             <artifactId>mirai-serialization</artifactId>
             <version>${mirai-serialization.version}</version>
             <optional>true</optional>
+            <scope>test</scope>
         </dependency>
 
         <!-- kt -->
@@ -112,6 +113,7 @@
             <artifactId>kotlinx-serialization-core</artifactId>
             <version>${kotlinx-serialization.version}</version>
             <optional>true</optional>
+            <scope>test</scope>
         </dependency>
 
         <!-- kt-test -->

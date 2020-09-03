@@ -58,8 +58,16 @@ import kotlin.collections.set
  * 然后发送此消息
  */
 @Suppress("EXPERIMENTAL_API_USAGE")
-suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact> {
-    return this.sendMessage(msg.toWholeMessage(this, cacheMaps))
+suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact>? {
+    if(msg.isBlank()){
+        throw IllegalArgumentException("msg is empty.")
+    }
+    val message = msg.toWholeMessage(this, cacheMaps)
+    return if(message !is EmptyMessageChain){
+        this.sendMessage(message)
+    }else{
+        null
+    }
 }
 
 
@@ -68,7 +76,6 @@ suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageR
  * 一般解析其中的CQ码
  * 等核心支持CAT码中转后转化为CAT码
  */
-//@ExperimentalCoroutinesApi
 fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 切割，解析CQ码并拼接最终结果
     return KQCodeUtils.split(this) {
@@ -650,69 +657,67 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
     if (this is MessageSource) {
         return ""
     }
-    val kqCode: KQCode = when (this) {
+    val kqCode: String = when (this) {
         // voice, 转化为record类型的cq码
         is Voice -> {
             val voiceKq: MutableKQCode = MapKQCode.mutableByPair("record", "file" to this.fileName, "size" to this.fileSize.toString())
             this.url?.run { voiceKq["url"] = this }
-            voiceKq
+            voiceKq.toString()
         }
 
         // 普通image
         is Image -> {
-            this.toKq(cacheMaps.imageCache, false)
+            this.toCq(cacheMaps.imageCache, false)
         }
 
         // 闪照
         is FlashImage -> {
-            this.image.toKq(cacheMaps.imageCache, true)
+            this.image.toCq(cacheMaps.imageCache, true)
         }
 
         is At -> {
-            KQCodeUtils.toKq("at", true, "qq=${this.target}", "display=$this.display")
+            KQCodeUtils.toCq("at", true, "qq=$target", "display=$display")
         }
 
         // at all
-        is AtAll -> com.simplerobot.modules.utils.AtAll
+        is AtAll -> com.simplerobot.modules.utils.AtAll.toString()
 
 
         // face -> id
-        is Face -> MQCodeUtils.toMqCode(this.toString()).toKQCode()
+        is Face -> {
+            // MQCodeUtils.toMqCode(this.toString()).toKQCode()
+            KQCodeUtils.toCq("face", false, "id=$id")
+        }
 
         // poke message, get id & type
         is PokeMessage -> {
-            val pokeMq = MQCodeUtils.toMqCode(this.toString())
-            val pokeKq = pokeMq.toKQCode().mutable()
-            pokeKq["type"] = this.type.toString()
-            pokeKq["id"] = this.id.toString()
-            pokeKq
+            // val pokeMq = MQCodeUtils.toMqCode(this.toString())
+            // val pokeKq = pokeMq.toKQCode().mutable()
+            // pokeKq["type"] = this.type.toString()
+            // pokeKq["id"] = this.id.toString()
+            // pokeKq
+            KQCodeUtils.toCq("poke", false, "name=$name", "type=$type", "id=$id")
         }
 
         // 引用
         is QuoteReply -> {
-            val quoteMq = MQCodeUtils.toMqCode(this.toString())
-            val quoteKq = quoteMq.toKQCode().mutable()
-            quoteKq["id"] = this.source.toCacheKey()
-            quoteKq["qq"] = this.source.fromId.toString()
-            quoteKq
+            // val quoteMq = MQCodeUtils.toMqCode(this.toString())
+            // val quoteKq = quoteMq.toKQCode().mutable()
+            // quoteKq["id"] = this.source.toCacheKey()
+            // quoteKq["qq"] = this.source.fromId.toString()
+            // quoteKq
+            KQCodeUtils.toCq("quote", false, "id=${source.toCacheKey()}", "qq=${source.fromId}")
         }
 
         // 富文本
         is RichMessage -> when (this) {
             // app
             is LightApp -> {
-                KQCodeUtils.toKq("app", true, "content=content")
-                // val code = KQCode.of("app")
-                // code["content"] = this.content
-                // code
+                KQCodeUtils.toCq("app", true, "content=$content")
             }
             // service message
             is ServiceMessage -> {
-                KQCodeUtils.toKq("service", true, "content=$content", "serviceId=$serviceId")
-                // val code = MutableKQCode("service")
-                // code["content"] = this.content
-                // code["serviceId"] = this.serviceId.toString()
-                // code
+                KQCodeUtils.toCq("service", true, "content=$content", "serviceId=$serviceId")
             }
             else -> {
                 val string = this.toString()
@@ -722,6 +727,7 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
             }
         }
 
+
         // 其他东西，不做特殊处理
         else -> {
             val string = this.toString()
@@ -730,24 +736,32 @@ fun SingleMessage.toCqString(cacheMaps: CacheMaps): String {
             } else string
         }
     }
-    return kqCode.toString()
+    return kqCode
 }
 
 /**
  * 将一个[Image]实例转化为[KQCode]. 如果[imageCache]不为null, 则会缓存.
  * [flash]代表其是否为闪照.
  */
-private fun Image.toKq(imageCache: ImageCache?, flash: Boolean): KQCode {
+private fun Image.toCq(imageCache: ImageCache?, flash: Boolean): String {
     // 缓存image
     val imageId = this.imageId
     imageCache?.set(imageId, this)
-    val imageMq = MQCodeUtils.toMqCode(this.toString())
-    val imageKq = imageMq.toKQCode().mutable()
-    imageKq["file"] = imageId
-    imageKq["url"] = runBlocking { queryUrl() }
+
+    // builder
+
+    val builder = KQCodeUtils.getStringBuilder("image")
+        .key("file").value(imageId)
+        .key("url").value( runBlocking { queryUrl() } )
+
+    // val imageMq = MQCodeUtils.toMqCode(this.toString())
+    // val imageKq = imageMq.toKQCode().mutable()
+    // imageKq["file"] = imageId
+    // imageKq["url"] = runBlocking { queryUrl() }
     if (flash) {
-        imageKq["destruct"] = "true"
+        builder.key("destruct").value("true")
+        // imageKq["destruct"] = "true"
     }
-    return imageKq
+    return builder.build()
 }
 

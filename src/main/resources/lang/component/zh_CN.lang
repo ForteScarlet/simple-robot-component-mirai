@@ -36,3 +36,5 @@ mirai.http.connection.success=连接到 {0} 成功
 
 mirai.bot.close=执行bot.close() {0}({1})
 mirai.bot.close.finish=执行bot.close() 结束. {0}({1})
+
+mirai.bot.sender.nothing=无可发送内容。

@@ -18,7 +18,8 @@
 - 不再传递`mirai`与`kotlin`的`serialization`依赖
 
 
-### BETA.6? 
+### BETA.6
+- 当没有实际可发送的内容的时候，增加一个日志输出。
  
 
 

@@ -37,3 +37,6 @@ mirai.http.connection.success=Successfully connected to {0}
 mirai.bot.close=Execute bot.close() {0}({1})
 mirai.bot.close.finish=Execute bot.close() finished. {0}({1})
 
+
+mirai.bot.sender.nothing=Nothing to send.
+

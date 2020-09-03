@@ -16,7 +16,7 @@
  */
 
 @file:Suppress("unused")
-@file:JvmName("msgParseUtils")
+@file:JvmName("MsgParseUtils")
 
 package com.simbot.component.mirai.utils
 
@@ -66,13 +66,14 @@ suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageR
     return if(message !is EmptyMessageChain){
         this.sendMessage(message)
     }else{
+        QQLog.debug("mirai.bot.sender.nothing")
         null
     }
 }
 
 
 /**
- * 字符串解析为[Message]
+ * 字符串解析为 [Message]。
  * 一般解析其中的CQ码
  * 等核心支持CAT码中转后转化为CAT码
  */

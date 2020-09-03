@@ -17,7 +17,6 @@
 
 package com.simbot.component.mirai
 
-import com.simplerobot.modules.utils.KQCode
 //
 // /**
 //  * Xml [KQCode]实例

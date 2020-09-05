@@ -284,9 +284,6 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
         }
     }
     // bot入群
-//    bot.registerListenerAlways<BotJoinGroupEvent> {
-//        MiraiBotJoinEvent(this).onMsg(msgProcessor)
-//    }
     // bot主动同意入群
     bot.registerListenerAlways<BotJoinGroupEvent.Active> {
         MiraiBotJoinEvent.Active(this).onMsg(msgProcessor)

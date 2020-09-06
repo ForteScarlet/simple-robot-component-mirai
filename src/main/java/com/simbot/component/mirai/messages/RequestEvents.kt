@@ -31,9 +31,10 @@ import net.mamoe.mirai.event.events.NewFriendRequestEvent
 /**
  * bot被邀请入群事件
  */
-open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<BotInvitedJoinGroupRequestEvent>(eventEvent), GroupAddRequest {
-    private val invitorId = eventEvent.invitorId.toString()
-    private val groupId = eventEvent.groupId.toString()
+open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupRequestEvent, cacheMaps: CacheMaps): MiraiEventGet<BotInvitedJoinGroupRequestEvent>(eventEvent), GroupAddRequest {
+    private val invitorId: String = eventEvent.invitorId.toString()
+    private val groupId: String = eventEvent.groupId.toString()
+    private val flagId: String = cacheMaps.requestCache.cache(event)
 
     /** 获取QQ号  */
     override fun getQQ(): String = invitorId
@@ -46,7 +47,7 @@ open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupR
     override fun getId(): String = flag
 
     /** 获取标识  */
-    override fun getFlag(): String = cacheMaps.requestCache.cache(event)
+    override fun getFlag(): String = flagId
 
     /** 加群类型，此处为被邀请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.INVITE
@@ -57,9 +58,17 @@ open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupR
 /**
  * 加群申请
  */
-open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<MemberJoinRequestEvent>(eventEvent), GroupAddRequest {
-    private val fromId = event.fromId.toString()
-    private val groupId = event.groupId.toString()
+open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, cacheMaps: CacheMaps): MiraiEventGet<MemberJoinRequestEvent>(eventEvent), GroupAddRequest {
+    private val fromId: String = event.fromId.toString()
+    private val groupId: String = event.groupId.toString()
+    private val flagId: String = cacheMaps.requestCache.cache(event)
+
+    private var _eventMsg: String? = event.message
+    override var eventMsg: String?
+        get() = _eventMsg
+        set(value) {
+            _eventMsg = value
+        }
 
     /** 获取QQ号  */
     override fun getQQ(): String = fromId
@@ -72,7 +81,7 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, priva
     override fun getId(): String = flag
 
     /** 获取标识  */
-    override fun getFlag(): String = cacheMaps.requestCache.cache(event)
+    override fun getFlag(): String = flagId
 
     /** 加群类型，此处为申请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.ADD
@@ -84,9 +93,16 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, priva
 /**
  * 好友添加申请
  */
-open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent, private val cacheMaps: CacheMaps): MiraiEventGet<NewFriendRequestEvent>(eventEvent), FriendAddRequest {
-    private val fromId = event.fromId.toString()
-    private val requestFlag = cacheMaps.requestCache.cache(eventEvent)
+open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent, cacheMaps: CacheMaps): MiraiEventGet<NewFriendRequestEvent>(eventEvent), FriendAddRequest {
+    private val fromId: String = event.fromId.toString()
+    private val requestFlag: String = cacheMaps.requestCache.cache(eventEvent)
+
+    private var _eventMsg: String? = event.message
+    override var eventMsg: String?
+        get() = _eventMsg
+        set(value) {
+            _eventMsg = value
+        }
 
     /** 请求人QQ  */
     override fun getQQ(): String = fromId

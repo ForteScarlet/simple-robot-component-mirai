@@ -153,7 +153,7 @@ abstract class MiraiEventGet<out EE : BotEvent>(event: EE, private val toStringN
         MiraiBaseMsgGet<EE>(event), EventGet {
     /** 事件消息正文 */
     override var eventMsg: String? = null
-    protected val eventId = "$event#$onTime"
+    protected val eventId: String get() = "$event#$onTime"
     override fun getId(): String = eventId
 
 

@@ -222,11 +222,11 @@ class MiraiBotInfo(private val id: String,
             logger.disable()
         }
 
-        Runtime.getRuntime().addShutdownHook(Thread{
-            val id = bot.id
-            runBlocking { bot.closeAndJoin() }
-            MiraiBots.remove(id.toString())
-        })
+        // Runtime.getRuntime().addShutdownHook(Thread{
+        //     val id = bot.id
+        //     runBlocking { bot.closeAndJoin() }
+        //     MiraiBots.remove(id.toString())
+        // })
 
     }
 

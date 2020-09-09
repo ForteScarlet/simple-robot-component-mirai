@@ -539,7 +539,7 @@ private fun Message.async(coroutineScope: CoroutineScope): Deferred<Message> {
 /**
  * ktor http client
  */
-private val httpClient: HttpClient by lazy { HttpClient() }
+private val httpClient: HttpClient = HttpClient()
 
 /**
  * 通过http网络链接得到一个输入流。

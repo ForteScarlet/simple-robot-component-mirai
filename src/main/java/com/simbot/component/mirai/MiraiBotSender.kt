@@ -282,12 +282,6 @@ open class MiraiBotSender(
     }
 
 
-    /** [setGroupAnonymousBan]的一次性警告日志 */
-    private val setGroupAnonymousBanWarning by lazy<Byte> {
-        /* logger */
-        QQLog.warning("mirai.api.deprecated", "setGroupAnonymousBan", "setGroupBan(...)")
-        0
-    }
 
     /** 设置匿名聊天ban */
     @Deprecated("Unsupported API: setGroupAnonymousBan")
@@ -305,12 +299,6 @@ open class MiraiBotSender(
         return true
     }
 
-    /** [setDiscussLeave]的一次性警告日志 */
-    private val setDiscussLeaveWarning by lazy<Byte> {
-        /* logger */
-        QQLog.warning("mirai.api.deprecated", "setDiscussLeave", "setGroupLeave(...)")
-        0
-    }
 
     /** 退出讨论组，直接使用退出群 */
     @Deprecated("just see group leave", ReplaceWith("setGroupLeave(group, false)"))
@@ -534,3 +522,18 @@ internal class DefaultThisCode(private val botManager: BotManager) : ThisCodeAbl
 
 }
 
+/** [setGroupAnonymousBan]的一次性警告日志 */
+private val setGroupAnonymousBanWarning by lazy<Byte> {
+    /* logger */
+    QQLog.warning("mirai.api.deprecated", "setGroupAnonymousBan", "setGroupBan(...)")
+    0
+}
+
+
+
+/** [setDiscussLeave]的一次性警告日志 */
+private val setDiscussLeaveWarning by lazy<Byte> {
+    /* logger */
+    QQLog.warning("mirai.api.deprecated", "setDiscussLeave", "setGroupLeave(...)")
+    0
+}

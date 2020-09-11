@@ -7,8 +7,8 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
 
-    <!-- 1.8.2-1.16-release 2020/9/9 -->
-    <version>1.8.2-1.16</version>
+    <!-- 1.8.3-1.16 2020/9/12 -->
+    <version>1.8.3-1.16</version>
 
     <properties>
         <hutool.versin>5.3.8</hutool.versin>
@@ -78,14 +78,14 @@
             <version>${mirai.version}</version>
         </dependency>
 
-        <!-- mirai serialization  -->
-        <dependency>
-            <groupId>net.mamoe</groupId>
-            <artifactId>mirai-serialization</artifactId>
-            <version>${mirai-serialization.version}</version>
-            <optional>true</optional>
-            <scope>test</scope>
-        </dependency>
+        <!--&lt;!&ndash; mirai serialization  &ndash;&gt;-->
+        <!--<dependency>-->
+        <!--    <groupId>net.mamoe</groupId>-->
+        <!--    <artifactId>mirai-serialization</artifactId>-->
+        <!--    <version>${mirai-serialization.version}</version>-->
+        <!--    <optional>true</optional>-->
+        <!--    <scope>test</scope>-->
+        <!--</dependency>-->
 
         <!-- kt -->
         <dependency>
@@ -107,14 +107,14 @@
             <version>${kotlinx-coroutines-core.version}</version>
         </dependency>
 
-        <!-- ktx - serialization core -->
-        <dependency>
-            <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-serialization-core</artifactId>
-            <version>${kotlinx-serialization.version}</version>
-            <optional>true</optional>
-            <scope>test</scope>
-        </dependency>
+        <!--&lt;!&ndash; ktx - serialization core &ndash;&gt;-->
+        <!--<dependency>-->
+        <!--    <groupId>org.jetbrains.kotlinx</groupId>-->
+        <!--    <artifactId>kotlinx-serialization-core</artifactId>-->
+        <!--    <version>${kotlinx-serialization.version}</version>-->
+        <!--    <optional>true</optional>-->
+        <!--    <scope>test</scope>-->
+        <!--</dependency>-->
 
         <!-- kt-test -->
         <dependency>
@@ -198,19 +198,19 @@
                         <arg>-Xjvm-default=enable</arg>
                         <arg>-Xinline-classes</arg>
                     </args>
-                    <compilerPlugins>
-                        <!-- kt serialization plugin -->
-                        <plugin>kotlinx-serialization</plugin>
-                    </compilerPlugins>
+                    <!--<compilerPlugins>-->
+                    <!--    &lt;!&ndash; kt serialization plugin &ndash;&gt;-->
+                    <!--    <plugin>kotlinx-serialization</plugin>-->
+                    <!--</compilerPlugins>-->
                     <jvmTarget>1.8</jvmTarget>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-serialization</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                </dependencies>
+                <!--<dependencies>-->
+                <!--    <dependency>-->
+                <!--        <groupId>org.jetbrains.kotlin</groupId>-->
+                <!--        <artifactId>kotlin-maven-serialization</artifactId>-->
+                <!--        <version>${kotlin.version}</version>-->
+                <!--    </dependency>-->
+                <!--</dependencies>-->
             </plugin>
 
             <!-- maven仓库相关插件 -->

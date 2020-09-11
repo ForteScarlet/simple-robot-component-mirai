@@ -20,7 +20,7 @@
 
         <!-- simbot core -->
         <simple-robot-core.version>1.16.3</simple-robot-core.version>
-        <cqcodeUtils.version>1.8.0-BETA.3</cqcodeUtils.version>
+        <cqcodeUtils.version>1.8.0</cqcodeUtils.version>
 
         <!-- kt properties -->
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>

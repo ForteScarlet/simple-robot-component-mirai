@@ -303,6 +303,15 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
 
 }
 
+/**
+ * mirai的图片文件缓存策略
+ */
+enum class MiraiCacheType {
+    /** 文件缓存 */
+    FILE,
+    /** 内存缓存 */
+    MEMORY
+}
 
 /**
  * [SystemDeviceInfo] 实例，尝试着固定下随机值
@@ -331,7 +340,7 @@ constructor(
 
     override val fingerprint: ByteArray =
             "mamoe/mirai/mirai:10/MIRAI.200122.001/${getRandomString(7, '0'..'9', random)}:user/release-keys".toByteArray()
-    override val bootId: ByteArray = ExternalImage.generateUUID(SecureUtil.md5().digest(getRandomByteArray(16, random))).toByteArray()
+    override val bootId: ByteArray = generateUUID(SecureUtil.md5().digest(getRandomByteArray(16, random))).toByteArray()
     override val procVersion: ByteArray =
             "Linux version 3.0.31-${getRandomString(8, random)} (android-build@xxx.xxx.xxx.xxx.com)".toByteArray()
 
@@ -339,9 +348,10 @@ constructor(
     override val imei: String = getRandomString(15, '0'..'9', random)
 }
 
-
 /*
- * 以下源代码修改自 net.mamoe.mirai.utils.SystemDeviceInfo.kt、
+ * 以下源代码修改自
+ * net.mamoe.mirai.utils.SystemDeviceInfo.kt、
+ * net.mamoe.mirai.utils.ExternalImage.kt
  *
  * 原源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license that can be found through the following link.
@@ -373,13 +383,19 @@ internal fun getRandomString(length: Int, charRange: CharRange, r: Random): Stri
 internal fun getRandomString(length: Int, r: Random, vararg charRanges: CharRange): String =
         String(CharArray(length) { charRanges[r.nextInt(0..charRanges.lastIndex)].random(r) })
 
-
-/**
- * mirai的图片文件缓存策略
- */
-enum class MiraiCacheType {
-    /** 文件缓存 */
-    FILE,
-    /** 内存缓存 */
-    MEMORY
+private fun generateUUID(md5: ByteArray): String {
+    return "${md5[0, 3]}-${md5[4, 5]}-${md5[6, 7]}-${md5[8, 9]}-${md5[10, 15]}"
 }
+@JvmSynthetic
+internal operator fun ByteArray.get(rangeStart: Int, rangeEnd: Int): String = buildString {
+    for (it in rangeStart..rangeEnd) {
+        append(this@get[it].fixToString())
+    }
+}
+private fun Byte.fixToString(): String {
+    return when (val b = this.toInt() and 0xff) {
+        in 0..15 -> "0${this.toString(16).toUpperCase()}"
+        else -> b.toString(16).toUpperCase()
+    }
+}
+

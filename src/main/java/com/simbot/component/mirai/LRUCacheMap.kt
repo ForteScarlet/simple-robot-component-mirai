@@ -134,7 +134,7 @@ constructor(initialCapacity: Int = 8, private val max: Long = 102400):
         get() = lruLinkedMap.entries.asSequence()
                 .map { e: Map.Entry<T, CacheReturn<R>?> ->
                     val value = e.value
-                    SimpleEntry<T, R>(e.key, value?.cache) as MutableMap.MutableEntry<T, R>
+                    SimpleEntry<T, R>(e.key, value?.cache)
                 }.toMutableSet()
 
 

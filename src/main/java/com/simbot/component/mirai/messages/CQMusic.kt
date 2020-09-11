@@ -43,6 +43,7 @@ interface CqMusicXml {
 /**
  * type = qq
  */
+@Suppress("DEPRECATION")
 @Deprecated("未完成")
 internal class MusicQQ(id: String) : CqMusicXml {
 

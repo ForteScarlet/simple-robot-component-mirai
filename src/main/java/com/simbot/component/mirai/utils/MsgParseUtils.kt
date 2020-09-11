@@ -33,7 +33,6 @@ import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.utils.io.jvm.javaio.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -88,7 +87,7 @@ fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
                 EmptyMessageChain
             } else {
                 PlainText(CQDecoder.decodeText(this))
-            }.async(contact)
+            }.async()
         }
     }.asSequence().map {
         runBlocking {
@@ -119,26 +118,26 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         "at" -> {
             val id = this["qq"] ?: this["at"] ?: throw CQCodeParamNullPointerException("at", "qq", "at")
             if (id == "all") {
-                AtAll.async(contact)
+                AtAll.async()
             } else {
                 when (contact) {
                     is Member -> {
-                        At(contact).async(contact)
+                        At(contact).async()
                     }
                     is Friend -> {
-                        PlainText("@${contact.nick} ").async(contact)
+                        PlainText("@${contact.nick} ").async()
                     }
                     is Group -> {
-                        At(contact[id.toLong()]).async(contact)
+                        At(contact[id.toLong()]).async()
                     }
-                    else -> PlainText("@$id").async(contact)
+                    else -> PlainText("@$id").async()
                 }
             }
         }
         //endregion
 
         //region face
-        "face" -> Face((this["id"] ?: this["face"])!!.toInt()).async(contact)
+        "face" -> Face((this["id"] ?: this["face"])!!.toInt()).async()
         //endregion
 
 
@@ -320,7 +319,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
         //region rps 猜拳
         "rps" -> {
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
             // 似乎也不支持猜拳
 //            PlainText("[猜拳]")
         }
@@ -328,7 +327,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
         //region dice 骰子
         "dice" -> {
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
             // 似乎也..
 //            PlainText("[骰子]")
         }
@@ -338,18 +337,18 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         "shake" -> {
             // 戳一戳进行扩展，可多解析'type'参数与'id'参数。
             // 如果没有type，直接返回戳一戳
-            val type = this["type"]?.toInt() ?: return PokeMessage.Poke.async(contact)
+            val type = this["type"]?.toInt() ?: return PokeMessage.Poke.async()
             val id = this["id"]?.toInt() ?: -1
 
             // 尝试寻找对应的Poke，找不到则返回戳一戳
-            return (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke).async(contact)
+            return (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke).async()
         }
         //endregion
 
         //region anonymous
         "anonymous" -> {
             // 匿名消息，不进行解析
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
         }
         //endregion
 
@@ -359,13 +358,13 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
             // 参数："type", "id", "style*"
             // 或者："type", "url", "audio", "title", "content*", "image*"
             val type = this["type"]
-            PlainText("[${type}音乐]").async(contact)
+            PlainText("[${type}音乐]").async()
         }
         //endregion
 
         //region share
         "share" -> {
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
             // 分享
             // 参数："url", "title", "content*", "image*"
 //            val type = this["url"]
@@ -376,7 +375,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
         //region emoji
         "emoji" -> {
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
             // emoji, 基本用不到
             // val id = this["id"] ?: ""
             // PlainText("emoji($id)")
@@ -386,7 +385,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
         //region location
         "location" -> {
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
             // 地点 "lat", "lon", "title", "content"
 //            val lat = this["lat"] ?: ""
 //            val lon = this["lon"] ?: ""
@@ -397,18 +396,18 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         //endregion
 
         //region sign
-        "sign" -> EmptyMessageChain.async(contact)
+        "sign" -> EmptyMessageChain.async()
 
         //endregion
 
         //region show
-        "show" -> EmptyMessageChain.async(contact)
+        "show" -> EmptyMessageChain.async()
         //endregion
 
 
         //region contact
         "contact" -> {
-            EmptyMessageChain.async(contact)
+            EmptyMessageChain.async()
             // 联系人分享
             // ype一般可能是qq或者group
             // [CQ:contact,id=1234546,type=qq]
@@ -473,7 +472,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
                 }
 
-            }.async(contact)
+            }.async()
         }
         //endregion
 
@@ -482,7 +481,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         // 一般都是json消息
         "app", "json" -> {
             val content: String = this["content"] ?: "{}"
-            LightApp(content).async(contact)
+            LightApp(content).async()
         }
         //endregion
 
@@ -491,8 +490,8 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         "rich", "service" -> {
             val content: String = this["content"] ?: "{}"
             // 如果没有serviceId，认为其为lightApp
-            val serviceId: Int = this["serviceId"]?.toInt() ?: return LightApp(content).async(contact)
-            ServiceMessage(serviceId, content).async(contact)
+            val serviceId: Int = this["serviceId"]?.toInt() ?: return LightApp(content).async()
+            ServiceMessage(serviceId, content).async()
         }
         //endregion
 
@@ -500,8 +499,8 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         // 引用回复
         "quote" -> {
             val key = this["id"] ?: this["quote"] ?: throw CQCodeParamNullPointerException("quote", "id")
-            val source = cacheMaps.recallCache.get(key, contact.bot.id) ?: return EmptyMessageChain.async(contact)
-            QuoteReply(source).async(contact)
+            val source = cacheMaps.recallCache.get(key, contact.bot.id) ?: return EmptyMessageChain.async()
+            QuoteReply(source).async()
         }
         //endregion
 
@@ -512,7 +511,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
             return if (handler != null) {
                 handler(this, contact)
             } else {
-                PlainText(this.toString()).async(contact)
+                PlainText(this.toString()).async()
             }
         }
         //endregion
@@ -527,7 +526,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 /**
  * 一个非挂起返回值得到[Deferred]实例
  */
-private fun Message.async(coroutineScope: CoroutineScope): Deferred<Message> {
+private fun Message.async(): Deferred<Message> {
     return when (this) {
         is EmptyMessageChain -> EmptyMessageChainDeferred
 //        else -> coroutineScope.async(start = CoroutineStart.LAZY) { this@async }

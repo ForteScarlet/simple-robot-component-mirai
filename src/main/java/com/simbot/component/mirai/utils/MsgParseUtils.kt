@@ -668,10 +668,11 @@ fun SingleMessage.toCqOrTextString(cacheMaps: CacheMaps): String {
 
             // voice, 转化为record类型的cq码
             is Voice -> {
-                val voiceKq: MutableKQCode =
-                    MapKQCode.mutableByPair("record", "file" to fileName, "size" to fileSize.toString())
-                url?.run { voiceKq["url"] = this }
-                voiceKq.toString()
+                val builder: CodeBuilder<String> = KQCodeUtils.getStringBuilder("record")
+                    .key("file").value(fileName)
+                    .key("size").value(fileSize)
+                url?.run { builder.key("url").value(this) }
+                builder.build()
             }
 
             // 普通image
@@ -685,7 +686,10 @@ fun SingleMessage.toCqOrTextString(cacheMaps: CacheMaps): String {
             }
 
             is At -> {
-                KQCodeUtils.toCq("at", true, "qq=$target", "display=$display")
+                KQCodeUtils.getStringBuilder("at")
+                    .key("qq").value(target)
+                    .key("display").value(display)
+                    .build()
             }
 
             // at all
@@ -694,7 +698,6 @@ fun SingleMessage.toCqOrTextString(cacheMaps: CacheMaps): String {
 
             // face -> id
             is Face -> {
-                // MQCodeUtils.toMqCode(this.toString()).toKQCode()
                 KQCodeUtils.toCq("face", false, "id=$id")
             }
 

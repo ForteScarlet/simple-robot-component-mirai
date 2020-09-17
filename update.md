@@ -1,3 +1,15 @@
+# 1.9.0-1.16
+- 更新mirai到`v1.3.0`
+- cq码追加解析支持：`nudge`类型，代表双击头像的戳一戳。
+群消息中发送需要有`target`参数指定被戳者。
+- 消息中会出现`[CQ:nudge[,code=123456,target=,action=,suffix=]]`，代表某人被戳。
+其中，`code`代表发起戳动作的人，`target`代表被戳的人，`action`代表戳一戳的动作名称，`suffix`代表戳一戳中设置的自定义后缀。
+
+上述参数中，`target`为发送时的可选参数，而其他参数均为接受时存在的参数，发送无效。
+
+注①：需要使用协议`simbot.mirai.protocol=ANDROID_PHONE`
+注②：bot自己发出的戳事件不会被触发。（`bot.id == event.from.id`）
+
 # 1.8.4-1.16
 - 更新cqcodeutils到`v1.8.1`
 

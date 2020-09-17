@@ -36,11 +36,10 @@ import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.Friend
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.MessageReceipt
+import net.mamoe.mirai.message.action.Nudge
+import net.mamoe.mirai.message.action.Nudge.Companion.sendNudge
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadAsGroupVoice
@@ -56,7 +55,6 @@ import kotlin.collections.set
  * 此处可解析部分CQ码并转化为Message
  * 然后发送此消息
  */
-@Suppress("EXPERIMENTAL_API_USAGE")
 suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageReceipt<Contact>? {
     if (msg.isBlank()) {
         throw IllegalArgumentException("msg is empty.")
@@ -65,7 +63,7 @@ suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageR
     return if (message !is EmptyMessageChain) {
         this.sendMessage(message)
     } else {
-        QQLog.debug("mirai.bot.sender.nothing")
+        // QQLog.debug("mirai.bot.sender.nothing")
         null
     }
 }
@@ -74,7 +72,6 @@ suspend fun <C : Contact> C.sendMsg(msg: String, cacheMaps: CacheMaps): MessageR
 /**
  * 字符串解析为 [Message]。
  * 一般解析其中的CQ码
- * 等核心支持CAT码中转后转化为CAT码
  */
 fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     // 切割，解析CQ码并拼接最终结果
@@ -112,6 +109,7 @@ fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
  */
 fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> {
     // 判断类型，有些东西有可能并不存在与CQ码规范中，例如XML
+    @Suppress("DuplicatedCode")
     return when (this.type) {
         //region CQ码解析为Message
         //region at
@@ -200,74 +198,6 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
         //endregion
 
-//        //region image
-//        "image" -> {
-//            // image 类型的CQ码，参数一般是file, destruct
-//            val file = this["file"] ?: this["image"] ?: throw CQCodeParamNullPointerException("image", "file", "image")
-//
-//            val imageCache = cacheMaps.imageCache
-//
-//            // 先查缓存
-//            var image: Image? = imageCache[file]
-//
-//            if (image == null) {
-//                // 是否缓存此上传的图片
-//                val cache: Boolean = this["cache"] != "false"
-//                if (file.startsWith("http")) {
-//                    // 网络图片 阻塞上传
-//                    return contact.async {
-////                        val externalImage = URL(file).openStream().toExternalImage()
-////                        val externalImage =
-//                        contact.uploadImage(URL(file).toStream().toExternalImage()).also {
-//                            if (cache) {
-//                                imageCache[file] = it
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    var cacheKey = file
-//                    val localFile: File = FileUtil.file(file)
-//                    val externalImage = if (!localFile.exists()) {
-//                        // 尝试看看有没有url参数, 如果没有则抛出异常
-//                        val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
-//                        cacheKey = url
-//                        // 如果有，通过url发送
-//                        contact.async { URL(url).toStream().toExternalImage() }
-//                    } else {
-//                        SimpleDefaultDeferred(localFile.toExternalImage())
-//                    }
-////                    contact.uploadImage(externalImage).also { imageCache[url] = it }
-////                    uploadImage.also { imageCache[file] = it }
-//
-//                    // async def
-//                    return contact.async {
-//                        contact.uploadImage(externalImage.await()).also {
-//                            if (cache) {
-//                                imageCache[cacheKey] = it
-//                            }
-//                        }.run {
-//                            if (this@toMessage["destruct"] == "true") {
-//                                this.flash()
-//                            } else this
-//                        }
-//                    }
-//                }
-//            }
-//
-////            // 先查询缓存中有没有这个东西
-////            // 本地文件
-////            imageCache[file] ?:
-//
-//            // file文件，可能是本地的或者网络的
-////            val image: Image =
-//            // 如果是闪照则转化
-//            return if (this["destruct"] == "true") {
-//                image.flash()
-//            } else {
-//                image
-//            }.async(contact)
-//        }
-//        //endregion
 
         //region record 语音
         "voice", "record" -> contact.async {
@@ -334,14 +264,56 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         //endregion
 
         //region shake 戳一戳
-        "shake" -> {
+        "shake", "poke" -> {
             // 戳一戳进行扩展，可多解析'type'参数与'id'参数。
             // 如果没有type，直接返回戳一戳
+            // 如果是再群内发送，则优先认为是头像戳一戳
             val type = this["type"]?.toInt() ?: return PokeMessage.Poke.async()
             val id = this["id"]?.toInt() ?: -1
 
-            // 尝试寻找对应的Poke，找不到则返回戳一戳
-            return (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke).async()
+            // 如果目标是一个群成员，则说明使用双击头像的”戳一戳“
+            // 此戳一戳将会被立即发送，并返回一个空消息串
+            when (contact) {
+                is Group -> {
+                    val code: Long = this["code"]?.toLong() ?: throw IllegalArgumentException("cannot found nudge target: code is empty.")
+                    val nudge: Nudge = contact.getOrNull(code)?.nudge() ?: throw IllegalArgumentException("cannot found nudge target: no such member($code) in group(${contact.id}).")
+                    // 获取群员并发送
+                    contact.async {
+                        contact.sendNudge(nudge)
+                        EmptyMessageChain
+                    }
+                }
+                else -> {
+                    // 尝试寻找对应的Poke，找不到则返回戳一戳
+                    return (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke).async()
+                }
+            }
+        }
+        //endregion
+
+        //region 双击头像戳一戳
+        "nudge" -> {
+            when(contact) {
+                // 如果是群
+                is Group -> {
+                    val code: Long = this["target"]?.toLong() ?: throw IllegalArgumentException("cannot found nudge target: target is empty.")
+                    val nudge: Nudge = contact.getOrNull(code)?.nudge() ?: throw IllegalArgumentException("cannot found nudge target: no such member($code) in group(${contact.id}).")
+                    // 获取群员并发送
+                    contact.async {
+                        contact.sendNudge(nudge)
+                        EmptyMessageChain
+                    }
+                }
+                is User -> {
+                    val nudge: Nudge = contact.nudge()
+                    contact.async {
+                        contact.sendNudge(nudge)
+                        EmptyMessageChain
+                    }
+                }
+                // 是其他人
+                else -> EmptyMessageChain.async()
+            }
         }
         //endregion
 
@@ -357,8 +329,14 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
             // 音乐，就是分享，应该归类于xml
             // 参数："type", "id", "style*"
             // 或者："type", "url", "audio", "title", "content*", "image*"
-            val type = this["type"]
-            PlainText("[${type}音乐]").async()
+            val type = this["type"] ?: ""
+            val title = this["title"] ?: ""
+            val urlOrId = this["url"] ?: this["id"] ?: ""
+            PlainText("""
+                |[${type}音乐]
+                |$title
+                |$urlOrId
+            """.trimMargin()).async()
         }
         //endregion
 
@@ -708,6 +686,7 @@ fun SingleMessage.toCqOrTextString(cacheMaps: CacheMaps): String {
                 // pokeKq["type"] = this.type.toString()
                 // pokeKq["id"] = this.id.toString()
                 // pokeKq
+
                 KQCodeUtils.toCq("poke", false, "name=$name", "type=$type", "id=$id")
             }
 

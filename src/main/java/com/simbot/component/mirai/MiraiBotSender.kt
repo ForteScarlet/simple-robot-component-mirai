@@ -192,6 +192,7 @@ open class MiraiBotSender(
 
     /** 发送群消息 */
     private fun sendGroupMsg(group: Long, msg: String): String? {
+        bot.nudge()
         val g = bot.getGroup(group.toLong())
         // 阻塞发送
         val result = senderRunner.run {

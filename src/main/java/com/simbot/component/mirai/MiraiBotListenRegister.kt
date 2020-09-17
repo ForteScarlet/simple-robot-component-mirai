@@ -25,6 +25,8 @@ import com.simbot.component.mirai.collections.toKey
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.toWholeMessage
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.contact.Friend
+import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.subscribeAlways
@@ -239,8 +241,29 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
         // try to quick reply
         result.quickReplyMessage(this, cacheMaps)
     }
-
     //endregion
+
+    //region 头像戳一戳事件
+    // bot被戳
+    bot.registerListenerAlways<BotNudgedEvent> {
+        println(this)
+        if(this.from.id != this.bot.id){
+            when(this.from) {
+                is Member -> MiraiBotGroupNudgedEvent(this).onMsg(msgProcessor)
+                is Friend -> MiraiBotFriendNudgedEvent(this).onMsg(msgProcessor)
+            }
+        }
+    }
+
+    // 群里其他人被戳事件
+    bot.registerListenerAlways<MemberNudgedEvent> {
+        println(this)
+        if(this.from.id != this.bot.id) {
+            MiraiMemberNudgedEvent(this).onMsg(msgProcessor)
+        }
+    }
+    //endregion
+
 
     // region 申请相关事件
 

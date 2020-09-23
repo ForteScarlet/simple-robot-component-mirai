@@ -14,9 +14,7 @@
 
 package com.simbot.component.mirai.utils
 
-import com.alibaba.fastjson.JSONObject
 import com.forte.qqrobot.sender.HttpClientAble
-import com.simbot.component.mirai.APIFailedException
 import com.simbot.component.mirai.security.cookies
 import net.mamoe.mirai.Bot
 
@@ -38,6 +36,16 @@ object SendLikeUtil {
      * @param uin 发送like的人
      */
     private fun toUrl2(gtk: String, uin: String, toUin: String): String{
+        // https://r.vip.qq.com/report/dc?
+        // uin=1149159218&
+        // domain=android&
+        // dcid=dc02842&
+        // biz_id=10002009&
+        // mqq_ver=0&
+        // page_id=heatdetail&
+        // oper_id=click_like&
+        // to_uin=2240189254&
+        // g_tk=1302669044
         return "$URL2?uin=$uin&domain=android&dcid=dc02842&biz_id=10002009&mqq_ver=0&page_id=heatdetail&oper_id=click_like&to_uin=$toUin&g_tk=$gtk"
     }
 

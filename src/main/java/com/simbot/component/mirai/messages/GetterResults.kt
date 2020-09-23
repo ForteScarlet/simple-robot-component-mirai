@@ -650,7 +650,7 @@ open class MiraiAuthInfo(private val cookies: Cookies): AuthInfo {
      * 获取一个编码
      * 此处为获取uin
      */
-    override fun getCode(): String = cookies.uin.toString()
+    override fun getCode(): String = cookies.uin
 
     /**
      * 获取cookies信息
@@ -661,6 +661,10 @@ open class MiraiAuthInfo(private val cookies: Cookies): AuthInfo {
      * 获取CsrfToken
      */
     override fun getCsrfToken(): String = cookies.bkn.toString()
+
+    override fun toString(): String {
+        return "MiraiAuthInfo(cookies=$cookies, csrfToken=$csrfToken, code=$code)"
+    }
 
 }
 

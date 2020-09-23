@@ -29,6 +29,11 @@ import java.nio.charset.Charset
  * 通过mirai安卓协议的[net.mamoe.mirai.qqandroid.QQAndroidBot]得到部分敏感信息.
  * 无法保证此类永远可用。此类的信息依赖于mirai的内部代码构造。
  * 最后测试可用版本：mirai:1.2.1
+ *
+ * @see net.mamoe.mirai.qqandroid.QQAndroidBot
+ * @see net.mamoe.mirai.qqandroid.network.QQAndroidClient
+ * @see net.mamoe.mirai.qqandroid.network.WLoginSigInfo
+ *
  */
 object AndroidBotCookieUtils {
     private var success: Boolean = false
@@ -45,14 +50,20 @@ object AndroidBotCookieUtils {
     private lateinit var getPt4TokenMapMethod: Method // Pt4TokenMap
     private lateinit var getPayTokenMethod: Method // ByteArray
 
+    /**
+     * @see net.mamoe.mirai.qqandroid.network.WLoginSimpleInfo
+     */
+    private lateinit var getWLoginSimpleInfoMethod: Method // WLoginSimpleInfo
+
     private lateinit var keyWithCreationTimeClazz: Class<*>
     private lateinit var getDataMethod: Method
     private var cause: Throwable? = null
+
     init {
         try {
             // bot client field
             botClientGetter = Class.forName("net.mamoe.mirai.qqandroid.QQAndroidBotBase")
-                    .getDeclaredMethod("getClient").also { it.isAccessible = true }
+                .getDeclaredMethod("getClient").also { it.isAccessible = true }
 
             // client clazz
             clientClazz = Class.forName("net.mamoe.mirai.qqandroid.network.QQAndroidClient")
@@ -64,19 +75,22 @@ object AndroidBotCookieUtils {
             wLoginSigInfoClazz = Class.forName("net.mamoe.mirai.qqandroid.network.WLoginSigInfo")
 
             // info getter
-            getSKeyMethod =         wLoginSigInfoClazz.getDeclaredMethod("getSKey").also { it.isAccessible = true }
-            getAccessTokenMethod =  wLoginSigInfoClazz.getDeclaredMethod("getAccessToken").also { it.isAccessible = true }
-            getSuperKeyMethod =     wLoginSigInfoClazz.getDeclaredMethod("getSuperKey").also { it.isAccessible = true }
-            getPsKeyMapMethod =     wLoginSigInfoClazz.getDeclaredMethod("getPsKeyMap").also { it.isAccessible = true }
-            getPt4TokenMapMethod =  wLoginSigInfoClazz.getDeclaredMethod("getPt4TokenMap").also { it.isAccessible = true }
-            getPayTokenMethod =     wLoginSigInfoClazz.getDeclaredMethod("getPayToken").also { it.isAccessible = true }
+            getSKeyMethod = wLoginSigInfoClazz.getDeclaredMethod("getSKey").also { it.isAccessible = true }
+            getAccessTokenMethod =
+                wLoginSigInfoClazz.getDeclaredMethod("getAccessToken").also { it.isAccessible = true }
+            getSuperKeyMethod = wLoginSigInfoClazz.getDeclaredMethod("getSuperKey").also { it.isAccessible = true }
+            getPsKeyMapMethod = wLoginSigInfoClazz.getDeclaredMethod("getPsKeyMap").also { it.isAccessible = true }
+            getPt4TokenMapMethod =
+                wLoginSigInfoClazz.getDeclaredMethod("getPt4TokenMap").also { it.isAccessible = true }
+            getPayTokenMethod = wLoginSigInfoClazz.getDeclaredMethod("getPayToken").also { it.isAccessible = true }
+            getWLoginSimpleInfoMethod = wLoginSigInfoClazz.getDeclaredMethod("getSimpleInfo").also { it.isAccessible = true }
 
             // data getter
             keyWithCreationTimeClazz = Class.forName("net.mamoe.mirai.qqandroid.network.KeyWithCreationTime")
-            getDataMethod =            keyWithCreationTimeClazz.getDeclaredMethod("getData").also { it.isAccessible = true }
+            getDataMethod = keyWithCreationTimeClazz.getDeclaredMethod("getData").also { it.isAccessible = true }
 
             success = true
-        }catch (e: Throwable){
+        } catch (e: Throwable) {
             cause = e
         }
     }
@@ -89,9 +103,9 @@ object AndroidBotCookieUtils {
      */
     @Throws(Exception::class)
     fun cookies(bot: Bot): Cookies {
-        if(!success){
+        if (!success) {
             cause?.run { throw IllegalStateException("can not use.", this) }
-                    ?: throw IllegalStateException("can not use.")
+                ?: throw IllegalStateException("can not use.")
         }
         // get bot client
         val client = botClientGetter(bot)
@@ -99,6 +113,7 @@ object AndroidBotCookieUtils {
         val wLoginSigInfo = getWLoginSigInfoMethod(client)
 
         val uin = "o${bot.id}"
+        val pUin: String = uin
         val skey: ByteArray = getDataMethod(getSKeyMethod(wLoginSigInfo)) as ByteArray
 //        val accessToken = getDataMethod(getAccessTokenMethod(wLoginSigInfo)) as ByteArray
 //        val superKey = getSuperKeyMethod(wLoginSigInfo) as ByteArray
@@ -125,9 +140,11 @@ object AndroidBotCookieUtils {
 
 
         // cookies info
-        return Cookies(uin,
-                skey.encodeToString(),
-                psKey?.encodeToString() ?: ""
+        return Cookies(
+            uin,
+            skey.encodeToString(),
+            pUin,
+            psKey?.encodeToString() ?: ""
         )
     }
 }
@@ -149,9 +166,11 @@ val Bot.cookies get() = AndroidBotCookieUtils.cookies(this)
 /**
  * bot的部分cookie信息
  */
-data class Cookies(val uin: String,
-                   val skey: String,
-                   val psKey: String // p_skey
+data class Cookies(
+    val uin: String,
+    val skey: String,
+    val p_uin: String,
+    val psKey: String // p_skey
 ) {
 
     /** bkn */
@@ -162,13 +181,14 @@ data class Cookies(val uin: String,
 
     /** cookie maps */
     val cookiesMap: MutableMap<String, String>
-    get() {
-        return mutableMapOf(
-              "uin" to uin,
-              "skey" to skey,
-              "p_skey" to psKey
-        )
-    }
+        get() {
+            return mutableMapOf(
+                "uin" to uin,
+                "p_uin" to p_uin,
+                "skey" to skey,
+                "p_skey" to psKey
+            )
+        }
 
     /** cookie string */
     override fun toString(): String {
@@ -182,7 +202,7 @@ data class Cookies(val uin: String,
  */
 internal fun toBkn(skey: String): Int {
     var hash = 5381
-    for (element in skey){
+    for (element in skey) {
         hash += (hash shl 5/* << 5*/) + element.toInt()
     }
     return hash and 2147483647 /*& 2147483647*/
@@ -200,6 +220,8 @@ internal fun toGtk(pskey: String): Long {
     var hash: Long = 5381
     for (element in p_skey) {
         hash += (hash shl 5) + element.toInt()
+        // hash += (hash shl 5 and 0x7fffffff) + element.toInt() and 0x7fffffff
+        // hash = hash and 0x7fffffff
     }
     return hash and 0x7fffffff
 }

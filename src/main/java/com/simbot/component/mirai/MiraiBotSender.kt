@@ -24,11 +24,14 @@ import com.forte.qqrobot.beans.messages.result.*
 import com.forte.qqrobot.beans.messages.types.GroupAddRequestType
 import com.forte.qqrobot.bot.BotInfo
 import com.forte.qqrobot.bot.BotManager
+import com.forte.qqrobot.exception.RobotApiException
 import com.forte.qqrobot.log.QQLog
+import com.forte.qqrobot.sender.BaseAPITemplate
 import com.forte.qqrobot.sender.HttpClientHelper
 import com.forte.qqrobot.sender.senderlist.BaseRootSenderList
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.BotLevelUtil
+import com.simbot.component.mirai.utils.SendLikeUtil
 import com.simbot.component.mirai.utils.sendMsg
 import kotlinx.coroutines.*
 import net.mamoe.mirai.Bot
@@ -180,7 +183,19 @@ open class MiraiBotSender(
     override fun getFriendList(): FriendList = MiraiFriendList(bot.friends)
 
     /** 群签到 */
-    override fun setGroupSign(group: String?): Boolean = super.setGroupSign(group)
+    override fun setGroupSign(group: String?): Boolean {
+        return try {
+            // 提供一个默认的登录接口
+            // 获取权限信息
+            val authInfo = authInfo
+            // 获取送信器
+            val http = HttpClientHelper.getDefaultHttp()
+            BaseAPITemplate.groupSign(http, authInfo, group, "签到", "签到")
+            true
+        } catch (e: Exception) {
+            throw RobotApiException.byFrom()
+        }
+    }
 
     /** 签到 */
     @Deprecated("Unsupported API: setSign")
@@ -270,8 +285,9 @@ open class MiraiBotSender(
 
 
     /** 点赞 */
-    @Deprecated("Unsupported API: sendLike")
-    override fun sendLike(QQ: String?, times: Int): Boolean = super.sendLike(QQ, times)
+    override fun sendLike(code: String, times: Int): Boolean {
+        return SendLikeUtil.sendLike(times, code, bot, HttpClientHelper.getDefaultHttp())
+    }
 
 
     /** 设置全群禁言 */

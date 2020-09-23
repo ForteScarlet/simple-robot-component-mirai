@@ -22,6 +22,7 @@ import com.forte.qqrobot.beans.messages.msgget.PrivateMsgDelete
 import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.utils.MiraiCodeFormatUtils
 import net.mamoe.mirai.event.events.MessageRecallEvent
+import net.mamoe.mirai.message.data.MessageSource
 
 
 //region 撤回事件
@@ -29,8 +30,8 @@ import net.mamoe.mirai.event.events.MessageRecallEvent
  * 消息撤回事件父类
  */
 abstract class MiraiMessageRecallEvent<out MRE: MessageRecallEvent>(event: MRE): MiraiEventGet<MRE>(event) {
-    private val recallMessageId = "${event.messageId}.${event.messageInternalId}.${event.messageTime}"
-    protected val authorId = event.authorId.toString()
+    private val recallMessageId = "${event.messageId}.${event.messageInternalId}"
+    protected val authorId: String = event.authorId.toString()
     private val eventMessageTime: Long = event.messageTime.toLong()
     /** 获取ID, 一般用于消息类型判断  */
     override fun getId(): String = recallMessageId
@@ -42,9 +43,9 @@ abstract class MiraiMessageRecallEvent<out MRE: MessageRecallEvent>(event: MRE):
 /**
  * 群消息撤回
  */
-open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall, private val cacheMaps: CacheMaps): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
+open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall, cacheMaps: CacheMaps): MiraiMessageRecallEvent<MessageRecallEvent.GroupRecall>(event), GroupMsgDelete {
 
-    private val recallMessage = cacheMaps.recallCache.get("${event.messageId}.${event.messageInternalId}.${event.messageTime}", event.bot.id)
+    private val recallMessage: MessageSource? = cacheMaps.recallCache.get("${event.messageId}.${event.messageInternalId}", event.bot.id)
 
     override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage, cacheMaps)
 
@@ -72,12 +73,23 @@ internal fun MessageRecallEvent.GroupRecall.getOperatorId(): Long = this.operato
 /**
  * 私信消息撤回
  */
-open class MiraiPrivateRecall(event: MessageRecallEvent.FriendRecall): MiraiMessageRecallEvent<MessageRecallEvent.FriendRecall>(event), PrivateMsgDelete {
+open class MiraiPrivateRecall(event: MessageRecallEvent.FriendRecall, cacheMaps: CacheMaps): MiraiMessageRecallEvent<MessageRecallEvent.FriendRecall>(event), PrivateMsgDelete {
+
+    private val recallMessage: MessageSource? = cacheMaps.recallCache.get("${event.messageId}.${event.messageInternalId}", event.bot.id)
+
+    override var eventMsg: String? = MiraiCodeFormatUtils.mi2cq(recallMessage?.originalMessage, cacheMaps)
+
+    /**
+     * 获取消息中存在的群号信息
+     */
+    override fun getCodeNumber(): Long = event.authorId
+
     /**
      * 获取QQ号信息。
+     * 假如一个消息封装中存在多个QQ号信息，例如同时存在处理者与被处理者，一般情况下我们认为其返回值为被处理者。
+     * @see .getCode
      */
-    override fun getQQCode(): String = authorId
-    override fun getCodeNumber(): Long = event.authorId
+    override fun getQQCode(): String = event.authorId.toString()
 }
 //endregion
 //endregion

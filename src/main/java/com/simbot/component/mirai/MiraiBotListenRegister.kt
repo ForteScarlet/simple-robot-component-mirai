@@ -358,7 +358,7 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
             //endregion
             //region 好友消息撤回
             is MessageRecallEvent.FriendRecall -> {
-                MiraiPrivateRecall(this).onMsg(msgProcessor)
+                MiraiPrivateRecall(this, cacheMaps).onMsg(msgProcessor)
             }
             //endregion
         }

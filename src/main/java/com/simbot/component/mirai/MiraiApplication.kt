@@ -129,8 +129,9 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      */
     override fun resourceInit() {
         // add shutdown hook for close.
+        val app = this
         Runtime.getRuntime().addShutdownHook(Thread{
-            this.close()
+            app.close()
         })
         registerMiraiAtFilter()
     }

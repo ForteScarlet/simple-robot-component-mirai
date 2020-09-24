@@ -1,15 +1,15 @@
 # 1.10.0-1.16
 ## ALPHA.1
-重新定义`MiraiBots`的内容, 对于`Bot`实例的获取均使用`Bot.getInstance`相关方法而不再做内部缓存。
+- 重新定义`MiraiBots`的内容, 对于`Bot`实例的获取均使用`Bot.getInstance`相关方法而不再做内部缓存。
 
 ## ALPHA.2
-追加配置：
+- 追加配置：
 ```properties
 simbot.mirai.onlineCheck=3600000
 ```
-
 以定时对bot进行在线检测。单位毫秒。默认为一小时。如果值小于等于0，则不生效。
 
+- 优化bot存活线程的处理。
 
 
 # 1.9.1-1.16

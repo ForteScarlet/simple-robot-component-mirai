@@ -27,6 +27,7 @@ import com.simbot.component.mirai.logger.SimbotMiraiLogger
 import net.mamoe.mirai.utils.*
 import java.io.File
 import java.util.AbstractMap.SimpleEntry
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -103,6 +104,9 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     @field:Conf("mirai.cacheDirectory", comment = "如果cacheType为FILE，则此处为路径。如果不填或者为null则默认为系统临时文件夹.")
     var cacheDirectory: String? = null
 
+
+    @field:Conf("mirai.onlineCheck", comment = "定时检测Bot们是否都在线。如果时间小于等于0, 则不检测。")
+    var onlineCheck: Long = TimeUnit.HOURS.toMillis(1)
 
     /**
      * 在[botConfiguration]配置完成后可以提供一些后置处理进行配置覆盖.
@@ -184,6 +188,10 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
                 if(logger is MiraiLoggerWithSwitch) logger else logger.withSwitch(true)
             }
         }
+
+        // if(inheritCoroutineContext) {
+        //     conf.inheritCoroutineContext()
+        // }
 
         // post processor
         postBotConfigurationProcessor(code, conf)

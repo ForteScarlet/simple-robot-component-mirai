@@ -26,7 +26,14 @@ mirai.event.register.unavailable=无法构建额外事件注册器，将无法�
 mirai.event.register=注册mirai的特殊事件：{0}
 
 mirai.relogin.off=bot({0})被动掉线, 准备尝试重新连接。title({1}), message({2})
-mirai.relogin.on=bot({0})掉线重连。
+mirai.relogin.on=bot({0})被动掉线重连。
+
+mirai.onlineCheck.relogin.check=尝试检测掉线bot并重连...
+mirai.onlineCheck.relogin.do=bot({0})掉线，主动重连。
+mirai.onlineCheck.relogin.done=bot({0})掉线，主动重连结束。
+mirai.onlineCheck.relogin.end=bot主动掉线检测结束。
+
+bot.close=bot({0}) 关闭。
 
 mirai.bot.thread.shutdown=尝试关闭mirai存活线程, 将会最多等待{0} {1}. 如果迟迟不会结束，请尝试让bot收到一次消息。
 mirai.bot.thread.mandatoryTermination=尝试强制终止mirai存活线程, 如果依然无法结束mirai线程则请尝试强制终止进程。

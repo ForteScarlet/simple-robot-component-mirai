@@ -23,9 +23,9 @@ import com.simbot.component.mirai.collections.*
  * 记录缓存库的Data类
  */
 open class CacheMaps(
-        val recallCache: RecallCache,
-        val requestCache: RequestCache,
-        val imageCache: ImageCache,
-        val voiceCache: VoiceCache,
-        val contactCache: ContactCache
+    val recallCache: RecallCache,
+    val requestCache: RequestCache,
+    val imageCache: ImageCache,
+    val voiceCache: VoiceCache,
+    val contactCache: ContactCache
 )

@@ -1,16 +1,16 @@
 /*
- *
  * Copyright (c) 2020. ForteScarlet All rights reserved.
- * Project  component-mirai
- * File     MiraiBots.kt
+ * Project  component-mirai (Codes other than Mirai)
+ * File     MiraiBots2.kt (Codes other than Mirai)
  *
  * You can contact the author through the following channels:
- *  github https://github.com/ForteScarlet
- *  gitee  https://gitee.com/ForteScarlet
- *  email  ForteScarlet@163.com
- *  QQ     1149159218
- *  The Mirai code is copyrighted by mamoe-mirai
- *  you can see mirai at https://github.com/mamoe/mirai
+ * github https://github.com/ForteScarlet
+ * gitee  https://gitee.com/ForteScarlet
+ * email  ForteScarlet@163.com
+ * QQ     1149159218
+ *
+ * The Mirai code is copyrighted by mamoe-mirai
+ * you can see mirai at https://github.com/mamoe/mirai
  *
  *
  */
@@ -27,104 +27,122 @@ import com.simbot.component.mirai.messages.MiraiLoginInfo
 import com.simbot.component.mirai.utils.BotLevelUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.alsoLogin
 import net.mamoe.mirai.closeAndJoin
 import net.mamoe.mirai.join
 import net.mamoe.mirai.utils.BotConfiguration
+import net.mamoe.mirai.utils.MiraiLogger
 import net.mamoe.mirai.utils.MiraiLoggerWithSwitch
 import java.util.concurrent.ConcurrentHashMap
 
-
-/**
- * 记录登录的bot列表以及监听注册的状态
- * 一般会通过[com.forte.qqrobot.bot.BotManager]类记录注册信息，此处记录实际的Bot信息
- */
 object MiraiBots {
 
-    /** 记录登录的bot */
-    private val bots: MutableMap<String, MiraiBotInfo> = ConcurrentHashMap()
+    /**
+     * 缓存bot的登录信息
+     */
+    internal val botSimpleInfo: MutableMap<Long, MiraiBotSimpleInfo> = ConcurrentHashMap()
 
-    /** 判断[bots]中是否存在内容 */
-    val empty: Boolean get() = bots.isEmpty()
+    /** 判断[Bot]中是否存在登录的bot */
+    val empty: Boolean get() = Bot.botInstances.isEmpty()
 
+    @Volatile
     private var _closed = false
     val closed: Boolean get() = _closed
+
+    /** 未注册监听的bot列表 */
+    private val noListenBots: MutableSet<Long> = mutableSetOf()
+
+
+    @Volatile
+    private lateinit var cacheMaps: CacheMaps
+    @Volatile
+    private lateinit var senderRunner: SenderRunner
 
     /** 消息处理器 */
     @Volatile
     private lateinit var msgProcessor: MsgProcessor
 
-    /** 未注册监听的bot列表 */
-    private val noListenBots: MutableMap<String, MiraiBotInfo> = ConcurrentHashMap()
+
+    fun contains(id: String): Boolean = Bot.getInstanceOrNull(id.toLong()) != null
+
+    fun containsAndActive(id: String): Boolean = Bot.getInstanceOrNull(id.toLong())?.isActive != null
+
+    fun containsAndOnline(id: String): Boolean = Bot.getInstanceOrNull(id.toLong())?.isOnline != null
+
 
     /**
-     * 遍历[MiraiBotInfo]
+     * 遍历 [Bot]
      */
-    fun forEach(action: (String, MiraiBotInfo) -> Unit) {
-        bots.forEach(action)
+    fun forEach(action: (String, Bot) -> Unit) {
+        Bot.forEachInstance { action(it.id.toString(), it) }
     }
 
-    /** 增加一个bot，如果此bot已经存在则会抛出异常 */
-    fun set(id: String, bot: MiraiBotInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
-        bots[id] = bot
+
+    /** 增加一个bot */
+    fun set(bot: MiraiBotSimpleInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean) {
+        botSimpleInfo[bot.id] = bot
         // 注册或等待
         registerOrWait(bot, cacheMaps, registeredSpecialListener)
     }
 
-    /**
-     * 尝试获取一个bot，如果获取不到则会尝试构建一个。
-     * 需要在从BotManager中验证存在后在通过此获取，否则BotManager中可能会缺失
-     */
-    fun get(info: BotInfo, botConfiguration: (String) -> BotConfiguration,
-            cacheMaps: CacheMaps, senderRunner: SenderRunner, registeredSpecialListener: Boolean): MiraiBotInfo {
-        val id = info.botCode
-        // 构建一个，构建失败会抛出异常
-        val miraiBotInfo = bots[id]
-        return if(miraiBotInfo == null){
-            // 不存在，尝试获取
-            val newBotInfo = MiraiBotInfo(info, botConfiguration(id), cacheMaps, senderRunner, registeredSpecialListener)
-            // 注册/等待并返回
-            registerOrWait(newBotInfo, cacheMaps, registeredSpecialListener)
-            newBotInfo
-        }else{
-            miraiBotInfo
-        }
-    }
-
     /** 注册监听或等待 */
-    private fun registerOrWait(info: MiraiBotInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
-        if(started()){
+    private fun registerOrWait(info: MiraiBotSimpleInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean) {
+        if (MiraiBots.started()) {
             // 启动了监听，注册
-            registerListen(info, cacheMaps, registeredSpecialListener)
-        }else{
-            noListenBots[info.botCode] = info
+            val bot = Bot.getInstance(info.id)
+            registerListen(bot, msgProcessor, cacheMaps, registeredSpecialListener)
+        } else {
+            noListenBots.add(info.id)
         }
     }
 
     /** get 根据id获取一个botInfo */
-    operator fun get(id: String) = bots[id]
+    fun getBotInfo(id: String): BotInfo? = Bot.getInstanceOrNull(id.toLong())?.toBotInfo(cacheMaps, senderRunner)
 
+    fun getBotOrLogin(
+        info: BotInfo, botConfiguration: (String) -> BotConfiguration,
+        cacheMaps: CacheMaps, senderRunner: SenderRunner, registeredSpecialListener: Boolean
+    ): Bot {
+        val botId = info.botCode
+        val containsAndOnline = containsAndOnline(botId)
+        return if (containsAndOnline) {
+            Bot.getInstance(botId.toLong())
+        } else {
+            MiraiBotInfo(info, botConfiguration(info.botCode), cacheMaps, senderRunner, registeredSpecialListener).bot
+        }
+    }
 
     /** 移除一个bot，移除的时候记得登出 */
-    fun remove(id: String): MiraiBotInfo? = bots.remove(id)
+    fun logout(id: String): Boolean = runBlocking {
+        Bot.getInstanceOrNull(id.toLong())?.closeAndJoin() ?: return@runBlocking false
+        true
+    }
 
 
     /** 是否启用了监听，即判断消息处理器是否初始化 */
     fun started(): Boolean = ::msgProcessor.isInitialized
 
-
     /** 启用监听 */
-    fun startListen(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
+    fun startListen(
+        msgProcessor: MsgProcessor,
+        cacheMaps: CacheMaps,
+        senderRunner: SenderRunner,
+        registeredSpecialListener: Boolean
+    ) {
         // 初始化
         this.msgProcessor = msgProcessor
+        this.cacheMaps = cacheMaps
+        this.senderRunner = senderRunner
+
         // 等待区注册监听
-        noListenBots.forEach{
-            registerListen(it.value, cacheMaps, registeredSpecialListener)
-            val bot = it.value.bot
-            val logger = bot.logger
-            if(logger is MiraiLoggerWithSwitch){
+        noListenBots.forEach {
+            val bot: Bot = Bot.getInstance(it)
+            registerListen(bot, msgProcessor, cacheMaps, registeredSpecialListener)
+            val logger: MiraiLogger = bot.logger
+            if (logger is MiraiLoggerWithSwitch) {
                 // 如果是可开关的，开启日志
                 logger.enable()
             }
@@ -136,79 +154,143 @@ object MiraiBots {
         noListenBots.clear()
     }
 
-    /** 注册监听 */
-    private fun registerListen(info: MiraiBotInfo, cacheMaps: CacheMaps, registeredSpecialListener: Boolean){
-        info.register(msgProcessor, cacheMaps, registeredSpecialListener)
-    }
-
-    /** 等待所有bot下线 */
-    fun joinAll(){
-        bots.map { it.value }.forEach {
-            // println("join --------------- ${it.bot} --------------")
-            it.join()
-            // println("join end ----------- ${it.bot} ----------")
+    fun joinAll() {
+        Bot.botInstances.forEach {
+            runBlocking {
+                it.join()
+            }
         }
     }
 
-
-    fun closeAll(){
-        val botCopy = bots.values.toTypedArray()
-        bots.clear()
-        botCopy.map {
-            val bot = it.bot
-            QQLog.debug("mirai.bot.close", bot.nick, bot.id.toString())
-            val async = GlobalScope.async { bot.closeAndJoin() }
-            QQLog.debug("mirai.bot.close.finish", bot.nick, bot.id.toString())
-            async
+    fun closeAll() {
+        Bot.botInstances.map {
+            GlobalScope.async {
+                val id = it.id.toString()
+                it.closeAndJoin()
+                QQLog.debug("bot.close", id)
+            }
         }.forEach {
             runBlocking { it.await() }
         }
-        _closed = true
     }
 
-
+    /** 注册监听 */
+    private fun registerListen(
+        bot: Bot,
+        msgProcessor: MsgProcessor,
+        cacheMaps: CacheMaps,
+        registeredSpecialListener: Boolean
+    ) {
+        bot.register(msgProcessor, cacheMaps, registeredSpecialListener)
+    }
 }
 
 
 /**
- * miraiBotInfo, 传入bot的账号密码，内部会创建并启动一个Bot
+ * 将一个已经存在的bot转化为BotInfo实例
+ */
+private fun Bot.toBotInfo(cacheMaps: CacheMaps, senderRunner: SenderRunner): BotInfo =
+    MiraiBotProxyInfo(MiraiBots.botSimpleInfo[this.id]!!, cacheMaps, senderRunner)
+
+
+/**
+ * BotInfo 实例
+ */
+public data class MiraiBotProxyInfo(
+    private val botSimpleInfo: MiraiBotSimpleInfo,
+    private val cacheMaps: CacheMaps,
+    private val senderRunner: SenderRunner,
+) : BotInfo {
+    override fun close() {
+        runBlocking {
+            Bot.getInstanceOrNull(botSimpleInfo.id)?.closeAndJoin()
+        }
+    }
+
+    private lateinit var loginInfo: LoginInfo
+    private lateinit var botSender: BotSender
+
+    override fun getBotCode(): String = botSimpleInfo.id.toString()
+
+    override fun getPath(): String = botSimpleInfo.pwd
+
+    override fun getInfo(): LoginInfo {
+        if (!::loginInfo.isInitialized) {
+            val bot: Bot = Bot.getInstance(botSimpleInfo.id)
+            val http = HttpClientHelper.getDefaultHttp()
+            loginInfo = MiraiLoginInfo(bot, BotLevelUtil.level(bot, http))
+        }
+        return loginInfo
+    }
+
+    override fun getSender(): BotSender {
+        if (!::loginInfo.isInitialized) {
+            val bot: Bot = Bot.getInstance(botSimpleInfo.id)
+            // val http = HttpClientHelper.getDefaultHttp()
+            botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))
+        }
+        return botSender
+
+
+    }
+}
+
+/**
+ * bot的简易info信息。
+ */
+data class MiraiBotSimpleInfo(internal val id: Long, internal val pwd: String)
+
+
+/**
+ * miraiBotInfo, 传入bot的账号密码，内部会启动一个Bot, 并记录简单信息。
  * @param id                // 账号
  * @param pwd               // 密码
  * @param botConfiguration  // 账号配置
  *
  */
-class MiraiBotInfo(private val id: String,
-                   private val pwd: String,
-                   private val botConfiguration: BotConfiguration,
-                   cacheMaps: CacheMaps,
-                   senderRunner: SenderRunner,
-                   registeredSpecialListener: Boolean
-): BotInfo {
+public class MiraiBotInfo(
+    private val id: String,
+    private val pwd: String,
+    private val botConfiguration: BotConfiguration,
+    cacheMaps: CacheMaps,
+    senderRunner: SenderRunner,
+    registeredSpecialListener: Boolean
+) : BotInfo {
 
     /** 使用info的构造 */
-    constructor(botInfo: BotInfo, botConfiguration: BotConfiguration,
-                cacheMaps: CacheMaps, senderRunner: SenderRunner,
-                registeredSpecialListener: Boolean):
+    constructor(
+        botInfo: BotInfo, botConfiguration: BotConfiguration,
+        cacheMaps: CacheMaps, senderRunner: SenderRunner,
+        registeredSpecialListener: Boolean
+    ) :
             this(botInfo.botCode, botInfo.path, botConfiguration, cacheMaps, senderRunner, registeredSpecialListener)
 
-    /** bot信息 */
-    val bot: Bot
+
+    /** bot信息, 通过Mirai获取 */
+    val bot: Bot get() = Bot.getInstance(id.toLong())
+
     /** 送信器 */
-    val botSender: BotSender
+    private val botSender: BotSender
+
     /**  登录信息 */
-    val loginInfo: LoginInfo
+    private val loginInfo: LoginInfo
 
     init {
         // 先验证此bot是否已经被注册或是否仍然在线
-        val botGet = MiraiBots[id]
-        if(botGet != null && botGet.bot.isOnline){
+        val containsAndOnline: Boolean = MiraiBots.containsAndOnline(id)
+
+        if (containsAndOnline) {
             // 已经注册
             throw IllegalArgumentException("id [$id] has already login")
         }
         // 输入账号密码，填入配置，阻塞登录
-        bot = runBlocking { Bot(id.toLong(), pwd, botConfiguration).alsoLogin() }
-        // 将自己记录在MiraiBots中
-        MiraiBots.set(id, this, cacheMaps, registeredSpecialListener)
+        val bot: Bot = runBlocking {
+            Bot(id.toLong(), pwd, botConfiguration).alsoLogin()
+        }
+
+        // 将自己的登录信息缓存在MiraiBots中
+        MiraiBots.set(MiraiBotSimpleInfo(bot.id, pwd), cacheMaps, registeredSpecialListener)
+
         // bot sender
         botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))
 
@@ -218,16 +300,9 @@ class MiraiBotInfo(private val id: String,
 
         // 登录后，如果日志可以关闭，暂时关闭
         val logger = bot.logger
-        if(logger is MiraiLoggerWithSwitch){
+        if (logger is MiraiLoggerWithSwitch) {
             logger.disable()
         }
-
-        // Runtime.getRuntime().addShutdownHook(Thread{
-        //     val id = bot.id
-        //     runBlocking { bot.closeAndJoin() }
-        //     MiraiBots.remove(id.toString())
-        // })
-
     }
 
     /**
@@ -260,19 +335,17 @@ class MiraiBotInfo(private val id: String,
      */
     override fun close() {
         // 关闭bot，并移除其相关信息
-        runBlocking { bot.closeAndJoin() }
-        MiraiBots.remove(id)
+        runBlocking {
+            val botId: Long = bot.id
+            bot.closeAndJoin()
+            MiraiBots.botSimpleInfo.remove(botId)
+        }
     }
 
     /** 一直等待到bot下线 */
-    fun join(){
+    fun join() {
         runBlocking { bot.join() }
     }
 
 }
-
-
-
-
-
 

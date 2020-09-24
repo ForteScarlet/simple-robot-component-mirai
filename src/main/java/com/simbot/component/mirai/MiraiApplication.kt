@@ -17,6 +17,8 @@
 
 package com.simbot.component.mirai
 
+import com.forte.plusutils.consoleplus.console.ColorsBuilder
+import com.forte.plusutils.consoleplus.console.colors.FontColorTypes
 import com.forte.qqrobot.*
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.bot.BotInfo
@@ -30,12 +32,16 @@ import com.forte.qqrobot.log.QQLog
 import com.forte.qqrobot.sender.senderlist.RootSenderList
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.ListenRegisterUtil
+import kotlinx.coroutines.*
+import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotOfflineEvent
 import net.mamoe.mirai.event.subscribeAlways
+import net.mamoe.mirai.join
 import net.mamoe.mirai.message.data.At
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Function
 import kotlin.reflect.KClass
 
@@ -43,32 +49,32 @@ import kotlin.reflect.KClass
  * mirai的context
  */
 class MiraiContext(
-        sender: MiraiBotSender,
-        setter: MiraiBotSender,
-        getter: MiraiBotSender,
-        manager: BotManager,
-        msgParser: MsgParser,
-        processor: MsgProcessor,
-        dependCenter: DependCenter,
-        config: MiraiConfiguration,
-        application: MiraiApplication
+    sender: MiraiBotSender,
+    setter: MiraiBotSender,
+    getter: MiraiBotSender,
+    manager: BotManager,
+    msgParser: MsgParser,
+    processor: MsgProcessor,
+    dependCenter: DependCenter,
+    config: MiraiConfiguration,
+    application: MiraiApplication
 ) : SimpleRobotContext<MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiConfiguration, MiraiApplication>(
-        sender,
-        setter,
-        getter,
-        manager,
-        msgParser,
-        processor,
-        dependCenter,
-        config,
-        application
+    sender,
+    setter,
+    getter,
+    manager,
+    msgParser,
+    processor,
+    dependCenter,
+    config,
+    application
 )
 
 
 /**
  * mirai app
  */
-interface MiraiApp: Application<MiraiConfiguration> {
+interface MiraiApp : Application<MiraiConfiguration> {
     override fun before(configuration: MiraiConfiguration)
 }
 
@@ -81,7 +87,8 @@ interface MiraiApp: Application<MiraiConfiguration> {
  * @since JDK1.8
  **/
 @Suppress("jol")
-class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
+class MiraiApplication :
+    BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
 
     private lateinit var botThread: Thread
 
@@ -130,7 +137,7 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun resourceInit() {
         // add shutdown hook for close.
         val app = this
-        Runtime.getRuntime().addShutdownHook(Thread{
+        Runtime.getRuntime().addShutdownHook(Thread {
             app.close()
         })
         registerMiraiAtFilter()
@@ -139,14 +146,14 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     /**
      * 注册Mirai的at判断，追加当为[MiraiMessageGet]的时候的判断
      */
-    private fun registerMiraiAtFilter(){
+    private fun registerMiraiAtFilter() {
         ListenerFilter.updateAtDetectionFunction { old ->
             Function { msg ->
-                if(msg is MiraiMessageGet<*>){
+                if (msg is MiraiMessageGet<*>) {
                     AtDetection {
                         (msg.message.find { msg -> msg is At } as? At)?.target == msg.event.bot.id
                     }
-                }else{
+                } else {
                     old.apply(msg)
                 }
             }
@@ -156,27 +163,27 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     /**
      * 注册mirai可提供的额外事件
      */
-    private fun registerMiraiEvent(){
+    private fun registerMiraiEvent() {
         val specialListeners: Map<String, KClass<out MsgGet>> = mapOf(
-                // 头像变更事件
-                MiraiEvents.friendAvatarChangedEvent to FriendAvatarChanged::class,
-                // 昵称变更事件
-                MiraiEvents.friendNicknameChangedEvent to FriendNicknameChanged::class,
-                // 输入状态变更事件
-                MiraiEvents.friendInputStatusChangedEvent to FriendInputStatusChanged::class,
-                // bot离线事件
-                MiraiEvents.botOfflineEvent to BotOffline::class,
-                // bot重新登录事件
-                MiraiEvents.botReloginEvent to BotRelogin::class,
-                // 群名称变更事件
-                MiraiEvents.groupNameChangedEvent to GroupNameChanged::class,
-                // 群员群昵称变更事件
-                MiraiEvents.memberRemarkChangedEvent to MemberRemarkChanged::class,
-                // 群员群头衔变更事件
-                MiraiEvents.memberSpecialTitleChangedEvent to MemberSpecialTitleChanged::class,
+            // 头像变更事件
+            MiraiEvents.friendAvatarChangedEvent to FriendAvatarChanged::class,
+            // 昵称变更事件
+            MiraiEvents.friendNicknameChangedEvent to FriendNicknameChanged::class,
+            // 输入状态变更事件
+            MiraiEvents.friendInputStatusChangedEvent to FriendInputStatusChanged::class,
+            // bot离线事件
+            MiraiEvents.botOfflineEvent to BotOffline::class,
+            // bot重新登录事件
+            MiraiEvents.botReloginEvent to BotRelogin::class,
+            // 群名称变更事件
+            MiraiEvents.groupNameChangedEvent to GroupNameChanged::class,
+            // 群员群昵称变更事件
+            MiraiEvents.memberRemarkChangedEvent to MemberRemarkChanged::class,
+            // 群员群头衔变更事件
+            MiraiEvents.memberSpecialTitleChangedEvent to MemberSpecialTitleChanged::class,
         )
 
-        if(!ListenRegisterUtil.usable){
+        if (!ListenRegisterUtil.usable) {
             val show = specialListeners.values.joinToString(",\n", transform = {
                 it.simpleName as CharSequence
             })
@@ -209,7 +216,15 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
             if (it is MiraiMessageGet<*>) {
                 contact = it.contact
             }
-            MultipleMiraiBotSender(contact, it, botManager, cacheMaps, senderRunner, registeredSpecialListenerSuccess, conf)
+            MultipleMiraiBotSender(
+                contact,
+                it,
+                botManager,
+                cacheMaps,
+                senderRunner,
+                registeredSpecialListenerSuccess,
+                conf
+            )
         }
     }
 
@@ -222,11 +237,22 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * @param dependCenter  依赖中心
      * @return 组件的Context对象实例
      */
-    override fun getComponentContext(defaultSenders: DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender>,
-                                     manager: BotManager,
-                                     msgParser: MsgParser, processor: MsgProcessor,
-                                     dependCenter: DependCenter, config: MiraiConfiguration): MiraiContext
-            = MiraiContext(defaultSenders.sender, defaultSenders.getter, defaultSenders.setter, manager, msgParser, processor, dependCenter, config, this)
+    override fun getComponentContext(
+        defaultSenders: DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender>,
+        manager: BotManager,
+        msgParser: MsgParser, processor: MsgProcessor,
+        dependCenter: DependCenter, config: MiraiConfiguration
+    ): MiraiContext = MiraiContext(
+        defaultSenders.sender,
+        defaultSenders.getter,
+        defaultSenders.setter,
+        manager,
+        msgParser,
+        processor,
+        dependCenter,
+        config,
+        this
+    )
 
 
     @Deprecated("just see getDefaultSenders", ReplaceWith("null"))
@@ -247,7 +273,8 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
     override fun getDefaultSenders(botManager: BotManager): DefaultSenders<MiraiBotSender, MiraiBotSender, MiraiBotSender> {
         val cacheMaps = dependCenter.get(CacheMaps::class.java)
         val senderRunner = dependCenter.get(SenderRunner::class.java)
-        val defaultSender = DefaultMiraiBotSender(null, cacheMaps, senderRunner, registeredSpecialListenerSuccess, botManager, conf)
+        val defaultSender =
+            DefaultMiraiBotSender(null, cacheMaps, senderRunner, registeredSpecialListenerSuccess, botManager, conf)
         return DefaultSenders(defaultSender, defaultSender, defaultSender)
     }
 
@@ -258,20 +285,25 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
      * @param msgProcessor   送信解析器
      * @return
      */
-    override fun runServer(dependCenter: DependCenter, manager: ListenerManager, msgProcessor: MsgProcessor, msgParser: MsgParser): String {
+    override fun runServer(
+        dependCenter: DependCenter,
+        manager: ListenerManager,
+        msgProcessor: MsgProcessor,
+        msgParser: MsgParser
+    ): String {
         val cacheMaps = dependCenter.get(CacheMaps::class.java)
+        val senderRunner = dependCenter.get(SenderRunner::class.java)
         // 启动服务，即注册监听
-        MiraiBots.startListen(msgProcessor, cacheMaps, registeredSpecialListenerSuccess)
+        MiraiBots.startListen(msgProcessor, cacheMaps, senderRunner, registeredSpecialListenerSuccess)
 
-        if(config.autoRelogin) {
+        if (config.autoRelogin) {
             // 如果要自动重启，此处注册自动重启事件
-            MiraiBots.forEach {
-                _, info ->
-                val id: Long = info.bot.id
+            MiraiBots.forEach { _, bot ->
+                val id: Long = bot.id
                 // 注册被动下线事件
-                info.bot.subscribeAlways<BotOfflineEvent.Dropped>(priority = Listener.EventPriority.HIGHEST) {
+                bot.subscribeAlways<BotOfflineEvent.Dropped>(priority = Listener.EventPriority.HIGHEST) {
                     val app = this@MiraiApplication
-                    if(this.bot.id == id && !app.doClosed){
+                    if (this.bot.id == id && !app.doClosed) {
                         QQLog.debug("mirai.relogin.off", this.cause, id)
                         bot.login()
                         QQLog.debug("mirai.relogin.on")
@@ -280,18 +312,24 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
             }
         }
 
+        val onlineCheckTime: Long = config.onlineCheck
 
         // 在一条新线程中执行挂起，防止程序终止
-        botThread = Thread({
-            val app = this
-            while(!MiraiBots.empty && !app.isClosed){
-                // QQLog.debug("join all............................")
-                MiraiBots.joinAll()
-                // QQLog.debug("join all end.")
-            }
-            QQLog.debug("bots all shutdown.")
-        }, "Mirai-bot-join")
-        botThread.start()
+        botThread =
+            if (onlineCheckTime <= 0) {
+                MiraiBotLivingThread(this)
+            } else {
+                MiraiBotLivingThreadWithReloginCheck(this, onlineCheckTime)
+            }.apply { start() }
+
+        // botThread = Thread({
+        //     val app = this
+        //     while (!app.isClosed) {
+        //         MiraiBots.joinAll()
+        //     }
+        //     QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+        // }, "Mirai-bot-living").apply { start() }
+
         return "mirai bot server"
     }
 
@@ -308,7 +346,14 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         // 如果验证失败，会抛出异常的
         try {
             QQLog.debug("验证账号$code...")
-            return MiraiBotInfo(code, info.path, conf.botConfiguration(code), cacheMaps, senderRunner, registeredSpecialListenerSuccess)
+            return MiraiBotInfo(
+                code,
+                info.path,
+                conf.botConfiguration(code),
+                cacheMaps,
+                senderRunner,
+                registeredSpecialListenerSuccess
+            )
         } catch (e: Exception) {
             throw BotVerifyException("failed", e, code, e.localizedMessage)
         }
@@ -333,30 +378,78 @@ class MiraiApplication : BaseApplication<MiraiConfiguration, MiraiBotSender, Mir
         val waitTime = 30L
         // join 10 seconds
         QQLog.info("mirai.bot.thread.shutdown", waitTime, timeUnit.name.toLowerCase())
-        // 等待1分钟
+        // interrupt并等待1分钟
+        runCatching { botThread.interrupt() }.exceptionOrNull()?.let { QQLog.error(it) }
+
         botThread.join(TimeUnit.SECONDS.toMillis(waitTime))
-        if(botThread.isAlive){
+        if (botThread.isAlive) {
             QQLog.warning("mirai.bot.thread.mandatoryTermination")
-            try{
+            runCatching {
                 // 强制终止
                 @Suppress("DEPRECATION")
                 botThread.stop()
-            }catch(e: Exception){
-                QQLog.error(e)
-            }
+            }.exceptionOrNull()?.let { QQLog.error(it) }
         }
-        try{
-            botThread.interrupt()
-        }catch(e: Exception){
-            QQLog.error(e)
-        }
+        runCatching { botThread.interrupt() }.exceptionOrNull()?.let { QQLog.error(it) }
     }
 
 }
 
 
+/**
+ * Mirai的bot存活线程。
+ */
+internal class MiraiBotLivingThread(private val app: MiraiApplication) : Thread("mirai-bot-living-thread") {
+    override fun run() {
+        while (isInterrupted || app.isClosed) {
+            // Bot.botInstances.forEach {
+            //     runBlocking {
+            //         it.join()
+            //     }
+            // }
+        }
+        QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+    }
+}
 
+/**
+ * Mirai的bot存活线程。会检测bot是否存活并重启。
+ */
+internal class MiraiBotLivingThreadWithReloginCheck(private val app: MiraiApplication, private val checkLong: Long) :
+    Thread("mirai-bot-living-with-online-check-thread") {
 
+    private val lastCheckTime: AtomicLong = AtomicLong(System.currentTimeMillis())
+
+    override fun run() {
+        while (isInterrupted || app.isClosed) {
+            val lastTime = lastCheckTime.get()
+            val nowTime = System.currentTimeMillis()
+            // 时间差
+            val diff = nowTime - lastTime
+            // diff >= check time
+            if (diff >= checkLong) {
+                lastCheckTime.set(nowTime)
+
+                QQLog.debug("mirai.onlineCheck.relogin.check")
+
+                Bot.botInstances.filter {
+                    // 如果携程依旧存活，但是已经掉线，重新登录
+                    it.isActive && !it.isOnline
+                }.map {
+                    it.async {
+                        QQLog.debug("mirai.onlineCheck.relogin.do", it.id.toString())
+                        it.login()
+                        QQLog.debug("mirai.onlineCheck.relogin.done", it.id.toString())
+                    }
+                }.forEach { runBlocking { it.await() } }
+
+                QQLog.debug("mirai.onlineCheck.relogin.end")
+            }
+
+        }
+        QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+    }
+}
 
 
 

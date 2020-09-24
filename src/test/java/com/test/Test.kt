@@ -14,6 +14,8 @@
 
 package com.test
 
+import java.util.concurrent.TimeUnit
+
 fun main() {
-    println(0x7fffffff == 2147483647)
+    println(TimeUnit.HOURS.toMillis(1))
 }

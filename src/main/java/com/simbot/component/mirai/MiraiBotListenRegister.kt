@@ -197,12 +197,10 @@ private suspend fun ListenResult<*>?.quickReply(event: NewFriendRequestEvent, ca
  * 注册监听
  *
  */
-internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, specialListen: Boolean = false) {
-    val bot = this.bot
-
+internal fun Bot.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, specialListen: Boolean = false) {
     //region 消息监听相关事件
 
-    bot.registerListenerAlways<MessageEvent> {
+    registerListenerAlways<MessageEvent> {
         // 首先缓存此消息
         cacheMaps.recallCache.cache(this.source)
         this.message.forEach {
@@ -245,7 +243,7 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
 
     //region 头像戳一戳事件
     // bot被戳
-    bot.registerListenerAlways<BotNudgedEvent> {
+    registerListenerAlways<BotNudgedEvent> {
         println(this)
         if(this.from.id != this.bot.id){
             when(this.from) {
@@ -256,7 +254,7 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     }
 
     // 群里其他人被戳事件
-    bot.registerListenerAlways<MemberNudgedEvent> {
+    registerListenerAlways<MemberNudgedEvent> {
         println(this)
         if(this.from.id != this.bot.id) {
             MiraiMemberNudgedEvent(this).onMsg(msgProcessor)
@@ -268,21 +266,21 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     // region 申请相关事件
 
     // 被邀请入群事件监听
-    bot.registerListenerAlways<BotInvitedJoinGroupRequestEvent> {
+    registerListenerAlways<BotInvitedJoinGroupRequestEvent> {
         val result = MiraiBotInvitedJoinGroupRequestEvent(this, cacheMaps).onMsg(msgProcessor)
         // try to quick reply
         result.quickReply(this, cacheMaps)
     }
 
     // 其他人申请入群事件监听
-    bot.registerListenerAlways<MemberJoinRequestEvent> {
+    registerListenerAlways<MemberJoinRequestEvent> {
         val result = MiraiMemberJoinRequestEvent(this, cacheMaps).onMsg(msgProcessor)
         // try to quick reply
         result.quickReply(this, cacheMaps)
     }
 
     // 新好友申请事件监听
-    bot.registerListenerAlways<NewFriendRequestEvent> {
+    registerListenerAlways<NewFriendRequestEvent> {
         val miraiNewFriendRequestEvent = MiraiNewFriendRequestEvent(this, cacheMaps)
         val result = miraiNewFriendRequestEvent.onMsg(msgProcessor)
         // try to quick reply
@@ -294,13 +292,13 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     //region 群成员/好友增减事件
 
     //region 成功添加了一个新好友
-    bot.registerListenerAlways<FriendAddEvent> {
+    registerListenerAlways<FriendAddEvent> {
         MiraiFriendAddEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region 群成员增加事件
     // 群成员新增
-    bot.registerListenerAlways<MemberJoinEvent> {
+    registerListenerAlways<MemberJoinEvent> {
         when(this){
             is MemberJoinEvent.Active -> MiraiMemberJoinEvent.Active(this).onMsg(msgProcessor)
             is MemberJoinEvent.Invite -> MiraiMemberJoinEvent.Invite(this).onMsg(msgProcessor)
@@ -308,25 +306,25 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     }
     // bot入群
     // bot主动同意入群
-    bot.registerListenerAlways<BotJoinGroupEvent.Active> {
+    registerListenerAlways<BotJoinGroupEvent.Active> {
         MiraiBotJoinEvent.Active(this).onMsg(msgProcessor)
     }
     // bot被动拉入群
-    bot.registerListenerAlways<BotJoinGroupEvent.Invite> {
+    registerListenerAlways<BotJoinGroupEvent.Invite> {
         MiraiBotJoinEvent.Invite(this).onMsg(msgProcessor)
     }
     //endregion
 
     //region 群成员减少事件
     // 群友减少
-    bot.registerListenerAlways<MemberLeaveEvent> {
+    registerListenerAlways<MemberLeaveEvent> {
         when(this){
             is MemberLeaveEvent.Kick -> MiraiMemberLeaveEvent.Kick(this).onMsg(msgProcessor)
             is MemberLeaveEvent.Quit -> MiraiMemberLeaveEvent.Quit(this).onMsg(msgProcessor)
         }
     }
     // bot退群
-    bot.registerListenerAlways<BotLeaveEvent> {
+    registerListenerAlways<BotLeaveEvent> {
         when(this){
             is BotLeaveEvent.Kick -> MiraiBotLeaveEvent.Kick(this).onMsg(msgProcessor)
             is BotLeaveEvent.Active -> MiraiBotLeaveEvent.Active(this).onMsg(msgProcessor)
@@ -338,18 +336,18 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
 
     //region 权限变动事件
     // 成员权限变动
-    bot.registerListenerAlways<MemberPermissionChangeEvent> {
+    registerListenerAlways<MemberPermissionChangeEvent> {
         MiraiMemberPermissionChangeEvent(this).onMsg(msgProcessor)
     }
     // bot权限变动
-    bot.registerListenerAlways<BotGroupPermissionChangeEvent> {
+    registerListenerAlways<BotGroupPermissionChangeEvent> {
         MiraiBotGroupPermissionChangeEvent(this).onMsg(msgProcessor)
     }
 
     //endregion
 
     //region 消息撤回事件
-    bot.registerListenerAlways<MessageRecallEvent> {
+    registerListenerAlways<MessageRecallEvent> {
         when (this) {
             //region 群消息撤回
             is MessageRecallEvent.GroupRecall -> {
@@ -368,35 +366,35 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     //region 禁言相关
 
     //region 群友被禁言
-    bot.registerListenerAlways<MemberMuteEvent> {
+    registerListenerAlways<MemberMuteEvent> {
         MiraiMemberMuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region 群友被解除禁言
-    bot.registerListenerAlways<MemberUnmuteEvent> {
+    registerListenerAlways<MemberUnmuteEvent> {
         MiraiMemberUnmuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region bot被禁言
-    bot.registerListenerAlways<BotMuteEvent> {
+    registerListenerAlways<BotMuteEvent> {
         MiraiBotMuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
     //region bot被取消禁言
-    bot.registerListenerAlways<BotUnmuteEvent> {
+    registerListenerAlways<BotUnmuteEvent> {
         MiraiBotUnmuteEvent(this).onMsg(msgProcessor)
     }
     //endregion
 
     //region 全员禁言 GroupMuteAllEvent
-    bot.registerListenerAlways<GroupMuteAllEvent> {
+    registerListenerAlways<GroupMuteAllEvent> {
         MiraiGroupMuteAllEvent(this).onMsg(msgProcessor)
     }
     //endregion
 
 
     //region 好友删除事件
-    bot.registerListenerAlways<FriendDeleteEvent> {
+    registerListenerAlways<FriendDeleteEvent> {
         MiraiFriendDeleteEvent(this).onMsg(msgProcessor)
     }
     //endregion
@@ -405,54 +403,54 @@ internal fun MiraiBotInfo.register(msgProcessor: MsgProcessor, cacheMaps: CacheM
     if(specialListen){
 
         //region 好友更换头像事件
-        bot.registerListenerAlways<FriendAvatarChangedEvent> {
+        registerListenerAlways<FriendAvatarChangedEvent> {
             MiraiFriendAvatarChangedEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
 
         //region 好友更换昵称事件
-        bot.registerListenerAlways<FriendNickChangedEvent> {
+        registerListenerAlways<FriendNickChangedEvent> {
             MiraiFriendNicknameChangedEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
 
         //region 好友输入状态变更事件
-        bot.registerListenerAlways<FriendInputStatusChangedEvent> {
+        registerListenerAlways<FriendInputStatusChangedEvent> {
             MiraiFriendInputStatusChangedEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
 
         //region bot离线事件
-        bot.registerListenerAlways<BotOfflineEvent> {
+        registerListenerAlways<BotOfflineEvent> {
             MiraiBotOfflineEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
         //region bot重新登录事件
-        bot.registerListenerAlways<BotReloginEvent> {
+        registerListenerAlways<BotReloginEvent> {
             MiraiBotReloginEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
 
         //region 群名称变更事件
-        bot.registerListenerAlways<GroupNameChangeEvent> {
+        registerListenerAlways<GroupNameChangeEvent> {
             MiraiGroupNameChangedEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
         //region 群友群备注变更事件
-        bot.registerListenerAlways<MemberCardChangeEvent> {
+        registerListenerAlways<MemberCardChangeEvent> {
             MiraiMemberRemarkChangedEvent(this).onMsg(msgProcessor)
         }
         //endregion
 
 
         //region 群友群头衔变更事件
-        bot.registerListenerAlways<MemberSpecialTitleChangeEvent> {
+        registerListenerAlways<MemberSpecialTitleChangeEvent> {
             MiraiMemberSpecialTitleChangedEvent(this).onMsg(msgProcessor)
         }
         //endregion

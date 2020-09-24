@@ -490,7 +490,7 @@ open class MultipleMiraiBotSender(
             return if (info != null) {
                 // 存在此信息，获取bot信息
                 val getBot =
-                    MiraiBots.get(info, conf.botConfiguration, cacheMaps, senderRunner, registeredSpecialListener).bot
+                    MiraiBots.getBotOrLogin(info, conf.botConfiguration, cacheMaps, senderRunner, registeredSpecialListener)
                 _bot = getBot
                 getBot
             } else {

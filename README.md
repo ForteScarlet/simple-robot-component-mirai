@@ -137,11 +137,16 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
     
     
     
-- **record**
+   
+- **record, voice**
 
-    参数：\[file](接收到的语音文件的ID或者上传文件的本地绝对路径/网络http链接地址.)
+    参数：
+    - \[`file`|`voice`](语音的ID或本地文件或网络文件。)
     
-    注①：已支持群聊中的语音转发与特定格式语音文件的上传与发送。
+        注①：file参数中的值，如果为`http`开头则会认定为网络图片。
+        注②：file参数中的值，语音ID一般为接收到的语音的ID，接收到的语音ID存在缓存期，默认缓存30分钟，每次获取此语音则会刷新此时间。也就是说当你30分钟内不再发送此语音，则之后也无法发送了。
+        注③：file参数中的值，在排除了网络语音后，会优先判断缓存，如果缓存中不存在才会去寻找本地文件，并根据本地文件路径将此语音计入缓存。
+
     
 
 - **rps**    
@@ -158,7 +163,7 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
      注①：暂不支持发送骰子，因此语音会变为`[骰子]`字样的文本消息    
 
 
-- **shake**
+- **shake**, **poke**
 
     参数：
     - \[`type`](互动表情的数字类型，如果此参数忽略则会直接使用戳一戳)
@@ -230,6 +235,13 @@ public class TestMain2 /* implements Application // 可以选择实现此接口 
                @JvmField
                val QiaoMen = PokeMessage("敲门", 126, 2002)
      ```
+          
+                         
+    - **nudge**
+    双击头像的戳一戳。需要协议为PHONE协议。
+    参数：
+    - \[`target`](如果发送至群聊，则此处代表为被戳的群员账号, 私聊此参数会被忽略)
+
                
 
 - **anonymous**

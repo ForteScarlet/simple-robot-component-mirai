@@ -28,7 +28,6 @@ import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.collections.ImageCache
 import com.simbot.component.mirai.collections.toCacheKey
 import com.simplerobot.modules.utils.*
-import com.simplerobot.modules.utils.codes.MapKQCode
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -78,7 +77,7 @@ fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
     return KQCodeUtils.split(this) {
         if (this.trim().startsWith("[CQ:")) {
             // 如果是CQ码，转化为KQCode并进行处理
-            KQCode.of(this).toMessage(contact, cacheMaps)
+            KQCode.of(this).toMessageAsync(contact, cacheMaps)
         } else {
             if (this.isBlank()) {
                 EmptyMessageChain
@@ -107,7 +106,7 @@ fun String.toWholeMessage(contact: Contact, cacheMaps: CacheMaps): Message {
 /**
  * KQCode转化为Message对象
  */
-fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> {
+fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> {
     // 判断类型，有些东西有可能并不存在与CQ码规范中，例如XML
     @Suppress("DuplicatedCode")
     return when (this.type) {
@@ -143,7 +142,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         "image" -> contact.async {
             // image 类型的CQ码，参数一般是file, destruct
             val file: String =
-                this@toMessage["file"] ?: this@toMessage["image"] ?: throw CQCodeParamNullPointerException(
+                this@toMessageAsync["file"] ?: this@toMessageAsync["image"] ?: throw CQCodeParamNullPointerException(
                     "image",
                     "file",
                     "image"
@@ -156,7 +155,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
 
             if (image == null) {
                 // 是否缓存此上传的图片
-                val cache: Boolean = this@toMessage["cache"] != "false"
+                val cache: Boolean = this@toMessageAsync["cache"] != "false"
                 return@async if (file.startsWith("http")) {
                     // 网络图片
                     contact.uploadImage(URL(file).toStream().toExternalImage()).also {
@@ -169,7 +168,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
                     val localFile: File = FileUtil.file(file)
                     val externalImage = if (!localFile.exists()) {
                         // 尝试看看有没有url参数, 如果没有则抛出异常
-                        val url = this@toMessage["url"] ?: throw FileNotFoundException(file)
+                        val url = this@toMessageAsync["url"] ?: throw FileNotFoundException(file)
                         cacheKey = url
                         // 如果有，通过url发送
                         URL(url).toStream().toExternalImage()
@@ -181,7 +180,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
                             imageCache[cacheKey] = it
                         }
                     }.run {
-                        if (this@toMessage["destruct"] == "true") {
+                        if (this@toMessageAsync["destruct"] == "true") {
                             this.flash()
                         } else this
                     }
@@ -189,7 +188,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
             }
 
             // 如果是闪照则转化
-            if (this@toMessage["destruct"] == "true") {
+            if (this@toMessageAsync["destruct"] == "true") {
                 image.flash()
             } else {
                 image
@@ -202,8 +201,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
         //region record 语音
         "voice", "record" -> contact.async {
             // voice 类型的CQ码，参数一般是file
-            val file = this@toMessage["file"] ?: this@toMessage["voice"] ?: throw CQCodeParamNullPointerException(
-                "image",
+            val file = this@toMessageAsync["file"] ?: this@toMessageAsync["voice"] ?: throw CQCodeParamNullPointerException(
                 "file",
                 "voice"
             )
@@ -215,7 +213,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
             // see https://github.com/mamoe/mirai/releases/tag/1.2.0
             // return @async
             voiceCache[file] ?: if (contact is Group) {
-                val cache: Boolean = this@toMessage["cache"] != "false"
+                val cache: Boolean = this@toMessageAsync["cache"] != "false"
                 if (file.startsWith("http")) {
                     // 网络图片
                     val stream = URL(file).toStream()
@@ -297,7 +295,7 @@ fun KQCode.toMessage(contact: Contact, cacheMaps: CacheMaps): Deferred<Message> 
                 // 如果是群
                 is Group -> {
                     val code: Long = this["target"]?.toLong() ?: throw IllegalArgumentException("cannot found nudge target: target is empty.")
-                    val nudge: Nudge = contact.getOrNull(code)?.nudge() ?: throw IllegalArgumentException("cannot found nudge target: no such member($code) in group(${contact.id}).")
+                    val nudge: Nudge = contact.getOrNull(code)?.nudge() ?: throw NoSuchElementException("cannot found nudge target: no such member($code) in group(${contact.id}).")
                     // 获取群员并发送
                     contact.async {
                         contact.sendNudge(nudge)

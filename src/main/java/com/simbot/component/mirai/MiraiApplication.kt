@@ -319,16 +319,9 @@ class MiraiApplication :
             if (onlineCheckTime <= 0) {
                 MiraiBotLivingThread(this)
             } else {
+                System.err.println("relogin check!")
                 MiraiBotLivingThreadWithReloginCheck(this, onlineCheckTime)
             }.apply { start() }
-
-        // botThread = Thread({
-        //     val app = this
-        //     while (!app.isClosed) {
-        //         MiraiBots.joinAll()
-        //     }
-        //     QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
-        // }, "Mirai-bot-living").apply { start() }
 
         return "mirai bot server"
     }
@@ -401,7 +394,7 @@ class MiraiApplication :
  */
 internal class MiraiBotLivingThread(private val app: MiraiApplication) : Thread("mirai-bot-living-thread") {
     override fun run() {
-        while (isInterrupted || app.isClosed) {
+        while (!(isInterrupted || app.isClosed)) {
             // Bot.botInstances.forEach {
             //     runBlocking {
             //         it.join()
@@ -421,18 +414,18 @@ internal class MiraiBotLivingThreadWithReloginCheck(private val app: MiraiApplic
     private val lastCheckTime: AtomicLong = AtomicLong(System.currentTimeMillis())
 
     override fun run() {
-        while (isInterrupted || app.isClosed) {
-            val lastTime = lastCheckTime.get()
-            val nowTime = System.currentTimeMillis()
+        while (!(isInterrupted || app.isClosed)) {
+            val lastTime: Long = lastCheckTime.get()
+            val nowTime: Long = System.currentTimeMillis()
             // 时间差
-            val diff = nowTime - lastTime
+            val diff: Long = nowTime - lastTime
             // diff >= check time
             if (diff >= checkLong) {
                 lastCheckTime.set(nowTime)
-
                 QQLog.debug("mirai.onlineCheck.relogin.check")
 
                 Bot.botInstances.filter {
+                    QQLog.debug("mirai.onlineCheck.relogin.check.info", it.id.toString(), it.isActive, it.isOnline)
                     // 如果携程依旧存活，但是已经掉线，重新登录
                     it.isActive && !it.isOnline
                 }.map {
@@ -445,7 +438,6 @@ internal class MiraiBotLivingThreadWithReloginCheck(private val app: MiraiApplic
 
                 QQLog.debug("mirai.onlineCheck.relogin.end")
             }
-
         }
         QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
     }

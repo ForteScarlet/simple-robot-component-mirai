@@ -37,6 +37,7 @@ object MiraiEvents {
      * 好友更换头像事件
      * @since 1.3.0-1.16
      * @see FriendAvatarChanged
+     * @see MiraiFriendAvatarChangedEvent
      */
     const val friendAvatarChangedEvent: String = "friendAvatarChanged"
 
@@ -44,6 +45,7 @@ object MiraiEvents {
     /**
      * 好友昵称变动事件
      * @since 1.8.0-1.16
+     * @see FriendNicknameChanged
      * @see MiraiFriendNicknameChangedEvent
      */
     const val friendNicknameChangedEvent: String = "friendNicknameChanged"
@@ -52,6 +54,7 @@ object MiraiEvents {
     /**
      * 好友输入状态变更事件
      * @since 1.8.0-1.16
+     * @see FriendInputStatusChanged
      * @see MiraiFriendInputStatusChangedEvent
      */
     const val friendInputStatusChangedEvent: String = "friendInputStatusChanged"
@@ -100,11 +103,11 @@ object MiraiEvents {
     此处提供一些额外的监听事件的整合注解
  */
 
-/**
- * 针对于额外的事件[MiraiEvents.friendAvatarChangedEvent]的整合注解。
- */
-@Retention(AnnotationRetention.RUNTIME) //注解会在class字节码文件中存在，在运行时可以通过反射获取到
-@Target(allowedTargets = [CLASS, FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER]) //接口、类、枚举、注解、方法
-@Listen.ByName(MiraiEvents.friendAvatarChangedEvent)
-annotation class OnFriendAvatarChanged
+// /**
+//  * 针对于额外的事件[MiraiEvents.friendAvatarChangedEvent]的整合注解。
+//  */
+// @Retention(AnnotationRetention.RUNTIME) //注解会在class字节码文件中存在，在运行时可以通过反射获取到
+// @Target(allowedTargets = [CLASS, FUNCTION, PROPERTY_GETTER, PROPERTY_SETTER]) //接口、类、枚举、注解、方法
+// @Listen.ByName(MiraiEvents.friendAvatarChangedEvent)
+// annotation class OnFriendAvatarChanged
 

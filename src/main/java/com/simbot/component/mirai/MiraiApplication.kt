@@ -336,7 +336,7 @@ class MiraiApplication :
         val cacheMaps = dependCenter.get(CacheMaps::class.java)
         val senderRunner = dependCenter.get(SenderRunner::class.java)
         // 验证账号, 构建一个BotInfo
-        // 如果验证失败，会抛出异常的
+        // 如果验证失败，会抛出异常
         try {
             QQLog.debug("验证账号$code...")
             return MiraiBotInfo(

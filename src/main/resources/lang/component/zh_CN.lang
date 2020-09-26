@@ -29,9 +29,8 @@ mirai.relogin.off=bot({0})被动掉线, 准备尝试重新连接。title({1}), m
 mirai.relogin.on=bot({0})被动掉线重连。
 
 mirai.onlineCheck.relogin.check=尝试检测掉线bot并重连...
-mirai.onlineCheck.relogin.check.info=bot({0}): active={1}, online={2}
-mirai.onlineCheck.relogin.do=bot({0})掉线，主动重连。
-mirai.onlineCheck.relogin.done=bot({0})掉线，主动重连结束。
+mirai.onlineCheck.relogin.check.info=bot({0}): active={1}, try relogin...
+mirai.onlineCheck.relogin.done=bot({0}主动重连结束。
 mirai.onlineCheck.relogin.end=bot主动掉线检测结束。
 
 bot.close=bot({0}) 关闭。

@@ -30,9 +30,8 @@ mirai.relogin.on=bot({0}) dropped and reconnected.
 
 
 mirai.onlineCheck.relogin.check=Try to detect dropped bots and reconnect...
-mirai.onlineCheck.relogin.check.info=bot({0}): active={1}, online={2}
-mirai.onlineCheck.relogin.do=Bot({0}) dropped and reconnected actively.
-mirai.onlineCheck.relogin.done=Bot({0}) dropped and the active reconnection ended.
+mirai.onlineCheck.relogin.check.info=bot({0}): active={1}, try relogin...
+mirai.onlineCheck.relogin.done=Bot({0}) active reconnection ended.
 mirai.onlineCheck.relogin.end=The bot active disconnection detection ends.
 
 bot.close=Bot({0}) is closed.

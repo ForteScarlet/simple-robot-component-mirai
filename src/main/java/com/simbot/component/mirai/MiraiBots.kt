@@ -56,6 +56,8 @@ object MiraiBots {
     private val noListenBots: MutableSet<Long> = mutableSetOf()
 
 
+    val instances: List<Bot> get() = Bot.botInstances
+
     @Volatile
     private lateinit var cacheMaps: CacheMaps
     @Volatile
@@ -165,9 +167,11 @@ object MiraiBots {
     fun closeAll() {
         Bot.botInstances.map {
             GlobalScope.async {
-                val id = it.id.toString()
+                val id = it.id
+                val idStr = it.id.toString()
                 it.closeAndJoin()
-                QQLog.debug("bot.close", id)
+                QQLog.debug("bot.close", idStr)
+                botSimpleInfo.remove(id)
             }
         }.forEach {
             runBlocking { it.await() }
@@ -237,8 +241,10 @@ public data class MiraiBotProxyInfo(
 
 /**
  * bot的简易info信息。
+ *
+ * @param bot 记录一个Bot实体, 以防止[Bot._instances]中的弱引用丢失
  */
-data class MiraiBotSimpleInfo(internal val id: Long, internal val pwd: String)
+data class MiraiBotSimpleInfo(internal val id: Long, internal val pwd: String, internal val bot: Bot)
 
 
 /**
@@ -289,7 +295,7 @@ public class MiraiBotInfo(
         }
 
         // 将自己的登录信息缓存在MiraiBots中
-        MiraiBots.set(MiraiBotSimpleInfo(bot.id, pwd), cacheMaps, registeredSpecialListener)
+        MiraiBots.set(MiraiBotSimpleInfo(bot.id, pwd, bot), cacheMaps, registeredSpecialListener)
 
         // bot sender
         botSender = BotSender(MiraiBotSender(bot, null, cacheMaps, senderRunner))

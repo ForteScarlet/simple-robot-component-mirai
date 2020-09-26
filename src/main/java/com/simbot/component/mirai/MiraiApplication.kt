@@ -424,13 +424,12 @@ internal class MiraiBotLivingThreadWithReloginCheck(private val app: MiraiApplic
                 lastCheckTime.set(nowTime)
                 QQLog.debug("mirai.onlineCheck.relogin.check")
 
-                Bot.botInstances.filter {
-                    QQLog.debug("mirai.onlineCheck.relogin.check.info", it.id.toString(), it.isActive, it.isOnline)
-                    // 如果携程依旧存活，但是已经掉线，重新登录
-                    it.isActive && !it.isOnline
+                MiraiBots.instances.filter {
+                    // 如果携程依旧存活，重新登录
+                    it.isActive // && !it.isOnline
                 }.map {
                     it.async {
-                        QQLog.debug("mirai.onlineCheck.relogin.do", it.id.toString())
+                        QQLog.debug("mirai.onlineCheck.relogin.check.info", it.id.toString(), it.isActive)
                         it.login()
                         QQLog.debug("mirai.onlineCheck.relogin.done", it.id.toString())
                     }

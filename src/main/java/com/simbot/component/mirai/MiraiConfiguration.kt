@@ -105,8 +105,11 @@ class MiraiConfiguration: BaseConfiguration<MiraiConfiguration>(){
     var cacheDirectory: String? = null
 
 
-    @field:Conf("mirai.onlineCheck", comment = "定时检测Bot们是否都在线。如果时间小于等于0, 则不检测。")
-    var onlineCheck: Long = TimeUnit.HOURS.toMillis(1)
+    @field:Conf("mirai.reloginRegularly", comment = "定时对Bot们进行重新登录。")
+    var reloginRegularly: Long = TimeUnit.HOURS.toMillis(1)
+
+    @field:Conf("mirai.restartForce", comment = "使用强制重启。强制重启为使用BotManager的refreshBot。默认为false。false的时候是使用Mirai的Bot.login进行重启。")
+    var reloginForce: Boolean = false
 
     /**
      * 在[botConfiguration]配置完成后可以提供一些后置处理进行配置覆盖.

@@ -11,6 +11,24 @@ simbot.mirai.onlineCheck=3600000
 
 - 优化bot存活线程的处理。
 
+## ALPHA.3
+- 删除配置：
+```
+simbot.mirai.onlineCheck
+```
+
+- 追加配置：
+```properties
+    # 定时对bot进行重新登录操作。单位毫秒。默认为一小时。如果值小于等于0，则不生效。
+    # 重新登陆操作可能会导致登录期间的消息丢失。
+    simbot.mirai.reloginRegularly=3600000
+
+    # 使用强制重启。强制重启为使用BotManager的refreshBot。
+    # 默认为false。false的时候是使用Mirai的Bot.login进行重启。
+    simbot.mirai.restartForce=false
+```
+
+
 
 # 1.9.1-1.16
 - 更新mirai到`v1.3.1`

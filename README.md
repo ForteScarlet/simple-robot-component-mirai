@@ -27,14 +27,12 @@
 
 
 ## 支持内容
-目前测试了：
-- 私信的复读（文本、表情、图片）
-- 群聊被at情况下的复读（文本、表情、图片）
-- 启动的时候主动发送消息（`after()`）
-- 主动发送图片（以本地路径的cq码类型发送，例如`KQCodeUtils.INSTANCE.toCq("image", "file=C:\\Users\\Administrator\\Desktop\\123.jpg")` 即 `[CQ:image,file=C:\\Users\\Administrator\\Desktop\\123.jpg]`）
+
+> 基本功能都支持。
+
+- 发送消息、图片等。
 - 根据返回值的快捷回复：
     - Message消息相关(私信、群聊事件)中，返回值为`Map`类型的时候，会获取key = "reply"的作为快捷回复值。
-    
     
 - 多账号登录
 - 群消息撤回监听（mirai没有提供用户撤回的消息的具体msg内容的获取方法，因此撤回消息的`getMsg()`方法所得到的值会通过simbot组件进行缓存，如果监听到的撤回消息的缓存已过期或者其发送是在程序未启动的时候发送的，则只能获取到null。）

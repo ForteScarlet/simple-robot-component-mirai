@@ -33,12 +33,10 @@ import com.forte.qqrobot.sender.senderlist.RootSenderList
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.ListenRegisterUtil
 import kotlinx.coroutines.*
-import net.mamoe.mirai.Bot
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.event.Listener
 import net.mamoe.mirai.event.events.BotOfflineEvent
 import net.mamoe.mirai.event.subscribeAlways
-import net.mamoe.mirai.join
 import net.mamoe.mirai.message.data.At
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -312,15 +310,18 @@ class MiraiApplication :
             }
         }
 
-        val onlineCheckTime: Long = config.onlineCheck
+        val reloginRegularly: Long = config.reloginRegularly
 
         // 在一条新线程中执行挂起，防止程序终止
         botThread =
-            if (onlineCheckTime <= 0) {
+            if (reloginRegularly <= 0) {
                 MiraiBotLivingThread(this)
             } else {
-                System.err.println("relogin check!")
-                MiraiBotLivingThreadWithReloginCheck(this, onlineCheckTime)
+                if (config.reloginForce) {
+                    MiraiBotLivingThreadWithReloginCheck(this, reloginRegularly)
+                } else {
+                    MiraiBotLivingThreadWithReloginCheck(this, reloginRegularly)
+                }
             }.apply { start() }
 
         return "mirai bot server"
@@ -372,7 +373,12 @@ class MiraiApplication :
         // join 10 seconds
         QQLog.info("mirai.bot.thread.shutdown", waitTime, timeUnit.name.toLowerCase())
         // interrupt并等待1分钟
-        runCatching { botThread.interrupt() }.exceptionOrNull()?.let { QQLog.error(it) }
+        runCatching {
+            synchronized(lock) {
+                lock.notify()
+            }
+            botThread.interrupt()
+        }.exceptionOrNull()?.let { QQLog.error(it) }
 
         botThread.join(TimeUnit.SECONDS.toMillis(waitTime))
         if (botThread.isAlive) {
@@ -388,20 +394,23 @@ class MiraiApplication :
 
 }
 
+internal val lock = Object()
 
 /**
  * Mirai的bot存活线程。
  */
 internal class MiraiBotLivingThread(private val app: MiraiApplication) : Thread("mirai-bot-living-thread") {
     override fun run() {
-        while (!(isInterrupted || app.isClosed)) {
-            // Bot.botInstances.forEach {
-            //     runBlocking {
-            //         it.join()
-            //     }
-            // }
+        try {
+            while (!(isInterrupted || app.isClosed)) {
+                synchronized(lock) {
+                    lock.wait()
+                }
+            }
+            QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+        } catch (e: InterruptedException) {
+            // ignored.
         }
-        QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
     }
 }
 
@@ -414,31 +423,91 @@ internal class MiraiBotLivingThreadWithReloginCheck(private val app: MiraiApplic
     private val lastCheckTime: AtomicLong = AtomicLong(System.currentTimeMillis())
 
     override fun run() {
-        while (!(isInterrupted || app.isClosed)) {
-            val lastTime: Long = lastCheckTime.get()
-            val nowTime: Long = System.currentTimeMillis()
-            // 时间差
-            val diff: Long = nowTime - lastTime
-            // diff >= check time
-            if (diff >= checkLong) {
-                lastCheckTime.set(nowTime)
-                QQLog.debug("mirai.onlineCheck.relogin.check")
+        try {
+            while (!(isInterrupted || app.isClosed)) {
+                val lastTime: Long = lastCheckTime.get()
+                val nowTime: Long = System.currentTimeMillis()
+                // 时间差
+                val diff: Long = nowTime - lastTime
+                // diff >= check time
+                if (diff >= checkLong) {
+                    lastCheckTime.set(nowTime)
+                    QQLog.debug("mirai.onlineCheck.relogin.check")
 
-                MiraiBots.instances.filter {
-                    // 如果携程依旧存活，重新登录
-                    it.isActive // && !it.isOnline
-                }.map {
-                    it.async {
-                        QQLog.debug("mirai.onlineCheck.relogin.check.info", it.id.toString(), it.isActive)
-                        it.login()
-                        QQLog.debug("mirai.onlineCheck.relogin.done", it.id.toString())
+
+
+                    MiraiBots.instances.filter {
+                        // 如果携程依旧存活，重新登录
+                        // && !it.isOnline
+                        it.isActive.apply {
+                            QQLog.debug("mirai.onlineCheck.relogin.check.info", it.id.toString(), this)
+                        }
+                    }.map {
+                        QQLog.debug("mirai.onlineCheck.relogin.do", it.id.toString())
+                        it.async {
+                            it.login()
+                            QQLog.debug("mirai.onlineCheck.relogin.done", it.id.toString())
+                        }
+                    }.forEach {
+                        runBlocking {
+                            it.await()
+                        }
                     }
-                }.forEach { runBlocking { it.await() } }
 
-                QQLog.debug("mirai.onlineCheck.relogin.end")
+                    QQLog.debug("mirai.onlineCheck.relogin.end")
+                } else {
+                    // sleep diff
+                    sleep(diff)
+                }
             }
+            QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+        } catch (e: InterruptedException) {
+            // ignored.
         }
-        QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+    }
+}
+
+/**
+ * Mirai的bot存活线程。会检测bot是否存活并重启。
+ */
+internal class MiraiBotLivingThreadWithForceReloginCheck(
+    private val app: MiraiApplication,
+    private val checkLong: Long
+) :
+    Thread("mirai-bot-living-with-online-check-thread") {
+
+    private val lastCheckTime: AtomicLong = AtomicLong(System.currentTimeMillis())
+
+    override fun run() {
+        try {
+            while (!(isInterrupted || app.isClosed)) {
+                val lastTime: Long = lastCheckTime.get()
+                val nowTime: Long = System.currentTimeMillis()
+                // 时间差
+                val diff: Long = nowTime - lastTime
+                // diff >= check time
+                if (diff >= checkLong) {
+                    lastCheckTime.set(nowTime)
+                    QQLog.debug("mirai.onlineCheck.relogin.check")
+
+                    kotlin.runCatching {
+                        QQLog.debug("mirai.onlineCheck.relogin.force.do")
+                        BotRuntime.getRuntime().botManager.refreshBot()
+                    }.exceptionOrNull()?.let { e ->
+                        QQLog.error("mirai.onlineCheck.relogin.force.failed", e)
+                    } ?: run {
+                        QQLog.debug("mirai.onlineCheck.relogin.end")
+                    }
+
+                } else {
+                    // sleep diff
+                    sleep(diff)
+                }
+            }
+            QQLog.info("{0}", ColorsBuilder.getInstance().add("bots all shutdown.", FontColorTypes.RED).build())
+        } catch (e: InterruptedException) {
+            // ignored.
+        }
     }
 }
 

@@ -56,7 +56,9 @@ object MiraiBots {
     private val noListenBots: MutableSet<Long> = mutableSetOf()
 
 
-    val instances: List<Bot> get() = Bot.botInstances
+    // val instances: List<Bot> get() = Bot.botInstances
+
+    val instances: List<Bot> get() = botSimpleInfo.map { it.value.bot }
 
     @Volatile
     private lateinit var cacheMaps: CacheMaps

@@ -1,4 +1,5 @@
 # 1.10.0-1.16
+※ ALPHA版本号为“内测”版本，不一定会部署到Maven仓库中。
 ## ALPHA.1
 - 重新定义`MiraiBots`的内容, 对于`Bot`实例的获取均使用`Bot.getInstance`相关方法而不再做内部缓存。
 
@@ -27,6 +28,10 @@ simbot.mirai.onlineCheck
     # 默认为false。false的时候是使用Mirai的Bot.login进行重启。
     simbot.mirai.restartForce=false
 ```
+## ALPHA.3(2)
+奶奶的，怎么搞都没法处理bot突然去世的问题，除了改mirai自身暂时没找到能解决的办法了。
+还是等mirai修复吧。
+
 
 
 

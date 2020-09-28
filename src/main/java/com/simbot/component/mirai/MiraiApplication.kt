@@ -318,7 +318,7 @@ class MiraiApplication :
                 MiraiBotLivingThread(this)
             } else {
                 if (config.reloginForce) {
-                    MiraiBotLivingThreadWithReloginCheck(this, reloginRegularly)
+                    MiraiBotLivingThreadWithForceReloginCheck(this, reloginRegularly)
                 } else {
                     MiraiBotLivingThreadWithReloginCheck(this, reloginRegularly)
                 }

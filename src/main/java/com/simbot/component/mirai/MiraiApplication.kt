@@ -46,7 +46,7 @@ import kotlin.reflect.KClass
 /**
  * mirai的context
  */
-class MiraiContext(
+public class MiraiContext(
     sender: MiraiBotSender,
     setter: MiraiBotSender,
     getter: MiraiBotSender,
@@ -72,10 +72,10 @@ class MiraiContext(
 /**
  * mirai app
  */
-interface MiraiApp : Application<MiraiConfiguration> {
+@Suppress("unused")
+public interface MiraiApp : Application<MiraiConfiguration> {
     override fun before(configuration: MiraiConfiguration)
 }
-
 
 /**
  *
@@ -85,7 +85,7 @@ interface MiraiApp : Application<MiraiConfiguration> {
  * @since JDK1.8
  **/
 @Suppress("jol")
-class MiraiApplication :
+public class MiraiApplication :
     BaseApplication<MiraiConfiguration, MiraiBotSender, MiraiBotSender, MiraiBotSender, MiraiApplication, MiraiContext>() {
 
     private lateinit var botThread: Thread
@@ -369,16 +369,17 @@ class MiraiApplication :
         doClosed = true
         MiraiBots.closeAll()
         val timeUnit = TimeUnit.SECONDS
-        val waitTime = 30L
+        val waitTime = 10L
         // join 10 seconds
         QQLog.info("mirai.bot.thread.shutdown", waitTime, timeUnit.name.toLowerCase())
-        // interrupt并等待1分钟
+        // interrupt并等待
         runCatching {
             synchronized(lock) {
                 lock.notify()
             }
-            botThread.interrupt()
         }.exceptionOrNull()?.let { QQLog.error(it) }
+
+        botThread.interrupt()
 
         botThread.join(TimeUnit.SECONDS.toMillis(waitTime))
         if (botThread.isAlive) {
@@ -437,14 +438,12 @@ internal class MiraiBotLivingThreadWithReloginCheck(private val app: MiraiApplic
 
 
                     MiraiBots.instances.filter {
-                        // 如果携程依旧存活，重新登录
-                        // && !it.isOnline
                         it.isActive.apply {
                             QQLog.debug("mirai.onlineCheck.relogin.check.info", it.id.toString(), this)
                         }
                     }.map {
-                        QQLog.debug("mirai.onlineCheck.relogin.do", it.id.toString())
                         it.async {
+                            QQLog.debug("mirai.onlineCheck.relogin.do", it.id.toString())
                             it.login()
                             QQLog.debug("mirai.onlineCheck.relogin.done", it.id.toString())
                         }

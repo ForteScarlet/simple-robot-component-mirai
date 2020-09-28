@@ -345,8 +345,8 @@ public class MiraiBotInfo(
         // 关闭bot，并移除其相关信息
         runBlocking {
             val botId: Long = bot.id
-            bot.closeAndJoin()
             MiraiBots.botSimpleInfo.remove(botId)
+            bot.closeAndJoin()
         }
     }
 

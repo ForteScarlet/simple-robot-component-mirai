@@ -21,6 +21,7 @@ import com.forte.qqrobot.MsgProcessor
 import com.forte.qqrobot.beans.messages.msgget.MsgGet
 import com.forte.qqrobot.listener.result.ListenResult
 import com.simbot.component.mirai.collections.botId
+import com.simbot.component.mirai.collections.toImgVoiceCacheKey
 import com.simbot.component.mirai.collections.toKey
 import com.simbot.component.mirai.messages.*
 import com.simbot.component.mirai.utils.toWholeMessage
@@ -201,22 +202,25 @@ internal fun Bot.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, spec
     //region 消息监听相关事件
 
     registerListenerAlways<MessageEvent> {
+        // val topType: String = if ( this is GroupMessageEvent ) "GROUP_" else "PRIVATE_"
         // 首先缓存此消息
         cacheMaps.recallCache.cache(this.source)
         this.message.forEach {
             if(it is Image){
                 // 记录图片缓存
-                cacheMaps.imageCache[it.imageId] = it
+                cacheMaps.imageCache[it.imageId.toImgVoiceCacheKey(this)] = it
             }
+
             if(it is FlashImage){
                 // 记录闪照的图片缓存
                 with(it.image) {
-                    cacheMaps.imageCache[this.imageId] = this
+                    cacheMaps.imageCache[this.imageId.toImgVoiceCacheKey(this@registerListenerAlways)] = this
                 }
             }
+
             if(it is Voice){
                 // 记录语音缓存
-                cacheMaps.voiceCache[it.fileName] = it
+                cacheMaps.voiceCache[it.fileName.toImgVoiceCacheKey(this)] = it
             }
         }
         val result = when (this) {

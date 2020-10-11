@@ -27,6 +27,7 @@ import com.simbot.component.mirai.CQCodeParseHandlerRegisterException
 import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.collections.ImageCache
 import com.simbot.component.mirai.collections.toCacheKey
+import com.simbot.component.mirai.collections.toImgVoiceCacheKey
 import com.simplerobot.modules.utils.*
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -141,12 +142,16 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
         //region image
         "image" -> contact.async {
             // image 类型的CQ码，参数一般是file, destruct
-            val file: String =
-                this@toMessageAsync["file"] ?: this@toMessageAsync["image"] ?: throw CQCodeParamNullPointerException(
+            val fileValue: String =
+                this@toMessageAsync["file"] ?: this@toMessageAsync["image"]
+                ?: throw CQCodeParamNullPointerException(
                     "image",
                     "file",
                     "image"
                 )
+
+            val file: String = fileValue.toImgVoiceCacheKey(contact)
+
 
             val imageCache: ImageCache = cacheMaps.imageCache
 
@@ -201,11 +206,13 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
         //region record 语音
         "voice", "record" -> contact.async {
             // voice 类型的CQ码，参数一般是file
-            val file = this@toMessageAsync["file"] ?: this@toMessageAsync["voice"] ?: throw CQCodeParamNullPointerException(
+            val fileValue = this@toMessageAsync["file"] ?: this@toMessageAsync["voice"] ?: throw CQCodeParamNullPointerException(
                 "file",
                 "voice"
             )
             // 先找缓存
+
+            val file = fileValue.toImgVoiceCacheKey(contact)
 
             val voiceCache = cacheMaps.voiceCache
 

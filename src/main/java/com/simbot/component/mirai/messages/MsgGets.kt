@@ -115,10 +115,12 @@ abstract class MiraiBaseMsgGet<out E : BotEvent>(val event: E) : MsgGet {
  *
  * 且实现[MsgGet]接口
  */
-abstract class MiraiMessageGet<out ME : MessageEvent>(event: ME,
-                                                      cacheMaps: CacheMaps,
-                                                      private val toStringName: String = "SimbotMiraiMsgEvent") :
-        MiraiBaseMsgGet<ME>(event) {
+abstract class MiraiMessageGet<out ME : MessageEvent>(
+    event: ME,
+    cacheMaps: CacheMaps,
+    private val toStringName: String = "SimbotMiraiMsgEvent"
+) :
+    MiraiBaseMsgGet<ME>(event) {
 
     /**
      * 获取contact
@@ -150,7 +152,7 @@ abstract class MiraiMessageGet<out ME : MessageEvent>(event: ME,
  *  实现[EventGet]接口
  */
 abstract class MiraiEventGet<out EE : BotEvent>(event: EE, private val toStringName: String = "SimbotMiraiEvent") :
-        MiraiBaseMsgGet<EE>(event), EventGet {
+    MiraiBaseMsgGet<EE>(event), EventGet {
     /** 事件消息正文 */
     override var eventMsg: String? = null
     protected val eventId: String get() = "$event#$onTime"

@@ -71,6 +71,24 @@ open class VoiceCache(
         return voice
     }
 
+    /** 获取 */
+    open fun getGroup(key: String): Voice? {
+        val getKey = key.toGroupKey()
+        // 获取缓存, 并刷新时间
+        val voice = voiceCacheMap[getKey] ?: return null
+        voiceCacheMap.putPlusMinutes(getKey, voice, cacheTime)
+        return voice
+    }
+
+    /** 获取 */
+    open fun getPrivate(key: String): Voice? {
+        val getKey = key.toPrivateKey()
+        // 获取缓存, 并刷新时间
+        val voice = voiceCacheMap[getKey] ?: return null
+        voiceCacheMap.putPlusMinutes(getKey, voice, cacheTime)
+        return voice
+    }
+
 
     /** 记录一个map */
     open operator fun set(key: String, voice: Voice): Voice? {

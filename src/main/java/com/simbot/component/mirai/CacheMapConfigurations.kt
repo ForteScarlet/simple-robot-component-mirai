@@ -52,7 +52,7 @@ class RecallCacheConfiguration(
          * 缓存时间
          */
         @Conf("cacheTime", comment = "缓存时间(ms)")
-        var cacheTime: Long = TimeUnit.MINUTES.toMillis(30),
+        var cacheTime: Long = TimeUnit.MINUTES.toMillis(15),
         /**
          * 内部缓存的初始容量
          */
@@ -63,7 +63,7 @@ class RecallCacheConfiguration(
          * 缓存的最大容量
          */
         @Conf("max", comment = "缓存的最大容量")
-        var max: Long = 102400
+        var max: Long = 512
 )
 
 
@@ -78,7 +78,7 @@ class RequestCacheConfiguration(
         @Conf("check", comment = "清理缓存临界值, 当计数器达到指定值则触发一次清理")
         var check: Int = 1000,
         /**
-         * 默认缓存5分钟
+         * 默认缓存
          */
         @Conf("cacheTime", comment = "缓存时间(ms)")
         var cacheTime: Long = TimeUnit.MINUTES.toMillis(5),
@@ -96,12 +96,12 @@ class RequestCacheConfiguration(
          * 缓存的最大容量
          */
         @Conf("friend.max", comment = "好友相关的缓存的最大容量")
-        var friendRequestMax: Long = 102400,
+        var friendRequestMax: Long = 256,
         /**
          * 缓存的最大容量
          */
         @Conf("join.max", comment = "群相关的缓存的最大容量")
-        var joinRequestMax: Long = 102400
+        var joinRequestMax: Long = 256
 )
 
 /**
@@ -115,10 +115,10 @@ class ImageCacheConfiguration(
         @Conf("check", comment = "清理缓存临界值, 当计数器达到指定值则触发一次清理")
         var check: Int = 1000,
         /**
-         * 默认缓存30分钟
+         * 默认缓存
          */
         @Conf("cacheTime", comment = "缓存时间(ms)")
-        var cacheTime: Long = TimeUnit.MINUTES.toMillis(30),
+        var cacheTime: Long = TimeUnit.MINUTES.toMillis(5),
         /**
          * 内部缓存的初始容量
          */
@@ -128,7 +128,7 @@ class ImageCacheConfiguration(
          * 缓存的最大容量
          */
         @Conf("max", comment = "缓存的最大容量")
-        var max: Long = 102400
+        var max: Long = 256
 )
 
 /**
@@ -143,10 +143,10 @@ class VoiceCacheConfiguration(
         @Conf("check", comment = "清理缓存临界值, 当计数器达到指定值则触发一次清理")
         var check: Int = 1000,
         /**
-         * 默认缓存30分钟
+         * 默认缓存
          */
         @Conf("cacheTime", comment = "缓存时间(ms)")
-        var cacheTime: Long = TimeUnit.MINUTES.toMillis(30),
+        var cacheTime: Long = TimeUnit.MINUTES.toMillis(5),
         /**
          * 内部缓存的初始容量
          */
@@ -156,7 +156,7 @@ class VoiceCacheConfiguration(
          * 缓存的最大容量
          */
         @Conf("max", comment = "缓存的最大容量")
-        var max: Long = 102400
+        var max: Long = 256
 )
 
 /**
@@ -170,10 +170,10 @@ class ContactCacheConfiguration(
         @Conf("check", comment = "清理缓存临界值, 当计数器达到指定值则触发一次清理")
         var check: Int = 1000,
         /**
-         * 默认缓存15分钟
+         * 默认缓存
          */
         @Conf("cacheTime", comment = "缓存时间(ms)")
-        var cacheTime: Long = TimeUnit.MINUTES.toMillis(15),
+        var cacheTime: Long = TimeUnit.MINUTES.toMillis(5),
         /**
          * 内部缓存的初始容量
          */
@@ -184,7 +184,7 @@ class ContactCacheConfiguration(
          * 缓存的最大容量
          */
         @Conf("max", comment = "缓存的最大容量")
-        var max: Long = 102400
+        var max: Long = 256
 )
 
 

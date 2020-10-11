@@ -13,7 +13,7 @@ simbot.mirai.onlineCheck=3600000
 - 优化bot存活线程的处理。
 
 ## ALPHA.3
-优化mirai存活线程的存活方式，降低cpu压力。
+- 优化mirai存活线程的存活方式，降低cpu压力。
 
 - 删除配置：
 ```
@@ -30,14 +30,16 @@ simbot.mirai.onlineCheck
     # 默认为false。false的时候是使用Mirai的Bot.login进行重启。
     simbot.mirai.restartForce=false
 ```
+
+
 ## ALPHA.3(2)
-奶奶的，怎么搞都没法处理bot突然去世的问题，除了改mirai自身暂时没找到能解决的办法了。
+- 奶奶的，怎么搞都没法处理bot突然去世的问题，除了改mirai自身暂时没找到能解决的办法了。
 还是等mirai修复吧。
 
 ## BETA.1
-修改（降低）几个cache的默认值。
-修改image与voice的缓存机制，隔离群聊与私聊。
-
+- 修改（降低）几个cache的默认值。
+- 修改image与voice的缓存机制，隔离群聊与私聊。
+- 更新mirai版本到`v1.3.2`。
 
 
 

@@ -7,8 +7,8 @@
     <groupId>love.forte.simple-robot-component</groupId>
     <artifactId>component-mirai</artifactId>
 
-    <!-- 1.9.1-1.16 2020/9/23 -->
-    <version>1.10.0-1.16-BETA.1</version>
+    <!-- 1.10.0-1.16-BETA.2 2020/10/12 -->
+    <version>1.10.0-1.16-BETA.2</version>
 
     <properties>
         <hutool.versin>5.3.8</hutool.versin>
@@ -348,8 +348,7 @@
                 <version>${dokka.version}</version>
                 <executions>
                     <execution>
-                        <id>deploy-ex</id>
-                        <phase>site-deploy</phase>
+                        <phase>install</phase>
                         <goals>
                             <!--<goal>dokka</goal>-->
                             <!--<goal>javadoc</goal>-->
@@ -423,7 +422,7 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <phase>deploy</phase>
+                        <phase>install</phase>
                         <goals>
                             <goal>sign</goal>
                         </goals>

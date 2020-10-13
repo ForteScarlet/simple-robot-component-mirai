@@ -150,36 +150,38 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
                     "image"
                 )
 
-            val file: String = fileValue.toImgVoiceCacheKey(contact)
+            val fileCache: String = fileValue.toImgVoiceCacheKey(contact)
 
 
             val imageCache: ImageCache = cacheMaps.imageCache
 
             // 先查缓存
-            val image: Image? = imageCache[file]
+            val image: Image? = imageCache[fileCache]
 
             if (image == null) {
                 // 是否缓存此上传的图片
                 val cache: Boolean = this@toMessageAsync["cache"] != "false"
-                return@async if (file.startsWith("http")) {
+                return@async if (fileValue.startsWith("http")) {
                     // 网络图片
-                    contact.uploadImage(URL(file).toStream().toExternalImage()).also {
+                    contact.uploadImage(URL(fileValue).toStream().toExternalImage()).also {
                         if (cache) {
-                            imageCache[file] = it
+                            imageCache[fileCache] = it
                         }
                     }
                 } else {
-                    var cacheKey = file
-                    val localFile: File = FileUtil.file(file)
+                    var cacheKey = fileCache
+                    val localFile: File = FileUtil.file(fileValue)
                     val externalImage = if (!localFile.exists()) {
                         // 尝试看看有没有url参数, 如果没有则抛出异常
-                        val url = this@toMessageAsync["url"] ?: throw FileNotFoundException(file)
-                        cacheKey = url
+                        val url = this@toMessageAsync["url"] ?: throw FileNotFoundException(fileValue)
+                        cacheKey = url.toImgVoiceCacheKey(contact)
                         // 如果有，通过url发送
                         URL(url).toStream().toExternalImage()
                     } else {
                         localFile.toExternalImage()
                     }
+
+
                     contact.uploadImage(externalImage).also {
                         if (cache) {
                             imageCache[cacheKey] = it
@@ -212,38 +214,37 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
             )
             // 先找缓存
 
-            val file = fileValue.toImgVoiceCacheKey(contact)
+            val fileCache = fileValue.toImgVoiceCacheKey(contact)
 
             val voiceCache = cacheMaps.voiceCache
 
             // 截止到1.2.0, 只支持Group.uploadVoice
             // see https://github.com/mamoe/mirai/releases/tag/1.2.0
             // return @async
-            voiceCache[file] ?: if (contact is Group) {
+            voiceCache[fileCache] ?: if (contact is Group) {
                 val cache: Boolean = this@toMessageAsync["cache"] != "false"
-                if (file.startsWith("http")) {
+                if (fileValue.startsWith("http")) {
                     // 网络图片
-                    val stream = URL(file).toStream()
+                    val stream = URL(fileValue).toStream()
 //                    contact.async {
                     stream.uploadAsGroupVoice(contact).also {
+                        kotlin.runCatching { stream.close() }
                         if (cache) {
-                            voiceCache[file] = it
-                            voiceCache[it.fileName] = it
+                            voiceCache[fileCache] = it
+                            voiceCache[it.fileName.toImgVoiceCacheKey(contact)] = it
                         }
                     }
-//                    }
                 } else {
                     // 本地文件
-                    val voiceFile = File(file)
+                    val voiceFile = File(fileValue)
                     val stream = BufferedInputStream(FileInputStream(voiceFile))
-//                    contact.async {
                     contact.uploadVoice(stream).also {
+                        kotlin.runCatching { stream.close() }
                         if (cache) {
-                            voiceCache[file] = it
-                            voiceCache[it.fileName] = it
+                            voiceCache[fileCache] = it
+                            voiceCache[it.fileName.toImgVoiceCacheKey(contact)] = it
                         }
                     }
-//                    }
                 }
             } else {
                 EmptyMessageChain

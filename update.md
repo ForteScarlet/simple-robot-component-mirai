@@ -41,6 +41,10 @@ simbot.mirai.onlineCheck
 - 修改image与voice的缓存机制，隔离群聊与私聊。
 - 更新mirai版本到`v1.3.2`。
 
+## BETA.2
+- 处理部分需要手动关流的地方。
+
+
 
 
 # 1.9.1-1.16

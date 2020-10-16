@@ -273,8 +273,8 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
         "shake", "poke" -> {
             // 戳一戳进行扩展，可多解析'type'参数与'id'参数。
             // 如果没有type，直接返回戳一戳
-            // 如果是再群内发送，则优先认为是头像戳一戳
-            val type = this["type"]?.toInt() ?: return PokeMessage.Poke.async()
+            // 如果是再群内发送，则认为是头像戳一戳
+            val type = this["type"]?.toInt() // ?: return PokeMessage.Poke.async()
             val id = this["id"]?.toInt() ?: -1
 
             // 如果目标是一个群成员，则说明使用双击头像的”戳一戳“
@@ -291,7 +291,11 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
                 }
                 else -> {
                     // 尝试寻找对应的Poke，找不到则返回戳一戳
-                    return (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke).async()
+                    return if (type == null) {
+                        PokeMessage.Poke
+                    } else {
+                        (PokeMessage.values.find { it.type == type && it.id == id } ?: PokeMessage.Poke)
+                    }.async()
                 }
             }
         }
@@ -540,29 +544,6 @@ private suspend fun URL.toStream(): InputStream {
     } else {
         throw IllegalStateException("connection to '$urlString' failed ${status.value}: ${status.description}")
     }
-
-//    val urlName = this.toString()
-//    var connection: HttpURLConnection = this.openConnection() as HttpURLConnection
-//    connection.connectTimeout = 10_000
-//    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
-//    while(true) {
-//        val responseCode = connection.responseCode
-//        if(responseCode == 302){
-//            val location = connection.getHeaderField("Location")
-//            connection = URL(location).openConnection() as HttpURLConnection
-//            connection.connectTimeout = 10_000
-//            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36")
-//            continue
-//        }else if(responseCode >= 300){
-//            val errStream = connection.errorStream
-//            val errText = BufferedReader(InputStreamReader(errStream)).use { it.readText() }
-//            throw IllegalStateException("http connection to $urlName failed($responseCode): $errText")
-//        }else {
-//            return connection.inputStream
-//        }
-//    }
-
-
 }
 
 

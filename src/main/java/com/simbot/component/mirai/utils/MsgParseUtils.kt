@@ -32,6 +32,7 @@ import com.simplerobot.modules.utils.*
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -45,7 +46,6 @@ import net.mamoe.mirai.message.data.AtAll
 import net.mamoe.mirai.message.uploadAsGroupVoice
 import net.mamoe.mirai.utils.toExternalImage
 import java.io.*
-import java.net.URL
 import java.util.function.BiFunction
 import kotlin.collections.set
 
@@ -163,7 +163,7 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
                 val cache: Boolean = this@toMessageAsync["cache"] != "false"
                 return@async if (fileValue.startsWith("http")) {
                     // 网络图片
-                    contact.uploadImage(URL(fileValue).toStream().toExternalImage()).also {
+                    contact.uploadImage(Url(fileValue).toStream().toExternalImage()).also {
                         if (cache) {
                             imageCache[fileCache] = it
                         }
@@ -176,7 +176,7 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
                         val url = this@toMessageAsync["url"] ?: throw FileNotFoundException(fileValue)
                         cacheKey = url.toImgVoiceCacheKey(contact)
                         // 如果有，通过url发送
-                        URL(url).toStream().toExternalImage()
+                        Url(url).toStream().toExternalImage()
                     } else {
                         localFile.toExternalImage()
                     }
@@ -225,7 +225,7 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
                 val cache: Boolean = this@toMessageAsync["cache"] != "false"
                 if (fileValue.startsWith("http")) {
                     // 网络图片
-                    val stream = URL(fileValue).toStream()
+                    val stream = Url(fileValue).toStream()
 //                    contact.async {
                     stream.uploadAsGroupVoice(contact).also {
                         kotlin.runCatching { stream.close() }
@@ -237,7 +237,7 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
                 } else {
                     // 本地文件
                     val voiceFile = File(fileValue)
-                    val stream = BufferedInputStream(FileInputStream(voiceFile))
+                    val stream = BufferedInputStream(voiceFile.inputStream())
                     contact.uploadVoice(stream).also {
                         kotlin.runCatching { stream.close() }
                         if (cache) {
@@ -532,7 +532,7 @@ private val httpClient: HttpClient = HttpClient()
  * 通过http网络链接得到一个输入流。
  * 通常认为是一个http-get请求
  */
-private suspend fun URL.toStream(): InputStream {
+private suspend fun Url.toStream(): InputStream {
     val urlString = this.toString()
     QQLog.debug("mirai.http.connection.try", urlString)
     val response = httpClient.get<HttpResponse>(this)

@@ -44,6 +44,9 @@ simbot.mirai.onlineCheck
 ## BETA.2
 - 处理部分需要手动关流的地方。
 
+## BETA.3
+- 尝试更替部分url流读取方式为ktor中的方式。
+- 尝试更替部分文件流读取方式。
 
 
 

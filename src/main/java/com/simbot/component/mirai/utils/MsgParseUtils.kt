@@ -209,8 +209,8 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
         "voice", "record" -> contact.async {
             // voice 类型的CQ码，参数一般是file
             val fileValue = this@toMessageAsync["file"] ?: this@toMessageAsync["voice"] ?: throw CQCodeParamNullPointerException(
-                "file",
-                "voice"
+                "voice",
+                "file"
             )
             // 先找缓存
 
@@ -352,62 +352,66 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
 
         //region share
         "share" -> {
-            EmptyMessageChain.async()
-            // 分享
-            // 参数："url", "title", "content*", "image*"
-//            val type = this["url"]
-//            val title = this["title"]
-//            PlainText("$title: $type")
+            // 至少需要一个url
+            val url: String = this["url"] ?: throw CQCodeParamNullPointerException(
+                "share",
+                "url"
+            )
+            val title: String? =this["title"]
+            val content: String? = this["content"]
+            val coverUrl: String? = this["coverUrl"]
+
+            RichMessage.share(url, title, content, coverUrl).async()
         }
         //endregion
 
         //region emoji
-        "emoji" -> {
-            EmptyMessageChain.async()
-            // emoji, 基本用不到
-            // val id = this["id"] ?: ""
-            // PlainText("emoji($id)")
-        }
+        // "emoji" -> {
+        //     EmptyMessageChain.async()
+        //     // emoji, 基本用不到
+        //     // val id = this["id"] ?: ""
+        //     // PlainText("emoji($id)")
+        // }
         //endregion
 
 
         //region location
-        "location" -> {
-            EmptyMessageChain.async()
-            // 地点 "lat", "lon", "title", "content"
-//            val lat = this["lat"] ?: ""
-//            val lon = this["lon"] ?: ""
-//            val title = this["title"] ?: ""
-//            val content = this["content"] ?: ""
-//            PlainText("位置($lat,$lon)[$title]:$content")
-        }
+//         "location" -> {
+//             EmptyMessageChain.async()
+//             // 地点 "lat", "lon", "title", "content"
+// //            val lat = this["lat"] ?: ""
+// //            val lon = this["lon"] ?: ""
+// //            val title = this["title"] ?: ""
+// //            val content = this["content"] ?: ""
+// //            PlainText("位置($lat,$lon)[$title]:$content")
+//         }
         //endregion
 
         //region sign
-        "sign" -> EmptyMessageChain.async()
+        // "sign" -> EmptyMessageChain.async()
 
         //endregion
 
         //region show
-        "show" -> EmptyMessageChain.async()
+        // "show" -> EmptyMessageChain.async()
         //endregion
 
 
         //region contact
-        "contact" -> {
-            EmptyMessageChain.async()
-            // 联系人分享
-            // ype一般可能是qq或者group
-            // [CQ:contact,id=1234546,type=qq]
-            // val id = this["id"] ?: return EmptyMessageChain
-
-            // val typeName = when(this["type"]){
-            //     "qq" -> "好友分享"
-            //     "group" -> "群聊分享"
-            //     else -> "其他分享"
-            // }
-            // PlainText("$typeName: $id")
-        }
+        // "contact" -> {
+        //     EmptyMessageChain.async()
+        //     // 联系人分享
+        //     // ype一般可能是qq或者group
+        //     // [CQ:contact,id=1234546,type=qq]
+        //     // val id = this["id"] ?: return EmptyMessageChain
+        //
+        //     // val typeName = when(this["type"]){
+        //     //     "qq" -> "好友分享"
+        //     //     "group" -> "群聊分享"
+        //     //     else -> "其他分享"
+        //     // }
+        //     // PlainText("$typeName: $id")
+        // }
         //endregion
 
         //region xml message

@@ -49,6 +49,19 @@ simbot.mirai.onlineCheck
 - 尝试更替部分文件流读取方式。
 
 
+## BETA.4
+- 追加支持解析`share(网页分享)`类型的CQ码。其中，`url(网址)`参数为必须的，
+`title(标题)`、`content(内容, 大概指的是简介之类的)`、`coverUrl(封面)`均为可选参数。
+```java
+// 举例：使用builder构建cq码
+KQCodeUtils.getStringBuilder("share")
+    .key("url").value("分享链接")
+    .key("title").value("分享标题！") // 可选参数
+    .key("content").value("分享正文！") // 可选参数
+    .key("coverUrl").value("封面图片链接")// 可选参数
+    .build()
+```
+
 
 # 1.9.1-1.16
 - 更新mirai到`v1.3.1`

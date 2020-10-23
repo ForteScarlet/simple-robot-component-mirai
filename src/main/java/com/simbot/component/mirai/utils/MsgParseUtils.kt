@@ -327,13 +327,6 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
         }
         //endregion
 
-        //region anonymous
-        "anonymous" -> {
-            // 匿名消息，不进行解析
-            EmptyMessageChain.async()
-        }
-        //endregion
-
         //region music
         "music" -> {
             // 音乐，就是分享，应该归类于xml

@@ -248,7 +248,6 @@ internal fun Bot.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, spec
     //region 头像戳一戳事件
     // bot被戳
     registerListenerAlways<BotNudgedEvent> {
-        println(this)
         if(this.from.id != this.bot.id){
             when(this.from) {
                 is Member -> MiraiBotGroupNudgedEvent(this).onMsg(msgProcessor)
@@ -259,7 +258,6 @@ internal fun Bot.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, spec
 
     // 群里其他人被戳事件
     registerListenerAlways<MemberNudgedEvent> {
-        println(this)
         if(this.from.id != this.bot.id) {
             MiraiMemberNudgedEvent(this).onMsg(msgProcessor)
         }
@@ -395,7 +393,7 @@ internal fun Bot.register(msgProcessor: MsgProcessor, cacheMaps: CacheMaps, spec
         MiraiGroupMuteAllEvent(this).onMsg(msgProcessor)
     }
     //endregion
-
+    //endregion
 
     //region 好友删除事件
     registerListenerAlways<FriendDeleteEvent> {

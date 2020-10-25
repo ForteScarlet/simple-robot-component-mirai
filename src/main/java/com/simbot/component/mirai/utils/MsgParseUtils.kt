@@ -114,7 +114,7 @@ fun KQCode.toMessageAsync(contact: Contact, cacheMaps: CacheMaps): Deferred<Mess
         //region CQ码解析为Message
         //region at
         "at" -> {
-            val id = this["qq"] ?: this["at"] ?: throw CQCodeParamNullPointerException("at", "qq", "at")
+            val id = this["code"] ?: this["qq"] ?: this["at"] ?: throw CQCodeParamNullPointerException("at", "code", "qq", "at")
             if (id == "all") {
                 AtAll.async()
             } else {
@@ -649,7 +649,7 @@ fun SingleMessage.toCqOrTextString(cacheMaps: CacheMaps): String {
 
             is At -> {
                 KQCodeUtils.getStringBuilder("at")
-                    .key("qq").value(target)
+                    .key("code").value(target)
                     .key("display").value(display)
                     .build()
             }
@@ -679,9 +679,9 @@ fun SingleMessage.toCqOrTextString(cacheMaps: CacheMaps): String {
                 // val quoteMq = MQCodeUtils.toMqCode(this.toString())
                 // val quoteKq = quoteMq.toKQCode().mutable()
                 // quoteKq["id"] = this.source.toCacheKey()
-                // quoteKq["qq"] = this.source.fromId.toString()
+                // quoteKq["code"] = this.source.fromId.toString()
                 // quoteKq
-                KQCodeUtils.toCq("quote", false, "id=${source.toCacheKey()}", "qq=${source.fromId}")
+                KQCodeUtils.toCq("quote", false, "id=${source.toCacheKey()}", "code=${source.fromId}")
             }
 
             // 富文本

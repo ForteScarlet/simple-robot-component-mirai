@@ -62,6 +62,10 @@ KQCodeUtils.getStringBuilder("share")
     .build()
 ```
 
+## release
+- 更新kqcodeutils以解决部分常量KQCode的toString异常的问题。
+- 修改部分CQ码的解析，以适应Cat码与CQ码的特性，例如一切代表“账号”的参数，都从`qq`调整为`code`，例如`[CQ:at,code=123]`。
+
 
 # 1.9.1-1.16
 - 更新mirai到`v1.3.1`

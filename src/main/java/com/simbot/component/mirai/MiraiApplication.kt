@@ -148,8 +148,10 @@ public class MiraiApplication :
         ListenerFilter.updateAtDetectionFunction { old ->
             Function { msg ->
                 if (msg is MiraiMessageGet<*>) {
+                    val botId = msg.event.bot.id
                     AtDetection {
-                        (msg.message.find { msg -> msg is At } as? At)?.target == msg.event.bot.id
+                        msg.message.any { msg -> msg is At && msg.target == botId }
+                        // msg.message.find { msg -> msg is At && msg.target == botId }?.let { true } ?: false
                     }
                 } else {
                     old.apply(msg)

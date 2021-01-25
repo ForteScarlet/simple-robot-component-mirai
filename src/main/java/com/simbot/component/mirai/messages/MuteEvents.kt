@@ -74,6 +74,13 @@ open class MiraiMemberMuteEvent(event: MemberMuteEvent): Mute<MemberMuteEvent>(e
     override fun time(): Long = durationSeconds
     /** 操作者的QQ号  */
     override fun getOperatorQQ(): String = operatorId
+    override fun getNickname(): String {
+        return event.member.nick
+    }
+
+    override fun getRemark(): String {
+        return event.member.nameCard
+    }
 }
 //endregion
 //region 群成员解除禁言
@@ -91,6 +98,13 @@ open class MiraiMemberUnmuteEvent(event: MemberUnmuteEvent): Unmute<MemberUnmute
     override fun time(): Long = 0
     /** 操作者的QQ号  */
     override fun getOperatorQQ(): String = operatorId
+    override fun getNickname(): String {
+        return event.member.nick
+    }
+
+    override fun getRemark(): String {
+        return event.member.nameCard
+    }
 }
 //endregion
 
@@ -109,6 +123,11 @@ open class MiraiBotMuteEvent(event: BotMuteEvent): Mute<BotMuteEvent>(event) {
     override fun time(): Long = durationSeconds
     /** 操作者的QQ号  */
     override fun getOperatorQQ(): String = operatorId
+    override fun getNickname(): String {
+        return event.bot.nick
+    }
+
+    override fun getRemark(): String? = null
 }
 //endregion
 //region bot解除禁言
@@ -125,6 +144,11 @@ open class MiraiBotUnmuteEvent(event: BotUnmuteEvent): Unmute<BotUnmuteEvent>(ev
     override fun time(): Long = 0
     /** 操作者的QQ号  */
     override fun getOperatorQQ(): String = operatorId
+    override fun getNickname(): String {
+        return event.bot.nick
+    }
+
+    override fun getRemark(): String? = null
 }
 //endregion
 
@@ -162,6 +186,13 @@ open class MiraiGroupMuteAllEvent(event: GroupMuteAllEvent):  MiraiBanEvent<Grou
     /** 禁言时长-秒  */
     override fun time(): Long = -1
 
+    override fun getNickname(): String {
+        return event.operatorOrBot.nick
+    }
+
+    override fun getRemark(): String {
+        return event.operatorOrBot.nameCard
+    }
 }
 //endregion
 

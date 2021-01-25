@@ -53,7 +53,7 @@ object SendLikeUtil {
     /**
      * send like
      */
-    fun sendLike(times: Int, code: String, bot: Bot, http: HttpClientAble) : Boolean {
+    fun sendLike(code: String, bot: Bot, http: HttpClientAble) : Boolean {
         val cookies = bot.cookies
         val cookiesMap: MutableMap<String, String> = cookies.cookiesMap
         val header: MutableMap<String, String> = mutableMapOf("Referer" to "https://club.vip.qq.com/visitor/index")

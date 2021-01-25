@@ -105,6 +105,14 @@ sealed class MiraiMemberJoinEvent(event: MemberJoinEvent):
      * 被邀请入群的
      */
     class Invite(event: MemberJoinEvent.Invite): MiraiMemberJoinEvent(event) {
+        override fun getNickname(): String {
+            return event.member.nick
+        }
+
+        override fun getRemark(): String {
+            return event.member.nameCard
+        }
+
         /** 入群类型 */
         override val increaseType: IncreaseType = IncreaseType.AGREE
 
@@ -116,6 +124,13 @@ sealed class MiraiMemberJoinEvent(event: MemberJoinEvent):
      * 主动申请入群的
      */
     class Active(event: MemberJoinEvent.Active): MiraiMemberJoinEvent(event) {
+        override fun getNickname(): String {
+            return event.member.nick
+        }
+
+        override fun getRemark(): String {
+            return event.member.nameCard
+        }
         /** 入群类型 */
         override val increaseType: IncreaseType = IncreaseType.AGREE
 
@@ -134,6 +149,14 @@ sealed class MiraiMemberJoinEvent(event: MemberJoinEvent):
 open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
         MiraiEventGet<BotJoinGroupEvent>(event), MiraiGroupJoinEvent {
     override fun isBotSelf(): Boolean = true
+
+    override fun getNickname(): String {
+        return event.bot.nick
+    }
+
+    override fun getRemark(): String? {
+        return null
+    }
 
     /** 入群者的ID */
     private val newMemberId = event.bot.id.toString()
@@ -175,7 +198,11 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
     class Active(event: BotJoinGroupEvent.Active):
             MiraiEventGet<BotJoinGroupEvent.Active>(event), MiraiGroupJoinEvent {
         override fun isBotSelf(): Boolean = true
+        override fun getNickname(): String {
+            return event.bot.nick
+        }
 
+        override fun getRemark(): String? = null
         /** 入群者的ID */
         private val newMemberId = event.bot.id.toString()
         /** 群号 */
@@ -212,7 +239,13 @@ open class MiraiBotJoinEvent(event: BotJoinGroupEvent):
     class Invite(event: BotJoinGroupEvent.Invite):
             MiraiEventGet<BotJoinGroupEvent.Invite>(event), MiraiGroupJoinEvent {
         override fun isBotSelf(): Boolean = true
+        override fun getNickname(): String {
+            return event.invitor.nick
+        }
 
+        override fun getRemark(): String {
+            return event.invitor.nameCard
+        }
         /** 入群者的ID */
         private val newMemberId = event.bot.id.toString()
         /** 群号 */
@@ -288,6 +321,13 @@ sealed class MiraiMemberLeaveEvent(event: MemberLeaveEvent):
      * @see MemberLeaveEvent.Kick
      */
     class Kick(event: MemberLeaveEvent.Kick): MiraiMemberLeaveEvent(event) {
+        override fun getNickname(): String {
+            return event.member.nick
+        }
+
+        override fun getRemark(): String {
+            return event.member.nameCard
+        }
         /** 类型 */
         override val reduceType: ReduceType = ReduceType.KICK_OUT
         /** 操作者ID */
@@ -299,6 +339,13 @@ sealed class MiraiMemberLeaveEvent(event: MemberLeaveEvent):
      * @see MemberLeaveEvent.Quit
      */
     class Quit(event: MemberLeaveEvent.Quit): MiraiMemberLeaveEvent(event) {
+        override fun getNickname(): String {
+            return event.member.nick
+        }
+
+        override fun getRemark(): String {
+            return event.member.nameCard
+        }
         /** 类型 */
         override val reduceType: ReduceType = ReduceType.LEAVE
         /** 操作者ID， 就是离群者自己 */
@@ -345,6 +392,12 @@ sealed class MiraiBotLeaveEvent(event: BotLeaveEvent):
      * @see MemberLeaveEvent.Kick
      */
     class Kick(event: BotLeaveEvent.Kick): MiraiBotLeaveEvent(event) {
+        override fun getNickname(): String {
+            return event.bot.nick
+        }
+
+        override fun getRemark(): String? = null
+
         /** 类型 */
         override val reduceType: ReduceType = ReduceType.KICK_OUT
         /** 操作者ID */
@@ -356,6 +409,11 @@ sealed class MiraiBotLeaveEvent(event: BotLeaveEvent):
      * @see MemberLeaveEvent.Quit
      */
     class Active(event: BotLeaveEvent.Active): MiraiBotLeaveEvent(event) {
+        override fun getNickname(): String {
+            return event.bot.nick
+        }
+
+        override fun getRemark(): String? = null
         /** 类型 */
         override val reduceType: ReduceType = ReduceType.LEAVE
         /** 操作者ID， 就是离群者自己 */
@@ -392,7 +450,13 @@ open class MiraiMemberPermissionChangeEvent(event: MemberPermissionChangeEvent):
     private val groupId = event.group.id.toString()
     private val operatorId = event.group.owner.id.toString()
     override val groupAdminChangeType = event.toGroupAdminChangeType()
+    override fun getNickname(): String {
+        return event.member.nick
+    }
 
+    override fun getRemark(): String {
+        return event.member.nameCard
+    }
     override val permissionEvent: BotPassiveEvent
         get() = this.event
 
@@ -423,6 +487,11 @@ open class MiraiBotGroupPermissionChangeEvent(event: BotGroupPermissionChangeEve
     private val groupId = event.group.id.toString()
     private val operatorId = event.group.owner.id.toString()
     override val groupAdminChangeType = event.toGroupAdminChangeType()
+    override fun getNickname(): String {
+        return event.bot.nick
+    }
+
+    override fun getRemark(): String? = null
 
     override val permissionEvent: BotPassiveEvent
         get() = this.event

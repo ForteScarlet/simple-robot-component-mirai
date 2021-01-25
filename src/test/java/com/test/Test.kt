@@ -14,8 +14,12 @@
 
 package com.test
 
-import java.util.concurrent.TimeUnit
+import com.forte.qqrobot.BaseApplication
+import com.forte.qqrobot.SimpleRobotApplication
+
+@SimpleRobotApplication
+class App
 
 fun main() {
-    println(TimeUnit.HOURS.toMillis(1))
+    BaseApplication.runAuto(App::class.java)
 }

@@ -40,6 +40,7 @@ open class MiraiFriendAddEvent(event: FriendAddEvent): MiraiEventGet<FriendAddEv
 
     /** 添加人的QQ  */
     override fun getQQ(): String = fromId
+    override fun getNickname(): String = event.friend.nick
     override fun getCodeNumber(): Long = event.friend.id
 
 }

@@ -51,6 +51,28 @@ open class MiraiBotInvitedJoinGroupRequestEvent(eventEvent: BotInvitedJoinGroupR
 
     /** 加群类型，此处为被邀请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.INVITE
+
+    override fun getNickname(): String {
+        return event.invitor.nick
+    }
+
+    override fun invitorCode(): String {
+        return event.invitorId.toString()
+    }
+
+    override fun invitorNickname(): String {
+        return event.invitorNick
+    }
+
+    override fun invitorRemark(): String? = null
+
+    override fun inviteeCode(): String {
+        return event.bot.id.toString()
+    }
+
+    override fun inviteeNickname(): String {
+        return event.bot.nick
+    }
 }
 //endregion
 
@@ -85,6 +107,26 @@ open class MiraiMemberJoinRequestEvent(eventEvent: MemberJoinRequestEvent, cache
 
     /** 加群类型，此处为申请入群  */
     override fun getRequestType(): GroupAddRequestType = GroupAddRequestType.ADD
+
+    override fun getNickname(): String {
+        return event.fromNick
+    }
+
+    override fun getRemark(): String? = null
+
+    override fun invitorCode(): String? = null
+
+    override fun invitorNickname(): String? = null
+
+    override fun invitorRemark(): String? = null
+
+    override fun inviteeCode(): String {
+        return event.fromId.toString()
+    }
+
+    override fun inviteeNickname(): String {
+        return event.fromNick
+    }
 }
 //endregion
 
@@ -112,6 +154,11 @@ open class MiraiNewFriendRequestEvent(eventEvent: NewFriendRequestEvent, cacheMa
 
     /** 获取标识  */
     override fun getFlag(): String = requestFlag
+
+    override fun getNickname(): String {
+        return event.fromNick
+    }
+
 }
 //endregion
 //endregion

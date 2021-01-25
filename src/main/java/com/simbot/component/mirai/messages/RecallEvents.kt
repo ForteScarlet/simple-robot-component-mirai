@@ -22,6 +22,7 @@ import com.forte.qqrobot.beans.messages.msgget.PrivateMsgDelete
 import com.simbot.component.mirai.CacheMaps
 import com.simbot.component.mirai.utils.MiraiCodeFormatUtils
 import net.mamoe.mirai.event.events.MessageRecallEvent
+import net.mamoe.mirai.event.events.author
 import net.mamoe.mirai.message.data.MessageSource
 
 
@@ -64,6 +65,14 @@ open class MiraiGroupRecall(event: MessageRecallEvent.GroupRecall, cacheMaps: Ca
 
     /** 操作者的QQ号，即执行撤回操作的人的QQ号  */
     override fun getOperatorQQ(): String = operatorId
+
+    override fun getNickname(): String {
+        return event.author.nick
+    }
+
+    override fun getRemark(): String {
+        return event.author.nameCard
+    }
 }
 
 /** 获取操作者Id */
@@ -90,6 +99,11 @@ open class MiraiPrivateRecall(event: MessageRecallEvent.FriendRecall, cacheMaps:
      * @see .getCode
      */
     override fun getQQCode(): String = event.authorId.toString()
+
+    override fun getNickname(): String {
+        return event.bot.getFriend(event.operator).nick
+    }
+
 }
 //endregion
 //endregion

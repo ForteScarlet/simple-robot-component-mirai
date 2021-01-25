@@ -86,6 +86,10 @@ open class MiraiGroupInfo(
     private val entranceAnnouncement: String get() = baseGroup.settings.entranceAnnouncement
     private val members: ContactList<Member> get() = baseGroup.members
 
+    override fun getRemark(): String {
+        return baseGroup.name
+    }
+
     /**
      * 群主与管理员的map
      * 此值只会通过懒加载初始化一次, 且**不是**线程安全的
@@ -610,6 +614,11 @@ open class MiraiGroupBanList(group: Group): BanList {
 
 /** 禁言信息 */
 open class MiraiGroupBanInfo(val member: Member): BanInfo {
+
+    override fun getNickname(): String {
+        return member.nick
+    }
+
     /**
      * 被禁言者的QQ
      */

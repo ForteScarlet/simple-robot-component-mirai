@@ -286,7 +286,7 @@ open class MiraiBotSender(
 
     /** 点赞 */
     override fun sendLike(code: String, times: Int): Boolean {
-        return SendLikeUtil.sendLike(times, code, bot, HttpClientHelper.getDefaultHttp())
+        return SendLikeUtil.sendLike(code, bot, HttpClientHelper.getDefaultHttp())
     }
 
 

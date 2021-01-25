@@ -367,10 +367,6 @@
                     <!--</execution>-->
                 </executions>
                 <configuration>
-                    <!--<skip>true</skip>-->
-                    <includes>
-                        <include>modules.md</include>
-                    </includes>
                     <!-- Set to true to skip dokka task, default: false -->
                     <!--                        <skip>true</skip>-->
                     <!-- Used for linking to JDK, default: 6 -->
@@ -381,6 +377,8 @@
                     <reportUndocumented>true</reportUndocumented>
                     <!--<noJdkLink>true</noJdkLink>-->
                     <!--<noStdlibLink>true</noStdlibLink>-->
+
+                    <offlineMode>true</offlineMode>
 
                     <dokkaPlugins>
                         <!--<plugin>-->

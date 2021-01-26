@@ -90,12 +90,6 @@
             <version>${kotlin.version}</version>
         </dependency>
 
-        <!--&lt;!&ndash; ktx coroutines core &ndash;&gt;-->
-        <!--<dependency>-->
-        <!--    <groupId>org.jetbrains.kotlinx</groupId>-->
-        <!--    <artifactId>kotlinx-coroutines-core</artifactId>-->
-        <!--    <version>${kotlinx-coroutines-core.version}</version>-->
-        <!--</dependency>-->
 
         <!-- kt-test -->
         <dependency>

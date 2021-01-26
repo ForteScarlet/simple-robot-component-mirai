@@ -9,17 +9,17 @@
 
     <!--
      1.11.0-1.17-Final 核心为1.17.0-Final的最终版。对应mirai为1.3.2
-
+     1.12.0-1.17-Final 核心为1.17.0-Final的最终版。对应mirai为2.0.0
      -->
-    <version>1.11.0-1.17-Final</version>
+    <!--<version>1.11.0-1.17-Final</version>-->
+    <version>1.12.0-1.17-Final</version>
 
     <properties>
         <hutool.versin>5.3.8</hutool.versin>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
 
         <!-- mirai -->
-        <mirai.version>1.3.2</mirai.version>
-        <mirai-serialization.version>1.1.3</mirai-serialization.version>
+        <mirai.version>2.0.0</mirai.version>
 
         <!-- simbot core -->
         <simple-robot-core.version>1.17.0-Final</simple-robot-core.version>
@@ -27,9 +27,10 @@
 
         <!-- kt properties -->
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-        <kotlin.version>1.4.10</kotlin.version>
-        <kotlinx-coroutines-core.version>1.3.9</kotlinx-coroutines-core.version>
-        <kotlinx-serialization.version>1.0.0-RC</kotlinx-serialization.version>
+        <kotlin.version>1.4.30-RC</kotlin.version>
+        <kotlin-maven-plugin.version>1.4.21</kotlin-maven-plugin.version>
+        <!--<kotlinx-coroutines-core.version>1.3.9</kotlinx-coroutines-core.version>-->
+        <!--<kotlinx-serialization.version>1.0.0-RC</kotlinx-serialization.version>-->
 
         <!-- dokka version -->
         <dokka.version>1.4.0-rc</dokka.version>
@@ -72,25 +73,9 @@
         <!-- https://bintray.com/him188moe/mirai/mirai-core -->
         <dependency>
             <groupId>net.mamoe</groupId>
-            <artifactId>mirai-core</artifactId>
+            <artifactId>mirai-core-jvm</artifactId>
             <version>${mirai.version}</version>
         </dependency>
-
-        <!-- https://bintray.com/him188moe/mirai/mirai-core-qqandroid -->
-        <dependency>
-            <groupId>net.mamoe</groupId>
-            <artifactId>mirai-core-qqandroid</artifactId>
-            <version>${mirai.version}</version>
-        </dependency>
-
-        <!--&lt;!&ndash; mirai serialization  &ndash;&gt;-->
-        <!--<dependency>-->
-        <!--    <groupId>net.mamoe</groupId>-->
-        <!--    <artifactId>mirai-serialization</artifactId>-->
-        <!--    <version>${mirai-serialization.version}</version>-->
-        <!--    <optional>true</optional>-->
-        <!--    <scope>test</scope>-->
-        <!--</dependency>-->
 
         <!-- kt -->
         <dependency>
@@ -105,20 +90,11 @@
             <version>${kotlin.version}</version>
         </dependency>
 
-        <!-- ktx coroutines core -->
-        <dependency>
-            <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-coroutines-core</artifactId>
-            <version>${kotlinx-coroutines-core.version}</version>
-        </dependency>
-
-        <!--&lt;!&ndash; ktx - serialization core &ndash;&gt;-->
+        <!--&lt;!&ndash; ktx coroutines core &ndash;&gt;-->
         <!--<dependency>-->
         <!--    <groupId>org.jetbrains.kotlinx</groupId>-->
-        <!--    <artifactId>kotlinx-serialization-core</artifactId>-->
-        <!--    <version>${kotlinx-serialization.version}</version>-->
-        <!--    <optional>true</optional>-->
-        <!--    <scope>test</scope>-->
+        <!--    <artifactId>kotlinx-coroutines-core</artifactId>-->
+        <!--    <version>${kotlinx-coroutines-core.version}</version>-->
         <!--</dependency>-->
 
         <!-- kt-test -->
@@ -197,7 +173,7 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
+                <version>${kotlin-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -351,7 +327,7 @@
                 <version>${dokka.version}</version>
                 <executions>
                     <execution>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <goals>
                             <!--<goal>dokka</goal>-->
                             <!--<goal>javadoc</goal>-->
@@ -377,36 +353,10 @@
                     <reportUndocumented>true</reportUndocumented>
                     <!--<noJdkLink>true</noJdkLink>-->
                     <!--<noStdlibLink>true</noStdlibLink>-->
-
+                    <skipDeprecated>true</skipDeprecated>
                     <offlineMode>true</offlineMode>
 
-                    <dokkaPlugins>
-                        <!--<plugin>-->
-                        <!--    <groupId>org.jetbrains.dokka</groupId>-->
-                        <!--    <artifactId>dokka-base</artifactId>-->
-                        <!--    <version>${dokka.version}</version>-->
-                        <!--</plugin>-->
-                        <!--<plugin>-->
-                        <!--    <groupId>org.jetbrains.dokka</groupId>-->
-                        <!--    <artifactId>gfm-plugin</artifactId>-->
-                        <!--    <version>${dokka.version}</version>-->
-                        <!--</plugin>-->
-                        <!--<plugin>-->
-                        <!--    <groupId>org.jetbrains.dokka</groupId>-->
-                        <!--    <artifactId>jekyll-plugin</artifactId>-->
-                        <!--    <version>${dokka.version}</version>-->
-                        <!--</plugin>-->
-                        <!--<plugin>-->
-                        <!--    <groupId>org.jetbrains.dokka</groupId>-->
-                        <!--    <artifactId>javadoc-plugin</artifactId>-->
-                        <!--    <version>${dokka.version}</version>-->
-                        <!--</plugin>-->
-                        <!--<plugin>-->
-                        <!--    <groupId>org.jetbrains.dokka</groupId>-->
-                        <!--    <artifactId>kotlin-as-java-plugin</artifactId>-->
-                        <!--    <version>${dokka.version}</version>-->
-                        <!--</plugin>-->
-                    </dokkaPlugins>
+                    <cacheRoot>default</cacheRoot>
                 </configuration>
             </plugin>
 
@@ -490,7 +440,7 @@
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
-                                <phase>verify</phase>
+                                <phase>install</phase>
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>

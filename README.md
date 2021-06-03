@@ -5,6 +5,12 @@
 基于 [**`simple-robot-core`**](https://github.com/ForteScarlet/simple-robot-core) 核心框架，对接 [**`Mirai`**](https://github.com/mamoe/mirai) 及其`qqandroid`库
 
 
+# 使用2.x版本：
+https://github.com/ForteScarlet/simpler-robot
+
+当前仓库版本(1.x)已进入停止更新状态，请前往2.x版本。
+
+
 ## 特性
 
 - ~~内置`v1.4.1-1.13`版本的`cqCodeUtils`模组来代替核心内部自带的CQCodeUtil工具.~~ `cqCodeUtils`模组已由核心内置.
